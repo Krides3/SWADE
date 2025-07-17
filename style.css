@@ -16,18 +16,8 @@ button {
   cursor: pointer;
 }
 
-npx electronmon .
-^^^zorgt dat window open blijft en zich aanapst elke keer je saved op de page dat je aant werken bent.
 
-
-
-
-
-
-----------------------
-
-
-row:after {
+.row:after {
     content: "";
     display: table;
     clear: both;
@@ -92,4 +82,11 @@ row:after {
   padding-left: 0;
   margin: 0;
   
+}
+
+.body {
+  background-color: #292929;
+  padding: 2em;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(255, 254, 254, 0.1);
 }
