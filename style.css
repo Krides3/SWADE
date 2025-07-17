@@ -1,0 +1,95 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+h1 {
+  color: #333;
+  margin-top: 2em;
+}
+button {
+  padding: 0.5em 1em;
+  font-size: 1em;
+  margin-top: 1em;
+  cursor: pointer;
+}
+
+npx electronmon .
+^^^zorgt dat window open blijft en zich aanapst elke keer je saved op de page dat je aant werken bent.
+
+
+
+
+
+
+----------------------
+
+
+row:after {
+    content: "";
+    display: table;
+    clear: both;
+  }
+
+.column {
+  padding-top: 1%;
+  margin-left: 1em;
+    width: auto;
+    border: 2px solid #ccc;      /* Light gray border */
+    border-radius: 15px;         /* Rounded corners */
+    padding: 20px;               /* Space inside the box */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* Optional: subtle shadow */
+   display: inline-block;
+}
+
+.column h1 {
+  padding-bottom: 0.5em;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 20px;
+    font-size: vp2;
+  background: -webkit-linear-gradient(#eee, #333);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+
+.subtitle {
+
+  font-size: 16px;
+  color: #b4b4b4;
+  margin-bottom: 1em;
+  margin-left: 1em;
+  border-bottom: #3B566E 1px dotted;
+  width: 50%;           /* Only half the width */
+  min-width: 200px;     /* Optional: minimum width */
+  margin-right: auto;   /* Align left, border stops halfway */
+}
+
+
+.button {
+  border: none;
+  color: white;
+ padding-top: 0.5em;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  
+  cursor: pointer;
+  padding-left: 0.01em;
+  margin-left: 0;
+}
+
+.li {
+  list-style-type: circle;
+  padding-left: 0;
+  margin: 0;
+  
+}
