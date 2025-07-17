@@ -1,0 +1,2 @@
+npx electronmon .
+^^^zorgt dat window open blijft en zich aanapst elke keer je saved op de page dat je aant werken bent.
