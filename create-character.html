@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>Character Creation</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./script.js"></script>
+</head>
+<body>
+<button type="button" onclick="window.location.href='index.html'">Back to Character Sheet</button>
+<div class="character-creation">
+    <h1>Create Your Character</h1>
+    <form id="character-form">
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required />
+        
+        <label for="level">Level:</label>
+        <input type="number" id="level" name="level" min="1" max="100" required />
+        
+        <label for="stats">Stats:</label>
+        <textarea id="stats" name="stats" required></textarea>
+        
+        <label for="skills">Skills:</label>
+        <textarea id="skills" name="skills"></textarea>
+        
+        <label for="edges">Edges:</label>
+        <textarea id="edges" name="edges"></textarea>
+
+        <button type="submit" onclick="saveCharacter()">Create Character</button>
+    </form>
+
+</div>
+</body>
+</html>
