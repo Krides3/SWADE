@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <title>Swade Character Creator</title>
   <link rel="stylesheet" href="./style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="./script.js"></script>
   
 </head>
@@ -19,22 +20,23 @@
   </div>
 </div>
 
+<div class="welcome">
+  <h1>Welcome to the Swade Character Creator</h1>
 
 
 
 
-
-
+<div >
     <ul class="navbar">
         <li> <a class="title">SWADE</a></li>
         <li class="active"><a href="index.html">Home</a></li>
-        <li><a href="news.asp">Content</a></li>
+        <li><a href="content.html">Content</a></li>
         <li><a href="contact.asp">Shop</a></li>
         <li><a href="about.asp">Lore</a></li>
 </ul>
+</div>  
 
-<div class="welcome">
-  <h1>Welcome to the Swade Character Creator</h1>
+
     
 
 </div>
@@ -42,16 +44,14 @@
 <div class="options ">
     
     <ul>
-        <li><a href="create-character.html">Create Character</a></li>
-        <li><a href="load-character.html">Load Character</a></li>
-        <li><a href="save-character.html">Save Character</a></li>
-        <li><a href="export-character.html">Export Character</a></li>
+        <li><button type="button" onclick="window.location.href='create-character.html'">Create Character</button></li>
+        <li><button type="button" onclick="window.location.href='load-character.html'">Load Character</button></li>
+        <li><button type="button" onclick="window.location.href='save-character.html'">Save Character</button></li>
+        <li><button type="button" onclick="exportCharacterSheetToPDF()">Export Character</button></li>
     </ul>
+</div>
 
-
-
-   
-    <div class="character-sheet">   
+<div class="character-sheet">   
         <h2>Character Sheet</h2>
         <p id="character-name">Name: </p>
         <p id="character-level">Level: </p>
@@ -63,6 +63,8 @@
         <p id="character-equipment">Equipment: </p>
 
 </div>
+   
+    
    
 
 
