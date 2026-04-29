@@ -69,53 +69,40 @@ document.addEventListener('DOMContentLoaded', function() {
 // Load character sheet data from localStorage and display on index.html
 document.addEventListener('DOMContentLoaded', function() {
   const data = localStorage.getItem('swadeCharacter');
-  if (data) {
-    const character = JSON.parse(data);
-    document.getElementById('character-name').textContent = 'Name: ' + (character.name || '');
-    document.getElementById('character-level').textContent = 'Level: ' + (character.level || '');
-    document.getElementById('character-stats').textContent = 'Stats: ' + (character.stats || '');
-    document.getElementById('character-skills').textContent = 'Skills: ' + (character.skills || '');
-    document.getElementById('character-edges').textContent = 'Edges: ' + (character.edges || '');
-    document.getElementById('character-hindrances').textContent = 'Hindrances: ' + (character.hindrances || '');
-    document.getElementById('character-powers').textContent = 'Powers: ' + (character.powers || '');
-    document.getElementById('character-equipment').textContent = 'Equipment: ' + (character.equipment || '');
+  if (!data) return;
+  const character = JSON.parse(data);
+  const fields = {
+    'character-name':        'Name: '        + (character.name || ''),
+    'character-level':       'Level: '       + (character.level || ''),
+    'character-stats':       'Stats: '       + (character.stats || ''),
+    'character-skills':      'Skills: '      + (character.skills || ''),
+    'character-edges':       'Edges: '       + (character.edges || ''),
+    'character-hindrances':  'Hindrances: '  + (character.hindrances || ''),
+    'character-powers':      'Powers: '      + (character.powers || ''),
+    'character-equipment':   'Equipment: '   + (character.equipment || ''),
+  };
+  for (const [id, text] of Object.entries(fields)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = text;
   }
 });
-// Hide main content until overlay is gone
+// Boot overlay — hide after CSS animation completes
 document.addEventListener('DOMContentLoaded', function() {
-  // Check if launch animation has already played
+  const overlay = document.getElementById('boot-overlay');
+  if (!overlay) return;
+
   if (sessionStorage.getItem('swadeLaunchPlayed')) {
-    document.getElementById('launch-overlay').style.display = 'none';
-    document.querySelector('.navbar').style.display = '';
-    document.querySelector('.welcome').style.display = '';
-    document.querySelector('.options').style.display = '';
-    document.querySelector('.character-sheet').style.display = '';
-    document.body.classList.remove('overlay-active');
+    overlay.style.display = 'none';
   } else {
-    // Run animation as usual
-    document.querySelector('.navbar').style.display = 'none';
-    document.querySelector('.welcome').style.display = 'none';
-    document.querySelector('.options').style.display = 'none';
-    document.querySelector('.character-sheet').style.display = 'none';
-    document.body.classList.add('overlay-active');
-
-    // Show 'Connection complete' after scan bar fills and hide init message
+    // Boot bar animation is 3s; fade out shortly after it finishes
     setTimeout(() => {
-      document.getElementById('launch-complete-msg').classList.add('visible');
-      document.getElementById('init-msg').classList.add('hidden-fade');
-    }, 4500); // show after scanBarMove 4s is fully done
+      overlay.classList.add('fade-out');
+    }, 3200);
 
-    // Hide overlay and show main content (show message for 3s)
     setTimeout(() => {
-      document.getElementById('launch-overlay').style.display = 'none';
-      document.querySelector('.navbar').style.display = '';
-      document.querySelector('.welcome').style.display = '';
-      document.querySelector('.options').style.display = '';
-      document.querySelector('.character-sheet').style.display = '';
-      document.body.classList.remove('overlay-active');
-      // Set flag so animation doesn't play again
+      overlay.style.display = 'none';
       sessionStorage.setItem('swadeLaunchPlayed', 'true');
-    }, 7000); // 4s scan + 3s message
+    }, 4400); // 3.2s + 1.2s fade-out
   }
 });
 // Add this function to script.js
