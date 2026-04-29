@@ -1,76 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
-  <meta charset="UTF-8">
-  <title>Swade Character Creator</title>
-  <link rel="stylesheet" href="./style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="./script.js"></script>
-  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Luxor Terminal — Dashboard</title>
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
 
-<div id="launch-overlay">
-  <div class="launch-content">
-    <h2>Luxor</h2>
-    <p id="init-msg">Initializing Secure Terminal...</p>
-    <div class="scan-bar"></div>
-    <p class="launch-complete" id="launch-complete-msg">Connection complete. Welcome, operator.</p>
-  </div>
+<div id="boot-overlay">
+    <div class="boot-logo" data-text="LUXOR">LUXOR</div>
+    <div class="boot-sub">Tactical Operations Terminal v2.4.1</div>
+    <div class="boot-bar-wrap"><div class="boot-bar"></div></div>
+    <div class="boot-status" id="boot-status">Initializing...<span class="boot-cursor"></span></div>
 </div>
 
-<div class="welcome">
-  <h1>Welcome to the Swade Character Creator</h1>
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"   data-icon="01">Dashboard</a></li>
+            <li><a href="map.html"     data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"   data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"   data-icon="04">Tools</a></li>
+            <li><a href="dice.html"    data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"   data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/radioScanner.html"   data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"    data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html" data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"    data-icon="10">Hacking</a></li>
+        </ul>
+        <div class="nav-footer">
+            <span class="status-dot"></span>UPLINK &nbsp;·&nbsp; <span class="session-id">——————</span>
+        </div>
+    </nav>
 
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
 
+    <main class="main">
+        <div class="page-header">
+            <h1>Welcome, Operator</h1>
+            <div class="tagline">// LUXOR TERMINAL — TACTICAL OPERATIONS SYSTEM //</div>
+            <div class="header-divider"></div>
+        </div>
 
+        <div class="tool-grid">
 
-<div >
-    <ul class="navbar">
-        <li> <a class="title">SWADE</a></li>
-        <li class="active"><a href="index.html">Home</a></li>
-        <li><a href="content.html">Content</a></li>
-        <li><a href="contact.asp">Shop</a></li>
-        <li><a href="about.asp">Lore</a></li>
-</ul>
-</div>  
+            <a class="tool-card" href="map.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">◈</div>
+                    <div class="tool-card-badge">READY</div>
+                </div>
+                <div class="tool-card-title">Asset Map</div>
+                <div class="tool-card-desc">Live tactical overlay. Track team positions, objectives and points of interest.</div>
+                <div class="tool-card-code">MAP_SYS.EXE</div>
+            </a>
 
+            <a class="tool-card" href="radio.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">◎</div>
+                    <div class="tool-card-badge">READY</div>
+                </div>
+                <div class="tool-card-title">Radio Scrambler</div>
+                <div class="tool-card-desc">Intercept and decrypt enemy comms. Frequency scanner with noise injection.</div>
+                <div class="tool-card-code">RADIO_SYS.EXE</div>
+            </a>
 
-    
+            <a class="tool-card" href="bomb.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">◉</div>
+                    <div class="tool-card-badge badge-warn">STANDBY</div>
+                </div>
+                <div class="tool-card-title">Bomb Defusal</div>
+                <div class="tool-card-desc">Multi-stage defusal minigame. Wire sequences, timers, pressure triggers.</div>
+                <div class="tool-card-code">DEFUSAL.EXE</div>
+            </a>
 
+            <a class="tool-card" href="comms.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">▣</div>
+                    <div class="tool-card-badge">READY</div>
+                </div>
+                <div class="tool-card-title">HQ Comms</div>
+                <div class="tool-card-desc">Encrypted channel to command. Broadcast orders and receive intel drops.</div>
+                <div class="tool-card-code">COMMS.EXE</div>
+            </a>
+
+            <a class="tool-card" href="lockpick.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">⌗</div>
+                    <div class="tool-card-badge badge-warn">STANDBY</div>
+                </div>
+                <div class="tool-card-title">Lockpick Interface</div>
+                <div class="tool-card-desc">Electronic bypass simulator. Tumblers, keypads, biometric overrides.</div>
+                <div class="tool-card-code">LOCKPICK.EXE</div>
+            </a>
+
+            <a class="tool-card" href="hack.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">▦</div>
+                    <div class="tool-card-badge badge-warn">STANDBY</div>
+                </div>
+                <div class="tool-card-title">Hacking Terminal</div>
+                <div class="tool-card-desc">Breach ICE layers. Port scan, inject payloads, exfiltrate data nodes.</div>
+                <div class="tool-card-code">BREACH.EXE</div>
+            </a>
+
+            <a class="tool-card" href="dice.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">⬡</div>
+                    <div class="tool-card-badge">READY</div>
+                </div>
+                <div class="tool-card-title">Dice Roller</div>
+                <div class="tool-card-desc">SWADE dice set. d4 through d12 with wild die, raises and modifiers.</div>
+                <div class="tool-card-code">DICE.EXE</div>
+            </a>
+
+            <a class="tool-card" href="timer.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">◷</div>
+                    <div class="tool-card-badge">READY</div>
+                </div>
+                <div class="tool-card-title">Mission Timer</div>
+                <div class="tool-card-desc">Countdown and stopwatch. Track round timers, extraction windows, bomb clocks.</div>
+                <div class="tool-card-code">TIMER.EXE</div>
+            </a>
+
+            <a class="tool-card" href="tools.html">
+                <div class="tool-card-top">
+                    <div class="tool-card-icon">⊞</div>
+                    <div class="tool-card-badge">READY</div>
+                </div>
+                <div class="tool-card-title">All Tools</div>
+                <div class="tool-card-desc">Open the full operator toolkit — all modules in one view.</div>
+                <div class="tool-card-code">TOOLKIT.EXE</div>
+            </a>
+
+        </div>
+    </main>
 </div>
-    
-<div class="options ">
-    
-    <ul>
-        <li><button type="button" onclick="window.location.href='create-character.html'">Create Character</button></li>
-        <li><button type="button" onclick="window.location.href='load-character.html'">Load Character</button></li>
-        <li><button type="button" onclick="window.location.href='save-character.html'">Save Character</button></li>
-        <li><button type="button" onclick="exportCharacterSheetToPDF()">Export Character</button></li>
-    </ul>
-</div>
 
-<div class="character-sheet">   
-        <h2>Character Sheet</h2>
-        <p id="character-name">Name: </p>
-        <p id="character-level">Level: </p>
-        <p id="character-stats">Stats: </p>
-        <p id="character-skills">Skills: </p>
-        <p id="character-edges">Edges: </p>
-        <p id="character-hindrances">Hindrances: </p>
-        <p id="character-powers">Powers: </p>
-        <p id="character-equipment">Equipment: </p>
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
 
-</div>
-   
-    
-   
-
-
-
-
-
-  
+<script src="./nav.js"></script>
 </body>
 </html>
