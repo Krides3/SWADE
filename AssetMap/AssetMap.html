@@ -2,60 +2,70 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Luxor Terminal — Asset Map</title>
-    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR — Asset Deployment Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="./AssetMap.css">
 </head>
 <body>
 
-<div class="app">
-    <nav class="navbar" id="navbar">
-        <div class="nav-brand">
-            <div class="nav-brand-title">LUXOR</div>
-            <div class="nav-brand-sub">// TACTICAL OPS //</div>
-        </div>
-        <ul class="nav-links">
-            <li><a href="index.html"    data-icon="01">Dashboard</a></li>
-            <li><a href="map.html"      data-icon="02">Asset Map</a></li>
-            <li><a href="comms.html"    data-icon="03">HQ Comms</a></li>
-            <li><a href="tools.html"    data-icon="04">Tools</a></li>
-            <li><a href="dice.html"     data-icon="05">Dice Roller</a></li>
-            <li><a href="timer.html"    data-icon="06">Mission Timer</a></li>
-            <li><a href="radio.html"    data-icon="07">Radio</a></li>
-            <li><a href="bomb.html"     data-icon="08">Bomb Defusal</a></li>
-            <li><a href="lockpick.html" data-icon="09">Lockpick</a></li>
-            <li><a href="hack.html"     data-icon="10">Hacking</a></li>
-        </ul>
-        <div class="nav-footer">
-            <span class="status-dot"></span>UPLINK &nbsp;·&nbsp; <span class="session-id">——————</span>
-        </div>
-    </nav>
-
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-    </button>
-
-    <main class="main">
-        <div class="page-header">
-            <h1>Asset Map</h1>
-            <div class="tagline">// TACTICAL OVERLAY — LIVE FEED //</div>
-            <div class="header-divider"></div>
-        </div>
-
-        <div class="coming-soon-panel">
-            <div class="cs-icon">◈</div>
-            <div class="cs-title">MAP_SYS.EXE</div>
-            <div class="cs-desc">Interactive tactical map with draggable markers, zone overlays and team pings. Module loading...</div>
-            <div class="cs-bar"><div class="cs-bar-fill" style="width:35%"></div></div>
-            <div class="cs-status">MODULE PENDING DEPLOYMENT</div>
-        </div>
-    </main>
+<!-- ── Top Bar ─────────────────────────────────────────── -->
+<div id="topbar">
+    <span class="bar-title">LUXOR</span>
+    <span class="bar-sub">Asset Deployment Map</span>
+    <span class="bar-sep"></span>
+    <span class="bar-status">LIVE FEED</span>
+    <a class="nav-back" href="../index.html">&#x2190; Terminal</a>
 </div>
 
-<div class="nav-overlay" id="nav-overlay"></div>
-<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
-<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<!-- ── Full-screen map ────────────────────────────────── -->
+<div id="map"></div>
 
-<script src="./nav.js"></script>
+<!-- ── Scanline overlay ───────────────────────────────── -->
+<div id="scanlines"></div>
+
+<!-- ── UTC Clock ──────────────────────────────────────── -->
+<div id="clock-panel" class="map-panel">
+    <div class="panel-label">System Time (UTC)</div>
+    <div id="clock-time">00:00:00</div>
+    <div id="clock-date">---</div>
+</div>
+
+<!-- ── Clearance Selector ─────────────────────────────── -->
+<div id="clearance-panel" class="map-panel">
+    <div class="panel-label">Player Clearance</div>
+    <div id="clearance-btns">
+        <button class="cl-btn active" data-level="1">1</button>
+        <button class="cl-btn"        data-level="2">2</button>
+        <button class="cl-btn"        data-level="3">3</button>
+        <button class="cl-btn"        data-level="4">4</button>
+        <button class="cl-btn"        data-level="5">5</button>
+    </div>
+</div>
+
+<!-- ── Legend ─────────────────────────────────────────── -->
+<div id="legend" class="map-panel">
+    <div class="panel-label">Legend</div>
+
+    <div class="legend-item"><span class="legend-dot l-active"></span>Active</div>
+    <div class="legend-item"><span class="legend-dot l-inactive"></span>Inactive</div>
+    <div class="legend-item"><span class="legend-dot l-compr"></span>Compromised</div>
+    <div class="legend-item"><span class="legend-dot l-unknown"></span>Unknown</div>
+
+    <div class="legend-div"></div>
+
+    <div class="legend-item"><span class="legend-icon">&#9670;</span>HQ</div>
+    <div class="legend-item"><span class="legend-icon">&#9679;</span>Ground Unit</div>
+    <div class="legend-item"><span class="legend-icon">&#9651;</span>Outpost</div>
+    <div class="legend-item"><span class="legend-icon">&#9678;</span>Naval</div>
+
+    <div class="legend-div"></div>
+
+    <div class="legend-item"><span class="legend-icon">&#x2708;</span>Aircraft</div>
+    <div class="legend-item"><span class="legend-icon">&#x1F681;</span>Helicopter</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="./AssetMap.js"></script>
 </body>
 </html>
