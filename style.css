@@ -313,20 +313,19 @@ button {
   position: fixed;
   z-index: 9999;
   inset: 0;
-  height: 100vh;
-  background:
-    linear-gradient(120deg, rgba(10,10,20,0.7) 60%, rgba(30,0,40,0.5) 100%);
-  background-size: cover;
-  background-repeat: no-repeat;
-  backdrop-filter: blur(2px);
+  background: linear-gradient(120deg, #0a0a14 60%, #1e0028 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-/* Fade and blur character sheet when overlay is active */
+}
+
 .overlay-active .character-sheet {
   filter: blur(3px) brightness(0.7);
   transition: filter 0.5s;
 }
+
+.overlay-fade-out {
+  animation: overlayFadeOut 0.8s ease-out forwards;
 }
 
 @keyframes cyberGlow {
@@ -389,7 +388,8 @@ button {
   background: linear-gradient(90deg, #a09d09 0%, #7a059e 100%);
   border-radius: 3px;
   margin: 0 auto;
-  animation: scanBarMove 4s linear;
+  transform-origin: left center;
+  animation: scanBarMove 2s linear forwards;
 }
 
 

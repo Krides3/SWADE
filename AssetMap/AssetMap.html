@@ -1,10 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Luxor Asset Map</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LUXOR — Asset Deployment Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="./AssetMap.css">
 </head>
 <body>
 
+  <!-- ── Top Bar ─────────────────────────────────────────── -->
+  <div id="topbar">
+    <span class="bar-title">LUXOR</span>
+    <span class="bar-sub">Asset Deployment Map</span>
+    <span class="bar-sep"></span>
+    <span class="bar-status">LIVE FEED</span>
+    <a class="nav-back" href="../index.html">&#x2190; Terminal</a>
+  </div>
+
+  <!-- ── Full-screen map ────────────────────────────────── -->
+  <div id="map"></div>
+
+  <!-- ── Scanline overlay ───────────────────────────────── -->
+  <div id="scanlines"></div>
+
+  <!-- ── UTC Clock ──────────────────────────────────────── -->
+  <div id="clock-panel" class="map-panel">
+    <div class="panel-label">System Time (UTC)</div>
+    <div id="clock-time">00:00:00</div>
+    <div id="clock-date">---</div>
+  </div>
+
+  <!-- ── Clearance Selector ─────────────────────────────── -->
+  <div id="clearance-panel" class="map-panel">
+    <div class="panel-label">Player Clearance</div>
+    <div id="clearance-btns">
+      <button class="cl-btn active" data-level="1">1</button>
+      <button class="cl-btn"        data-level="2">2</button>
+      <button class="cl-btn"        data-level="3">3</button>
+      <button class="cl-btn"        data-level="4">4</button>
+      <button class="cl-btn"        data-level="5">5</button>
+    </div>
+  </div>
+
+  <!-- ── Legend ─────────────────────────────────────────── -->
+  <div id="legend" class="map-panel">
+    <div class="panel-label">Legend</div>
+
+    <div class="legend-item"><span class="legend-dot l-active"></span>Active</div>
+    <div class="legend-item"><span class="legend-dot l-inactive"></span>Inactive</div>
+    <div class="legend-item"><span class="legend-dot l-compr"></span>Compromised</div>
+    <div class="legend-item"><span class="legend-dot l-unknown"></span>Unknown</div>
+
+    <div class="legend-div"></div>
+
+    <div class="legend-item"><span class="legend-icon">&#9670;</span>HQ</div>
+    <div class="legend-item"><span class="legend-icon">&#9679;</span>Ground Unit</div>
+    <div class="legend-item"><span class="legend-icon">&#9651;</span>Outpost</div>
+    <div class="legend-item"><span class="legend-icon">&#9678;</span>Naval</div>
+
+    <div class="legend-div"></div>
+
+    <div class="legend-item"><span class="legend-icon">&#x2708;</span>Aircraft</div>
+    <div class="legend-item"><span class="legend-icon">&#x1F681;</span>Helicopter</div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="./AssetMap.js"></script>
 </body>
 </html>

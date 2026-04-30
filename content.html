@@ -1,36 +1,37 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Content</title>
-    <link rel="stylesheet" href="./style.css" />
+  <meta charset="UTF-8">
+  <title>Content - SWADE</title>
+  <link rel="stylesheet" href="./style.css">
 </head>
 <body>
-    <div>
-      <ul class="navbar">
-        <li><a class="title">SWADE</a></li>
-        <li ><a href="index.html">Home</a></li>
-        <li class="active"><a href="content.html">Content</a></li>
-        <li><a href="contact.asp">Shop</a></li>
-        <li><a href="about.asp">Lore</a></li>
-      </ul>
-    </div>
+  <div>
+    <ul class="navbar">
+      <li><a class="title">SWADE</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li class="active"><a href="content.html">Content</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="AssetMap/AssetMap.html">Asset Map</a></li>
+    </ul>
+  </div>
 
-    <div style="margin-left:220px;">
-      <h1>PDF Viewer</h1>
-      <label for="pdf-select">Choose a PDF:</label>
-      <select id="pdf-select">
-        <option value="assets/core_rules.pdf">Core Rules</option>
-        <!-- Add more options for other PDFs here -->
-      </select>
-      <div class="pdf-viewer" style="margin-top:2em;">
-        <iframe id="pdf-frame" src="./assets/PDF/core_rules.pdf" width="100%" height="750em" style="border: none;"></iframe>
-      </div>
+  <div style="margin-left: 240px; padding: 2em;">
+    <h1>PDF Viewer</h1>
+    <label for="pdf-select">Choose a PDF:</label>
+    <select id="pdf-select">
+      <option value="./assets/PDF/core_rules.pdf">Core Rules</option>
+    </select>
+    <div class="pdf-viewer" style="margin-top: 2em;">
+      <iframe id="pdf-frame" src="./assets/PDF/core_rules.pdf" style="border: none;"></iframe>
     </div>
-    <script>
-      document.getElementById('pdf-select').addEventListener('change', function() {
-        document.getElementById('pdf-frame').src = this.value;
-      });
-    </script>
+  </div>
+
+  <script>
+    document.getElementById('pdf-select').addEventListener('change', function () {
+      document.getElementById('pdf-frame').src = this.value;
+    });
+  </script>
 </body>
 </html>

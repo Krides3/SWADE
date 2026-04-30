@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    
   <meta charset="UTF-8">
   <title>Swade Character Creator</title>
   <link rel="stylesheet" href="./style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="./script.js"></script>
-  
+  <script src="./script.js" defer></script>
 </head>
 <body>
 
@@ -23,54 +21,38 @@
 <div class="welcome">
   <h1>Welcome to the Swade Character Creator</h1>
 
-
-
-
-<div >
+  <div>
     <ul class="navbar">
-        <li> <a class="title">SWADE</a></li>
-        <li class="active"><a href="index.html">Home</a></li>
-        <li><a href="content.html">Content</a></li>
-        <li><a href="contact.asp">Shop</a></li>
-        <li><a href="about.asp">Lore</a></li>
-</ul>
-</div>  
-
-
-    
-
-</div>
-    
-<div class="options ">
-    
-    <ul>
-        <li><button type="button" onclick="window.location.href='create-character.html'">Create Character</button></li>
-        <li><button type="button" onclick="window.location.href='load-character.html'">Load Character</button></li>
-        <li><button type="button" onclick="window.location.href='save-character.html'">Save Character</button></li>
-        <li><button type="button" onclick="exportCharacterSheetToPDF()">Export Character</button></li>
+      <li><a class="title">SWADE</a></li>
+      <li class="active"><a href="index.html">Home</a></li>
+      <li><a href="content.html">Content</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="AssetMap/AssetMap.html">Asset Map</a></li>
     </ul>
+  </div>
 </div>
 
-<div class="character-sheet">   
-        <h2>Character Sheet</h2>
-        <p id="character-name">Name: </p>
-        <p id="character-level">Level: </p>
-        <p id="character-stats">Stats: </p>
-        <p id="character-skills">Skills: </p>
-        <p id="character-edges">Edges: </p>
-        <p id="character-hindrances">Hindrances: </p>
-        <p id="character-powers">Powers: </p>
-        <p id="character-equipment">Equipment: </p>
-
+<div class="options">
+  <ul>
+    <li><button type="button" onclick="window.location.href='create-character.html'">Create Character</button></li>
+    <li><button type="button" onclick="window.location.href='load-character.html'">Load Character</button></li>
+    <li><button type="button" onclick="window.location.href='save-character.html'">Save Character</button></li>
+    <li><button type="button" onclick="exportCharacterSheetToPDF()">Export Character</button></li>
+  </ul>
 </div>
-   
-    
-   
 
+<div class="character-sheet">
+  <h2>Character Sheet</h2>
+  <p id="character-name">Name: </p>
+  <p id="character-level">Level: </p>
+  <p id="character-stats">Stats: </p>
+  <p id="character-skills">Skills: </p>
+  <p id="character-edges">Edges: </p>
+  <p id="character-hindrances">Hindrances: </p>
+  <p id="character-powers">Powers: </p>
+  <p id="character-equipment">Equipment: </p>
+</div>
 
-
-
-
-  
 </body>
 </html>

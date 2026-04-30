@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Load Character - SWADE</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div>
+    <ul class="navbar">
+      <li><a class="title">SWADE</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="content.html">Content</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="AssetMap/AssetMap.html">Asset Map</a></li>
+    </ul>
+  </div>
+
+  <div style="margin-left: 240px; padding: 2em;">
+    <h1>Load Character</h1>
+    <div id="character-display" class="character-sheet" style="max-width: 500px; margin: 0 auto; text-align: left;"></div>
+    <div style="margin-top: 2em; display: flex; gap: 1em; justify-content: center;">
+      <button onclick="window.location.href='index.html'">Back to Home</button>
+      <button onclick="window.location.href='create-character.html'">Edit Character</button>
+      <button onclick="deleteCharacter()" style="background: linear-gradient(90deg, #7a059e 0%, #8b0000 100%);">Delete Character</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const data = localStorage.getItem('swadeCharacter');
+      const display = document.getElementById('character-display');
+      if (data) {
+        try {
+          const c = JSON.parse(data);
+          display.innerHTML =
+            '<h2>' + (c.name || 'Unnamed') + '</h2>' +
+            '<p><strong>Level:</strong> ' + (c.level || '—') + '</p>' +
+            '<p><strong>Stats:</strong> ' + (c.stats || '—') + '</p>' +
+            '<p><strong>Skills:</strong> ' + (c.skills || '—') + '</p>' +
+            '<p><strong>Edges:</strong> ' + (Array.isArray(c.edges) ? c.edges.join(', ') : (c.edges || '—')) + '</p>' +
+            '<p><strong>Hindrances:</strong> ' + (c.hindrances || '—') + '</p>' +
+            '<p><strong>Powers:</strong> ' + (c.powers || '—') + '</p>' +
+            '<p><strong>Equipment:</strong> ' + (c.equipment || '—') + '</p>';
+        } catch (e) {
+          display.innerHTML = '<p>Character data is corrupted. <a href="create-character.html">Create a new character.</a></p>';
+        }
+      } else {
+        display.innerHTML = '<p>No saved character found. <a href="create-character.html">Create one?</a></p>';
+      }
+    });
+
+    function deleteCharacter() {
+      if (confirm('Delete the saved character? This cannot be undone.')) {
+        localStorage.removeItem('swadeCharacter');
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,36 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Character Creation</title>
-    <link rel="stylesheet" href="./style.css" />
-    <script src="./script.js"></script>
+  <meta charset="UTF-8">
+  <title>Create Character - SWADE</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./script.js" defer></script>
 </head>
 <body>
-<button type="button" onclick="window.location.href='index.html'">Back to Character Sheet</button>
-<div class="character-creation">
-    <h1>Create Your Character</h1>
-    <form id="character-form">
+  <div>
+    <ul class="navbar">
+      <li><a class="title">SWADE</a></li>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="content.html">Content</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="lore.html">Lore</a></li>
+      <li><a href="AssetMap/AssetMap.html">Asset Map</a></li>
+    </ul>
+  </div>
+
+  <div style="margin-left: 240px; padding: 2em;">
+    <div class="character-creation">
+      <h1>Create Your Character</h1>
+      <form id="character-form">
         <label for="name">Name:</label>
         <input type="text" id="name" name="name" required />
-        
+
         <label for="level">Level:</label>
         <input type="number" id="level" name="level" min="1" max="100" required />
-        
+
         <label for="stats">Stats:</label>
         <textarea id="stats" name="stats" required></textarea>
-        
+
         <label for="skills">Skills:</label>
         <textarea id="skills" name="skills"></textarea>
-        
-        <label for="edges">Edges:</label>
+
+        <label for="edges">Edges (hold Ctrl/Cmd to select multiple):</label>
         <select id="edges" name="edges" multiple>
-          <!-- Options will be added by JS -->
+          <!-- Populated by script.js -->
         </select>
 
-        <button type="submit">Create Character</button>
-    </form>
-
-</div>
+        <button type="submit">Save Character</button>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
