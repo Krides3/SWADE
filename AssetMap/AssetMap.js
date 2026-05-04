@@ -29,8 +29,8 @@ const TIME_SCALE = 300;
 const DEPLOYMENTS = [
     {
         id: 'luxor-hq',
-        name: 'LUXOR Command',
-        lat: 48.8566, lng: 2.3522,        // Paris
+        name: 'LUXOR HQ',
+        lat: 46.946876, lng: 7.448668,
         clearance: 1,
         type: 'hq',
         status: 'active',
@@ -115,7 +115,7 @@ const ROUTES = [
         from: [48.8566,  2.3522],          // Paris -> London
         to:   [51.5074, -0.1278],
         clearance: 2,
-        speedKmh: 260,
+        speedKmh: 60,
         loop: true,
         showPath: true
     },
