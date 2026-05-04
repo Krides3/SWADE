@@ -1,145 +1,631 @@
 // ================================================================
 //  LUXOR ASSET MAP  —  GM CONFIGURATION
-//  Edit DEPLOYMENTS and ROUTES below to update the map.
-//  No other changes needed.
+//  Edit DEPLOYMENTS and ROUTES below, or use the [+] panel in-browser.
+//  Custom entries added in-browser persist via localStorage.
 // ================================================================
 
 // Default player clearance shown on load (1–5).
-// Players can also change it via the UI buttons.
 let PLAYER_CLEARANCE = 1;
 
-// Animation speed multiplier.
-// 300 = vehicles move 300x faster than real life.
-// Raise this number to make vehicles cross the map faster.
+// Animation speed multiplier. 300 = vehicles move 300x real-world speed.
 const TIME_SCALE = 300;
 
 // ----------------------------------------------------------------
-//  DEPLOYMENTS
-//  Add objects to this array to place a ping on the map.
+//  DEPLOYMENTS  — place a ping on the map
 //
-//  Fields:
-//    id        — unique string, used internally
-//    name      — shown on hover if clearance is met; else REDACTED
-//    lat/lng   — GPS coordinates (decimal degrees)
-//    clearance — 1-5: minimum level needed to see name & notes
-//    type      — 'hq' | 'ground' | 'outpost' | 'naval'
-//    status    — 'active' | 'inactive' | 'compromised' | 'unknown'
-//    notes     — optional detail shown on hover (clearance-gated)
+//  id        — unique string
+//  name      — shown on hover if clearance met; else REDACTED
+//  lat/lng   — GPS decimal degrees
+//  clearance — 1–5: minimum level to see name & notes
+//  type      — 'hq' | 'ground' | 'outpost' | 'naval'
+//  status    — 'active' | 'inactive' | 'compromised' | 'unknown'
+//  notes     — optional detail (clearance-gated)
 // ----------------------------------------------------------------
 const DEPLOYMENTS = [
+
+    // ── HEADQUARTERS ──────────────────────────────────────────────
     {
         id: 'luxor-hq',
         name: 'LUXOR HQ',
-        lat: 46.946876, lng: 7.448668,
-        clearance: 1,
-        type: 'hq',
-        status: 'active',
-        notes: 'Primary command. Secure comms only.'
+        lat: 46.9481, lng: 7.4474,            // Bern, Switzerland
+        clearance: 1, type: 'hq', status: 'active',
+        notes: 'Primary command. 24/7 ops center. Secure comms only.'
+    },
+
+    // ── EUROPE ────────────────────────────────────────────────────
+    {
+        id: 'london-stn',
+        name: 'London Station',
+        lat: 51.5074, lng: -0.1278,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Cover: import/export consultancy. Active surveillance op.'
     },
     {
-        id: 'alpha-1',
-        name: 'Team Alpha',
-        lat: 51.5074, lng: -0.1278,       // London
-        clearance: 2,
-        type: 'ground',
-        status: 'active',
-        notes: 'Surveillance op. Check-in every 6 hrs.'
+        id: 'paris-safe',
+        name: 'Paris Safehouse',
+        lat: 48.8566, lng: 2.3522,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Secondary extraction point. 3-person capacity. Clean.'
     },
     {
-        id: 'bravo-1',
-        name: 'Team Bravo',
-        lat: 40.7128, lng: -74.0060,      // New York
-        clearance: 3,
-        type: 'ground',
-        status: 'active',
-        notes: 'Asset extraction in progress.'
+        id: 'madrid-relay',
+        name: 'Madrid Relay',
+        lat: 40.4168, lng: -3.7038,
+        clearance: 2, type: 'outpost', status: 'active',
+        notes: 'Signal relay node. Comms bridge to Morocco assets.'
     },
     {
-        id: 'outpost-kestrel',
+        id: 'oslo-stn',
+        name: 'Oslo Station',
+        lat: 59.9139, lng: 10.7522,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Northern Europe hub. Shipping company cover. Clean.'
+    },
+    {
+        id: 'warsaw-stn',
+        name: 'Warsaw Station',
+        lat: 52.2297, lng: 21.0122,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'Eastern Europe intelligence collection. Double-layer cover.'
+    },
+    {
+        id: 'prague-contact',
+        name: 'Prague Contact',
+        lat: 50.0755, lng: 14.4378,
+        clearance: 4, type: 'outpost', status: 'unknown',
+        notes: 'Handler dark 72 hrs. Last known: central district. Investigate.'
+    },
+    {
+        id: 'athens-out',
+        name: 'Athens Outpost',
+        lat: 37.9838, lng: 23.7275,
+        clearance: 2, type: 'outpost', status: 'active',
+        notes: 'Mediterranean observation post. Port traffic monitoring.'
+    },
+    {
+        id: 'istanbul-cross',
+        name: 'Istanbul Crossing',
+        lat: 41.0082, lng: 28.9784,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'East-West transit hub. Assets pass through regularly.'
+    },
+    {
+        id: 'moscow-echo',
+        name: 'Echo Station',
+        lat: 55.7558, lng: 37.6173,
+        clearance: 4, type: 'outpost', status: 'compromised',
+        notes: 'COMPROMISED. Do not transmit to this node. Evacuation failed.'
+    },
+    {
+        id: 'berlin-asset',
+        name: 'Berlin Asset',
+        lat: 52.5200, lng: 13.4050,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Deep cover. Contact via dead drop only. Last check-in: 48h ago.'
+    },
+    {
+        id: 'vienna-stn',
+        name: 'Vienna Station',
+        lat: 48.2082, lng: 16.3738,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'Financial intelligence. Diplomatic cover maintained.'
+    },
+    {
+        id: 'rome-relay',
+        name: 'Rome Relay',
+        lat: 41.9028, lng: 12.4964,
+        clearance: 2, type: 'outpost', status: 'active',
+        notes: 'Vatican-adjacent observation. Long-term placement.'
+    },
+    {
+        id: 'amsterdam-cntct',
+        name: 'Amsterdam Contact',
+        lat: 52.3676, lng: 4.9041,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Port intelligence. Diamond trade monitoring active.'
+    },
+    {
+        id: 'copenhagen-relay',
+        name: 'Copenhagen Relay',
+        lat: 55.6761, lng: 12.5683,
+        clearance: 2, type: 'outpost', status: 'active',
+        notes: 'Scandinavian bridge. Low-risk. Tech export monitoring.'
+    },
+    {
+        id: 'stockholm-obs',
+        name: 'Stockholm Observation',
+        lat: 59.3293, lng: 18.0686,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Embassy row monitoring. Nordic intelligence liaison.'
+    },
+
+    // ── MIDDLE EAST / NORTH AFRICA ────────────────────────────────
+    {
+        id: 'cairo-intel',
+        name: 'Cairo Intelligence',
+        lat: 30.0444, lng: 31.2357,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'Regional hub. Access to multiple client networks.'
+    },
+    {
+        id: 'dubai-transit',
+        name: 'Dubai Transit',
+        lat: 25.2048, lng: 55.2708,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Financial conduit. Asset laundering monitoring. VIP access.'
+    },
+    {
+        id: 'riyadh-asset',
+        name: 'Riyadh Asset',
+        lat: 24.7136, lng: 46.6753,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'Embedded in energy sector. High-value placement.'
+    },
+    {
+        id: 'tehran-intercept',
+        name: 'Tehran Intercept',
+        lat: 35.6892, lng: 51.3890,
+        clearance: 5, type: 'ground', status: 'compromised',
+        notes: 'BURN NOTICE ISSUED. Do not attempt contact. Sources burned.'
+    },
+    {
+        id: 'algiers-watch',
+        name: 'Algiers Watch',
+        lat: 36.7372, lng: 3.0869,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'North Africa corridor. Smuggling route monitoring.'
+    },
+    {
+        id: 'casablanca-safe',
+        name: 'Casablanca Safehouse',
+        lat: 33.5731, lng: -7.5898,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Western fallback position. Stocked for 2 weeks.'
+    },
+    {
+        id: 'tripoli-covert',
+        name: 'Tripoli Covert',
+        lat: 32.8872, lng: 13.1913,
+        clearance: 5, type: 'outpost', status: 'unknown',
+        notes: 'Status unconfirmed. Last contact 11 days ago.'
+    },
+    {
+        id: 'beirut-contact',
+        name: 'Beirut Contact',
+        lat: 33.8938, lng: 35.5018,
+        clearance: 4, type: 'ground', status: 'unknown',
+        notes: 'Freelance asset. Reliability flagged. Use with caution.'
+    },
+
+    // ── SUB-SAHARAN AFRICA ────────────────────────────────────────
+    {
+        id: 'nairobi-field',
+        name: 'Nairobi Field Office',
+        lat: -1.2921, lng: 36.8219,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'East Africa hub. NGO cover active. 6-month deployment.'
+    },
+    {
+        id: 'lagos-obs',
+        name: 'Lagos Observation',
+        lat: 6.5244, lng: 3.3792,
+        clearance: 3, type: 'outpost', status: 'active',
+        notes: 'Port monitoring. Oil sector intelligence collection.'
+    },
+    {
+        id: 'joburg-base',
+        name: 'Johannesburg Base',
+        lat: -26.2041, lng: 28.0473,
+        clearance: 2, type: 'ground', status: 'inactive',
+        notes: 'Standby. Mining sector cover ready. Awaiting activation.'
+    },
+
+    // ── ASIA ──────────────────────────────────────────────────────
+    {
+        id: 'tokyo-kestrel',
         name: 'Outpost Kestrel',
-        lat: 35.6762, lng: 139.6503,      // Tokyo
-        clearance: 4,
-        type: 'outpost',
-        status: 'unknown',
-        notes: 'Signal lost 48 hrs ago. Priority investigate.'
+        lat: 35.6762, lng: 139.6503,
+        clearance: 4, type: 'outpost', status: 'unknown',
+        notes: 'Signal lost 48 hrs ago. Priority investigation requested.'
     },
+    {
+        id: 'seoul-relay',
+        name: 'Seoul Relay',
+        lat: 37.5665, lng: 126.9780,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Peninsula monitoring. Tech sector embedded. Clean comms.'
+    },
+    {
+        id: 'beijing-watch',
+        name: 'Beijing Watch',
+        lat: 39.9042, lng: 116.4074,
+        clearance: 5, type: 'outpost', status: 'compromised',
+        notes: 'CRITICAL: Sources burned. Extract order pending approval.'
+    },
+    {
+        id: 'hongkong-relay',
+        name: 'HK Relay',
+        lat: 22.3193, lng: 114.1694,
+        clearance: 4, type: 'ground', status: 'unknown',
+        notes: 'Cover intact but access degraded. Status review overdue.'
+    },
+    {
+        id: 'singapore-hub',
+        name: 'Singapore Hub',
+        lat: 1.3521, lng: 103.8198,
+        clearance: 3, type: 'outpost', status: 'active',
+        notes: 'SE Asia coordination. Shipping intelligence primary mission.'
+    },
+    {
+        id: 'bangkok-transit',
+        name: 'Bangkok Transit',
+        lat: 13.7563, lng: 100.5018,
+        clearance: 3, type: 'outpost', status: 'active',
+        notes: 'Asset transit point. Grey market monitoring secondary.'
+    },
+    {
+        id: 'mumbai-port',
+        name: 'Mumbai Port Watch',
+        lat: 18.9667, lng: 72.8333,
+        clearance: 3, type: 'naval', status: 'active',
+        notes: 'Indian Ocean access. Contraband interdiction support.'
+    },
+    {
+        id: 'karachi-surv',
+        name: 'Karachi Surveillance',
+        lat: 24.8607, lng: 67.0011,
+        clearance: 4, type: 'ground', status: 'active',
+        notes: 'Difficult environment. Handler: FOXGLOVE. Check-in 12h.'
+    },
+
+    // ── AMERICAS ──────────────────────────────────────────────────
+    {
+        id: 'newyork-office',
+        name: 'New York Office',
+        lat: 40.7128, lng: -74.0060,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'Asset extraction in progress. UN access maintained.'
+    },
+    {
+        id: 'dc-contact',
+        name: 'Washington Contact',
+        lat: 38.9072, lng: -77.0369,
+        clearance: 4, type: 'ground', status: 'active',
+        notes: 'Beltway asset. Highly sensitive. Eyes-only comms only.'
+    },
+    {
+        id: 'mexico-relay',
+        name: 'Mexico City Relay',
+        lat: 19.4326, lng: -99.1332,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Central America corridor. Cartel intel secondary mission.'
+    },
+    {
+        id: 'bogota-stn',
+        name: 'Bogotá Station',
+        lat: 4.7110, lng: -74.0721,
+        clearance: 3, type: 'ground', status: 'active',
+        notes: 'South America hub. Drug trade intel feeds DC directly.'
+    },
+    {
+        id: 'saopaulo-hub',
+        name: 'São Paulo Hub',
+        lat: -23.5505, lng: -46.6333,
+        clearance: 3, type: 'outpost', status: 'active',
+        notes: 'Financial intelligence. Offshore account monitoring active.'
+    },
+    {
+        id: 'buenosaires-cntct',
+        name: 'Buenos Aires Contact',
+        lat: -34.6037, lng: -58.3816,
+        clearance: 2, type: 'ground', status: 'active',
+        notes: 'Southern cone hub. Clean diplomatic channel available.'
+    },
+    {
+        id: 'vancouver-stn',
+        name: 'Vancouver Station',
+        lat: 49.2827, lng: -123.1207,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Pacific Rim liaison. Low-profile. Tech monitoring primary.'
+    },
+
+    // ── NAVAL / MARITIME ──────────────────────────────────────────
     {
         id: 'sigma-naval',
         name: 'Maritime Unit Sigma',
-        lat: 36.8969, lng: 10.1873,       // Tunis
-        clearance: 5,
-        type: 'naval',
-        status: 'active',
-        notes: 'Covert maritime interdiction. Eyes only.'
+        lat: 36.8969, lng: 10.1873,
+        clearance: 5, type: 'naval', status: 'active',
+        notes: 'Covert maritime interdiction. Mediterranean theater. Eyes only.'
     },
     {
-        id: 'delta-standby',
+        id: 'malta-fleet',
+        name: 'Mediterranean Fleet',
+        lat: 35.9375, lng: 14.3754,
+        clearance: 3, type: 'naval', status: 'active',
+        notes: 'Central Med rapid response. 48hr full deployment window.'
+    },
+    {
+        id: 'natl-patrol',
+        name: 'North Atlantic Patrol',
+        lat: 45.0, lng: -35.0,
+        clearance: 4, type: 'naval', status: 'active',
+        notes: 'Deep water surveillance. Submerged assets in vicinity.'
+    },
+    {
+        id: 'scs-watch',
+        name: 'South China Sea Watch',
+        lat: 13.0, lng: 114.0,
+        clearance: 5, type: 'naval', status: 'active',
+        notes: 'Eyes only. Platform identity classified above clearance 5.'
+    },
+
+    // ── OCEANIA ───────────────────────────────────────────────────
+    {
+        id: 'sydney-delta',
         name: 'Team Delta',
-        lat: -33.8688, lng: 151.2093,     // Sydney
-        clearance: 2,
-        type: 'ground',
-        status: 'inactive',
-        notes: 'Standby. Awaiting activation orders.'
-    },
-    {
-        id: 'echo-station',
-        name: 'Echo Station',
-        lat: 55.7558, lng: 37.6173,       // Moscow
-        clearance: 4,
-        type: 'outpost',
-        status: 'compromised',
-        notes: 'COMPROMISED. Do not transmit to this node.'
+        lat: -33.8688, lng: 151.2093,
+        clearance: 2, type: 'ground', status: 'inactive',
+        notes: 'Standby. Awaiting Pacific theater activation orders.'
     }
 ];
 
 // ----------------------------------------------------------------
-//  ROUTES
-//  Add objects here to animate a vehicle between two points.
+//  ROUTES  — animate a vehicle along waypoints
 //
-//  Fields:
-//    id        — unique string
-//    name      — callsign shown on hover (clearance-gated)
-//    type      — 'helicopter' | 'plane'
-//    from      — [lat, lng] departure point
-//    to        — [lat, lng] destination point
-//    clearance — 1-5
-//    speedKmh  — real-world speed (helicopter ~240-300, plane ~800-900)
-//    loop      — true = back-and-forth continuously; false = one-way
-//    showPath  — true = draw animated dashed route line on the map
+//  id           — unique string
+//  name         — callsign shown on hover (clearance-gated)
+//  type         — 'helicopter' | 'plane' | 'ship'
+//  waypoints    — array of { pos:[lat,lng], dwellMinutes:0, label:'NAME' }
+//                 dwellMinutes: real-world minutes to pause at this stop
+//                 (30 world-min = 30*60/TIME_SCALE ≈ 6s on-screen)
+//  clearance    — 1–5
+//  speedKmh     — real-world speed (heli ~240–280, plane ~820–880, ship ~25–35)
+//  loop         — 'pingpong' / true  = bounce back and forth
+//                 'circuit'          = wrap from last stop back to first
+//                 false              = one-way, stops at end
+//  showPath     — draw animated dashed route line
+//
+//  Backward-compatible: you can still use from:[lat,lng] + to:[lat,lng]
+//  instead of waypoints and it will work automatically.
 // ----------------------------------------------------------------
 const ROUTES = [
+
+    // ── EUROPE ────────────────────────────────────────────────────
     {
         id: 'kingfisher-1',
         name: 'KINGFISHER-1',
         type: 'helicopter',
-        from: [48.8566,  2.3522],          // Paris -> London
-        to:   [51.5074, -0.1278],
-        clearance: 2,
-        speedKmh: 60,
-        loop: true,
-        showPath: true
+        waypoints: [
+            { pos: [48.8566,  2.3522], dwellMinutes: 20, label: 'PARIS' },
+            { pos: [51.5074, -0.1278], dwellMinutes: 15, label: 'LONDON' }
+        ],
+        clearance: 2, speedKmh: 240, loop: 'pingpong', showPath: true
     },
+    {
+        id: 'phantom-run',
+        name: 'PHANTOM-RUN',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [51.5074, -0.1278], dwellMinutes: 30, label: 'LONDON' },
+            { pos: [55.6761, 12.5683], dwellMinutes: 20, label: 'COPENHAGEN' },
+            { pos: [59.3293, 18.0686], dwellMinutes: 25, label: 'STOCKHOLM' },
+            { pos: [60.1695, 24.9354], dwellMinutes: 0,  label: 'HELSINKI' }
+        ],
+        clearance: 3, speedKmh: 260, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'serpent-4',
+        name: 'SERPENT-4',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [55.7558, 37.6173], dwellMinutes: 45, label: 'MOSCOW' },
+            { pos: [41.0082, 28.9784], dwellMinutes: 30, label: 'ISTANBUL' },
+            { pos: [37.9838, 23.7275], dwellMinutes: 20, label: 'ATHENS' },
+            { pos: [41.9028, 12.4964], dwellMinutes: 0,  label: 'ROME' }
+        ],
+        clearance: 4, speedKmh: 270, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'north-sea',
+        name: 'NORTHSEA',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [59.9139, 10.7522], dwellMinutes: 15, label: 'OSLO' },
+            { pos: [55.6761, 12.5683], dwellMinutes: 10, label: 'COPENHAGEN' },
+            { pos: [52.3676,  4.9041], dwellMinutes: 20, label: 'AMSTERDAM' },
+            { pos: [51.5074, -0.1278], dwellMinutes: 0,  label: 'LONDON' }
+        ],
+        clearance: 1, speedKmh: 220, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'atlas-run',
+        name: 'ATLAS',
+        type: 'plane',
+        waypoints: [
+            { pos: [36.7372,  3.0869], dwellMinutes: 60, label: 'ALGIERS' },
+            { pos: [41.9028, 12.4964], dwellMinutes: 45, label: 'ROME' },
+            { pos: [48.2082, 16.3738], dwellMinutes: 30, label: 'VIENNA' },
+            { pos: [52.2297, 21.0122], dwellMinutes: 0,  label: 'WARSAW' }
+        ],
+        clearance: 3, speedKmh: 820, loop: 'pingpong', showPath: true
+    },
+
+    // ── TRANSATLANTIC ─────────────────────────────────────────────
     {
         id: 'condor-7',
         name: 'CONDOR-7',
         type: 'plane',
-        from: [48.8566,   2.3522],         // Paris -> New York
-        to:   [40.7128, -74.0060],
-        clearance: 1,
-        speedKmh: 870,
-        loop: true,
-        showPath: true
+        waypoints: [
+            { pos: [48.8566,   2.3522], dwellMinutes: 90, label: 'PARIS' },
+            { pos: [40.7128, -74.0060], dwellMinutes: 90, label: 'NEW YORK' }
+        ],
+        clearance: 1, speedKmh: 870, loop: 'pingpong', showPath: true
     },
     {
-        id: 'osprey-run',
+        id: 'viper-3',
+        name: 'VIPER-3',
+        type: 'plane',
+        waypoints: [
+            { pos: [40.7128,  -74.0060], dwellMinutes: 60, label: 'NEW YORK' },
+            { pos: [19.4326,  -99.1332], dwellMinutes: 45, label: 'MEXICO CITY' },
+            { pos: [4.7110,   -74.0721], dwellMinutes: 30, label: 'BOGOTÁ' },
+            { pos: [-23.5505, -46.6333], dwellMinutes: 0,  label: 'SÃO PAULO' }
+        ],
+        clearance: 2, speedKmh: 850, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'sparrow-west',
+        name: 'SPARROW',
+        type: 'plane',
+        waypoints: [
+            { pos: [49.2827, -123.1207], dwellMinutes: 30, label: 'VANCOUVER' },
+            { pos: [19.4326,  -99.1332], dwellMinutes: 45, label: 'MEXICO CITY' },
+            { pos: [4.7110,   -74.0721], dwellMinutes: 0,  label: 'BOGOTÁ' }
+        ],
+        clearance: 2, speedKmh: 830, loop: 'pingpong', showPath: false
+    },
+    {
+        id: 'chimera-south',
+        name: 'CHIMERA',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [-34.6037, -58.3816], dwellMinutes: 20, label: 'BUENOS AIRES' },
+            { pos: [-23.5505, -46.6333], dwellMinutes: 20, label: 'SÃO PAULO' }
+        ],
+        clearance: 2, speedKmh: 230, loop: 'pingpong', showPath: true
+    },
+
+    // ── MIDDLE EAST / AFRICA ──────────────────────────────────────
+    {
+        id: 'osprey-supply',
         name: 'OSPREY Supply',
         type: 'helicopter',
-        from: [36.8969, 10.1873],          // Tunis -> Paris
-        to:   [48.8566,  2.3522],
-        clearance: 3,
-        speedKmh: 240,
-        loop: true,
-        showPath: false
+        waypoints: [
+            { pos: [36.8969, 10.1873], dwellMinutes: 30, label: 'TUNIS' },
+            { pos: [33.5731, -7.5898], dwellMinutes: 20, label: 'CASABLANCA' },
+            { pos: [40.4168, -3.7038], dwellMinutes: 0,  label: 'MADRID' }
+        ],
+        clearance: 3, speedKmh: 240, loop: 'circuit', showPath: false
+    },
+    {
+        id: 'raven-circuit',
+        name: 'RAVEN',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [40.4168,  -3.7038], dwellMinutes: 20, label: 'MADRID' },
+            { pos: [33.5731,  -7.5898], dwellMinutes: 15, label: 'CASABLANCA' },
+            { pos: [36.7372,   3.0869], dwellMinutes: 25, label: 'ALGIERS' },
+            { pos: [32.8872,  13.1913], dwellMinutes: 0,  label: 'TRIPOLI' }
+        ],
+        clearance: 4, speedKmh: 250, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'eagle-circuit',
+        name: 'EAGLE',
+        type: 'plane',
+        waypoints: [
+            { pos: [46.9481,   7.4474], dwellMinutes: 0,  label: 'BERN' },
+            { pos: [30.0444,  31.2357], dwellMinutes: 60, label: 'CAIRO' },
+            { pos: [-1.2921,  36.8219], dwellMinutes: 45, label: 'NAIROBI' },
+            { pos: [-26.2041, 28.0473], dwellMinutes: 0,  label: 'JOHANNESBURG' }
+        ],
+        clearance: 3, speedKmh: 860, loop: 'pingpong', showPath: true
+    },
+    {
+        id: 'griffin-loop',
+        name: 'GRIFFIN',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [-1.2921,  36.8219], dwellMinutes: 30, label: 'NAIROBI' },
+            { pos: [25.2048,  55.2708], dwellMinutes: 45, label: 'DUBAI' },
+            { pos: [24.7136,  46.6753], dwellMinutes: 20, label: 'RIYADH' },
+            { pos: [30.0444,  31.2357], dwellMinutes: 0,  label: 'CAIRO' }
+        ],
+        clearance: 3, speedKmh: 260, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'silk-road',
+        name: 'SILK ROAD',
+        type: 'plane',
+        waypoints: [
+            { pos: [41.0082, 28.9784], dwellMinutes: 60, label: 'ISTANBUL' },
+            { pos: [35.6892, 51.3890], dwellMinutes: 0,  label: 'TEHRAN' },
+            { pos: [25.2048, 55.2708], dwellMinutes: 45, label: 'DUBAI' },
+            { pos: [18.9667, 72.8333], dwellMinutes: 0,  label: 'MUMBAI' }
+        ],
+        clearance: 5, speedKmh: 880, loop: 'circuit', showPath: false
+    },
+    {
+        id: 'cobra-run',
+        name: 'COBRA',
+        type: 'plane',
+        waypoints: [
+            { pos: [35.6892, 51.3890], dwellMinutes: 0,  label: 'TEHRAN' },
+            { pos: [24.8607, 67.0011], dwellMinutes: 30, label: 'KARACHI' },
+            { pos: [18.9667, 72.8333], dwellMinutes: 0,  label: 'MUMBAI' }
+        ],
+        clearance: 5, speedKmh: 850, loop: 'circuit', showPath: false
+    },
+
+    // ── PACIFIC / ASIA ────────────────────────────────────────────
+    {
+        id: 'typhoon-run',
+        name: 'TYPHOON',
+        type: 'plane',
+        waypoints: [
+            { pos: [25.2048,  55.2708], dwellMinutes: 60, label: 'DUBAI' },
+            { pos: [18.9667,  72.8333], dwellMinutes: 30, label: 'MUMBAI' },
+            { pos: [1.3521,  103.8198], dwellMinutes: 45, label: 'SINGAPORE' },
+            { pos: [22.3193, 114.1694], dwellMinutes: 0,  label: 'HONG KONG' }
+        ],
+        clearance: 3, speedKmh: 860, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'fang-circuit',
+        name: 'FANG',
+        type: 'helicopter',
+        waypoints: [
+            { pos: [35.6762, 139.6503], dwellMinutes: 30, label: 'TOKYO' },
+            { pos: [37.5665, 126.9780], dwellMinutes: 20, label: 'SEOUL' },
+            { pos: [22.3193, 114.1694], dwellMinutes: 25, label: 'HONG KONG' },
+            { pos: [1.3521,  103.8198], dwellMinutes: 0,  label: 'SINGAPORE' }
+        ],
+        clearance: 3, speedKmh: 270, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'nighthawk-pac',
+        name: 'NIGHTHAWK',
+        type: 'plane',
+        waypoints: [
+            { pos: [-33.8688, 151.2093], dwellMinutes: 60, label: 'SYDNEY' },
+            { pos: [1.3521,   103.8198], dwellMinutes: 45, label: 'SINGAPORE' },
+            { pos: [13.7563,  100.5018], dwellMinutes: 0,  label: 'BANGKOK' }
+        ],
+        clearance: 2, speedKmh: 870, loop: 'pingpong', showPath: true
+    },
+
+    // ── NAVAL PATROLS ─────────────────────────────────────────────
+    {
+        id: 'sigma-patrol',
+        name: 'SIGMA PATROL',
+        type: 'ship',
+        waypoints: [
+            { pos: [36.8969, 10.1873], dwellMinutes: 120, label: 'TUNIS' },
+            { pos: [35.9375, 14.3754], dwellMinutes: 60,  label: 'MALTA' },
+            { pos: [37.9838, 23.7275], dwellMinutes: 90,  label: 'ATHENS' }
+        ],
+        clearance: 4, speedKmh: 30, loop: 'circuit', showPath: true
+    },
+    {
+        id: 'atlas-sweep',
+        name: 'ATLAS SWEEP',
+        type: 'ship',
+        waypoints: [
+            { pos: [45.0, -35.0], dwellMinutes: 0,   label: 'NORTH ATLANTIC' },
+            { pos: [50.0, -20.0], dwellMinutes: 120, label: 'MIDPOINT' },
+            { pos: [55.0, -5.0],  dwellMinutes: 0,   label: 'NORTHEAST' }
+        ],
+        clearance: 4, speedKmh: 28, loop: 'pingpong', showPath: false
     }
 ];
 
@@ -147,8 +633,6 @@ const ROUTES = [
 //  IMPLEMENTATION — no editing needed below this line
 // ================================================================
 
-// maxBounds + maxBoundsViscosity stops the map from scrolling into
-// repeated world copies. noWrap on the tile layer prevents ghost tiles.
 const map = L.map('map', {
     center: [30, 10],
     zoom: 3,
@@ -174,9 +658,9 @@ function haversineKm(a, b) {
     const R = 6371;
     const dLat = (b[0] - a[0]) * Math.PI / 180;
     const dLng = (b[1] - a[1]) * Math.PI / 180;
-    const h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    const h = Math.sin(dLat / 2) ** 2 +
         Math.cos(a[0] * Math.PI / 180) * Math.cos(b[0] * Math.PI / 180) *
-        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        Math.sin(dLng / 2) ** 2;
     return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
@@ -193,7 +677,13 @@ function lerp(a, b, t) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 }
 
-// ---- SVG icon HTML ----
+function normalizeLoop(loop) {
+    if (loop === true || loop === 'pingpong') return 'pingpong';
+    if (loop === 'circuit') return 'circuit';
+    return 'once';
+}
+
+// ---- SVG icons ----
 
 function heliSVG() {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -20 28 42" width="28" height="42">
@@ -221,6 +711,17 @@ function planeSVG() {
   </svg>`;
 }
 
+function shipSVG() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-14 -18 28 36" width="28" height="36">
+    <path d="M-7,2 L-5,-5 L5,-5 L7,2 L0,9 Z" fill="#a09d09" stroke="#00ffe7" stroke-width="0.5"/>
+    <rect x="-3.5" y="-11" width="7" height="6" rx="1" fill="#a09d09" stroke="#00ffe7" stroke-width="0.4"/>
+    <line x1="0" y1="-11" x2="0" y2="-17" stroke="#00ffe7" stroke-width="0.9"/>
+    <circle cx="0" cy="-17" r="1.6" fill="#00ffe7" opacity="0.7"/>
+    <path d="M-7,4 Q-11,7 -9,11" stroke="#00ffe7" stroke-width="0.5" fill="none" opacity="0.4"/>
+    <path d="M7,4 Q11,7 9,11" stroke="#00ffe7" stroke-width="0.5" fill="none" opacity="0.4"/>
+  </svg>`;
+}
+
 // ---- Leaflet icon factories ----
 
 function makeDeployIcon(d) {
@@ -238,12 +739,11 @@ function makeDeployIcon(d) {
     });
 }
 
-// bearing is baked into the icon HTML so the correct orientation is
-// shown from frame 1, and survives any Leaflet DOM rebuild (e.g. on
-// direction reversal when setIcon is called).
 function makeVehicleIcon(type, bearing) {
-    const svg  = type === 'helicopter' ? heliSVG() : planeSVG();
-    const size = type === 'helicopter' ? [28, 42] : [34, 34];
+    const svgs  = { helicopter: heliSVG, plane: planeSVG, ship: shipSVG };
+    const sizes = { helicopter: [28, 42], plane: [34, 34], ship: [28, 36] };
+    const svg   = (svgs[type] || planeSVG)();
+    const size  = sizes[type] || [34, 34];
     return L.divIcon({
         html: `<div class="veh-wrap" style="transform:rotate(${bearing}deg)">${svg}</div>`,
         className: '',
@@ -253,7 +753,7 @@ function makeVehicleIcon(type, bearing) {
     });
 }
 
-// ---- Tooltip content builders ----
+// ---- Tooltip builders ----
 
 function deployTT(d) {
     const ok = PLAYER_CLEARANCE >= d.clearance;
@@ -267,24 +767,45 @@ function deployTT(d) {
   </div>`;
 }
 
-function vehicleTT(route, forward) {
-    const ok  = PLAYER_CLEARANCE >= route.clearance;
-    const dir = forward ? '→' : '←';
-    const type = route.type === 'helicopter' ? 'HELICOPTER' : 'AIRCRAFT';
+function vehicleTT(v) {
+    const route = v.route;
+    const ok    = PLAYER_CLEARANCE >= route.clearance;
+    const typeLabel = { helicopter:'HELICOPTER', plane:'AIRCRAFT', ship:'VESSEL' }[route.type] || 'UNKNOWN';
+
+    let statusHtml = '';
+    if (v.dwelling) {
+        const wp = v.wps[v.dwellingAtWpIdx];
+        const label = (wp && wp.label) ? wp.label : 'WAYPOINT';
+        const remMin = Math.max(1, Math.ceil(v.dwellRemaining * TIME_SCALE / 60000));
+        statusHtml = `<div class="tt-row">STATUS: <b style="color:#ff9900">⚓ HOLDING${ok ? ' @ ' + label : ''}</b></div>
+                      ${ok ? `<div class="tt-row">DEPART IN: ~<b>${remMin} min</b></div>` : ''}`;
+    } else {
+        const fromWp = v.wps[v.direction === 1 ? v.segIdx : v.segIdx + 1];
+        const toWp   = v.wps[v.direction === 1 ? v.segIdx + 1 : v.segIdx];
+        if (ok && fromWp && toWp) {
+            const fl = fromWp.label || '?';
+            const tl = toWp.label   || '?';
+            statusHtml = `<div class="tt-row">EN ROUTE: <b>${fl} → ${tl}</b></div>`;
+        }
+    }
+
     return `<div>
-    <div class="${ok ? 'tt-name' : 'tt-redact'}">${dir} ${ok ? route.name : '████ REDACTED'}</div>
-    <div class="tt-row">TYPE: <b>${type}</b></div>
+    <div class="${ok ? 'tt-name' : 'tt-redact'}">${ok ? route.name : '████ REDACTED ████'}</div>
+    <div class="tt-row">TYPE: <b>${typeLabel}</b></div>
+    ${statusHtml}
     <div class="tt-row">SPEED: <b>${ok ? route.speedKmh + ' km/h' : '—'}</b></div>
     <div class="tt-clr">CLR REQUIRED: ${route.clearance}</div>
   </div>`;
 }
 
-// ---- Build deployment markers ----
+// ---- Deployment markers ----
 
 const deployMarkers = {};
 
 function buildDeployments() {
     Object.values(deployMarkers).forEach(m => m.remove());
+    for (const k in deployMarkers) delete deployMarkers[k];
+
     DEPLOYMENTS.forEach(d => {
         const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
             .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
@@ -293,73 +814,124 @@ function buildDeployments() {
     });
 }
 
-// ---- Vehicle animation class ----
+// ---- Vehicle class (multi-waypoint + dwell support) ----
 
 const vehicles = [];
 
 class Vehicle {
     constructor(route) {
-        this.route    = route;
-        this.forward  = true;
-        this.progress = Math.random(); // stagger start positions
-        this.lastTs   = null;
-        this.done     = false;
+        this.route = route;
 
-        const distKm       = haversineKm(route.from, route.to);
-        const realMs       = (distKm / route.speedKmh) * 3600000;
-        this.progressPerMs = TIME_SCALE / realMs;
+        // Normalize old from/to format into waypoints
+        this.wps = route.waypoints
+            ? route.waypoints
+            : [{ pos: route.from, dwellMinutes: 0 }, { pos: route.to, dwellMinutes: 0 }];
+
+        this.numSegs  = this.wps.length - 1;
+        this.loopMode = normalizeLoop(route.loop);
+        this.direction = 1;
+        this.segIdx    = this.numSegs > 1 ? Math.floor(Math.random() * this.numSegs) : 0;
+        this.progress  = Math.random();
+
+        this.dwelling       = false;
+        this.dwellRemaining = 0;
+        this.dwellingAtWpIdx = -1;
+        this.lastTooltipUpdate = 0;
+        this.lastTs  = null;
+        this.done    = false;
+
+        // Precompute progress-per-ms for each segment
+        this.segRates = this.wps.slice(0, -1).map((wp, i) => {
+            const dist = haversineKm(wp.pos, this.wps[i + 1].pos);
+            if (dist < 0.001) return 0.001;
+            return TIME_SCALE / ((dist / route.speedKmh) * 3600000);
+        });
 
         if (route.showPath) {
-            this.pathLine = L.polyline([route.from, route.to], {
-                color: '#00ffe7',
-                weight: 1,
-                opacity: 0.18,
-                className: 'lx-route'
+            this.pathLine = L.polyline(this.wps.map(w => w.pos), {
+                color: '#00ffe7', weight: 1, opacity: 0.18, className: 'lx-route'
             }).addTo(map);
         }
 
-        // Calculate the correct bearing from the start so the icon is
-        // oriented properly on frame 1, before tick() ever runs.
-        const initBearing = bearingDeg(route.from, route.to);
-        const initPos     = lerp(route.from, route.to, this.progress);
+        const fromPos    = this.wps[this.segIdx].pos;
+        const toPos      = this.wps[this.segIdx + 1].pos;
+        const initBrng   = bearingDeg(fromPos, toPos);
+        const initPos    = lerp(fromPos, toPos, this.progress);
 
-        this.marker = L.marker(initPos, { icon: makeVehicleIcon(route.type, initBearing), zIndexOffset: 500 })
-            .bindTooltip(vehicleTT(route, this.forward), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
+        this.marker = L.marker(initPos, { icon: makeVehicleIcon(route.type, initBrng), zIndexOffset: 500 })
+            .bindTooltip(vehicleTT(this), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
             .addTo(map);
     }
 
     tick(ts) {
         if (this.done) return;
         if (this.lastTs === null) { this.lastTs = ts; return; }
-
         const dt = ts - this.lastTs;
         this.lastTs = ts;
 
-        const prevForward = this.forward;
-        this.progress += this.progressPerMs * dt * (this.forward ? 1 : -1);
-
-        if (this.progress >= 1) {
-            if (this.route.loop) { this.forward = false; this.progress = 1; }
-            else { this.progress = 1; this.done = true; }
-        } else if (this.progress <= 0) {
-            this.forward  = true;
-            this.progress = 0;
+        if (this.dwelling) {
+            this.dwellRemaining -= dt;
+            if (this.dwellRemaining <= 0) {
+                this.dwelling = false;
+                this.dwellingAtWpIdx = -1;
+                this.refreshTooltip();
+            } else {
+                // Refresh countdown display ~once per second
+                if (ts - this.lastTooltipUpdate > 1000) {
+                    this.lastTooltipUpdate = ts;
+                    this.refreshTooltip();
+                }
+            }
+            return;
         }
 
-        const from = this.forward ? this.route.from : this.route.to;
-        const to   = this.forward ? this.route.to   : this.route.from;
-        const pos  = lerp(this.route.from, this.route.to, this.progress);
-        const brng = bearingDeg(from, to);
+        this.progress += (this.segRates[this.segIdx] || 0.001) * dt;
 
-        this.marker.setLatLng(pos);
+        if (this.progress >= 1) {
+            this.progress = 0;
 
-        if (this.forward !== prevForward) {
-            // Rebuild the icon with the new bearing baked in so it survives
-            // any future DOM recreation by Leaflet.
-            this.marker.setIcon(makeVehicleIcon(this.route.type, brng));
-            this.marker.setTooltipContent(vehicleTT(this.route, this.forward));
-        } else {
-            // Fast path: poke the DOM directly without a full icon rebuild.
+            // Which waypoint index did we just arrive at?
+            let arrivedIdx = this.direction === 1 ? this.segIdx + 1 : this.segIdx;
+
+            // Advance segment
+            if (this.direction === 1) {
+                this.segIdx++;
+                if (this.segIdx >= this.numSegs) {
+                    if      (this.loopMode === 'pingpong') { this.direction = -1; this.segIdx = this.numSegs - 1; }
+                    else if (this.loopMode === 'circuit')  { this.segIdx = 0; }
+                    else                                   { this.done = true; return; }
+                }
+            } else {
+                this.segIdx--;
+                if (this.segIdx < 0) {
+                    this.direction = 1;
+                    this.segIdx    = 0;
+                    arrivedIdx     = 0;
+                }
+            }
+
+            // Check dwell at arrived waypoint
+            const arrivedWp = this.wps[arrivedIdx];
+            const dwellMin  = arrivedWp ? (arrivedWp.dwellMinutes || 0) : 0;
+            if (dwellMin > 0) {
+                this.dwelling        = true;
+                this.dwellRemaining  = dwellMin * 60000 / TIME_SCALE;
+                this.dwellingAtWpIdx = arrivedIdx;
+                this.marker.setLatLng(arrivedWp.pos);
+                this.refreshTooltip();
+                return;
+            }
+        }
+
+        if (!this.done) {
+            const fromPos = this.direction === 1 ? this.wps[this.segIdx].pos     : this.wps[this.segIdx + 1].pos;
+            const toPos   = this.direction === 1 ? this.wps[this.segIdx + 1].pos : this.wps[this.segIdx].pos;
+            if (!fromPos || !toPos) return;
+
+            const pos  = lerp(fromPos, toPos, this.progress);
+            const brng = bearingDeg(fromPos, toPos);
+
+            this.marker.setLatLng(pos);
             const el = this.marker.getElement();
             if (el) {
                 const wrap = el.querySelector('.veh-wrap');
@@ -369,12 +941,22 @@ class Vehicle {
     }
 
     refreshTooltip() {
-        this.marker.setTooltipContent(vehicleTT(this.route, this.forward));
+        this.marker.setTooltipContent(vehicleTT(this));
+    }
+
+    remove() {
+        this.done = true;
+        this.marker.remove();
+        if (this.pathLine) this.pathLine.remove();
     }
 }
 
 function buildVehicles() {
-    ROUTES.forEach(r => vehicles.push(new Vehicle(r)));
+    ROUTES.forEach(r => {
+        const wps = r.waypoints || [{ pos: r.from }, { pos: r.to }];
+        if (wps.length < 2) return;
+        vehicles.push(new Vehicle(r));
+    });
 }
 
 // ---- Animation loop ----
@@ -414,7 +996,535 @@ function tickClock() {
 setInterval(tickClock, 1000);
 tickClock();
 
-// ---- Boot ----
+// ================================================================
+//  LOCALSTORAGE — custom entry persistence
+// ================================================================
+
+const LS_DEPS = 'luxor_custom_deployments';
+const LS_RTES = 'luxor_custom_routes';
+
+function getStoredDeps() { try { return JSON.parse(localStorage.getItem(LS_DEPS) || '[]'); } catch { return []; } }
+function getStoredRtes() { try { return JSON.parse(localStorage.getItem(LS_RTES) || '[]'); } catch { return []; } }
+
+function persistDep(d)  { const a = getStoredDeps(); a.push(d); localStorage.setItem(LS_DEPS, JSON.stringify(a)); }
+function persistRte(r)  { const a = getStoredRtes(); a.push(r); localStorage.setItem(LS_RTES, JSON.stringify(a)); }
+
+function removeDep(id)  { localStorage.setItem(LS_DEPS, JSON.stringify(getStoredDeps().filter(d => d.id !== id))); }
+function removeRte(id)  { localStorage.setItem(LS_RTES, JSON.stringify(getStoredRtes().filter(r => r.id !== id))); }
+
+function loadCustomFromStorage() {
+    getStoredDeps().forEach(d => DEPLOYMENTS.push(d));
+    getStoredRtes().forEach(r => ROUTES.push(r));
+}
+
+// ================================================================
+//  IN-BROWSER ADD UI
+// ================================================================
+
+// Map-click mode: when active, next map click fills a lat/lng pair
+let _pickTarget = null; // { latEl, lngEl }
+
+map.on('click', e => {
+    if (!_pickTarget) return;
+    _pickTarget.latEl.value = e.latlng.lat.toFixed(5);
+    _pickTarget.lngEl.value = e.latlng.lng.toFixed(5);
+    _pickTarget = null;
+    map.getContainer().style.cursor = '';
+    document.querySelectorAll('.lx-pick').forEach(b => b.classList.remove('picking'));
+});
+
+function activatePick(latEl, lngEl, btn) {
+    _pickTarget = { latEl, lngEl };
+    map.getContainer().style.cursor = 'crosshair';
+    document.querySelectorAll('.lx-pick').forEach(b => b.classList.remove('picking'));
+    btn.classList.add('picking');
+}
+
+// Waypoint rows state for route form
+let _wps = [];
+
+function wpRowHTML(i) {
+    const w = _wps[i];
+    return `<div class="lx-wp-row" id="lx-wp-${i}">
+        <button class="lx-pick lx-pick-wp" data-idx="${i}" title="Click map to fill coords">⊕</button>
+        <input class="lx-wp-lat" data-idx="${i}" type="number" step="any" placeholder="Lat" value="${w.lat}">
+        <input class="lx-wp-lng" data-idx="${i}" type="number" step="any" placeholder="Lng" value="${w.lng}">
+        <input class="lx-wp-dwell" data-idx="${i}" type="number" min="0" step="1" placeholder="Dwell" value="${w.dwell}">
+        <input class="lx-wp-label" data-idx="${i}" type="text" placeholder="Label" value="${w.label}">
+        ${_wps.length > 2 ? `<button class="lx-rm-wp" data-idx="${i}" title="Remove">✕</button>` : '<span></span>'}
+    </div>`;
+}
+
+function renderWpRows() {
+    const c = document.getElementById('lx-wps');
+    if (!c) return;
+    c.innerHTML = _wps.map((_, i) => wpRowHTML(i)).join('');
+    // wire events
+    c.querySelectorAll('.lx-wp-lat').forEach(el => el.addEventListener('input', () => { _wps[+el.dataset.idx].lat = el.value; }));
+    c.querySelectorAll('.lx-wp-lng').forEach(el => el.addEventListener('input', () => { _wps[+el.dataset.idx].lng = el.value; }));
+    c.querySelectorAll('.lx-wp-dwell').forEach(el => el.addEventListener('input', () => { _wps[+el.dataset.idx].dwell = el.value; }));
+    c.querySelectorAll('.lx-wp-label').forEach(el => el.addEventListener('input', () => { _wps[+el.dataset.idx].label = el.value; }));
+    c.querySelectorAll('.lx-pick-wp').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const i   = +btn.dataset.idx;
+            const row = document.getElementById(`lx-wp-${i}`);
+            activatePick(row.querySelector('.lx-wp-lat'), row.querySelector('.lx-wp-lng'), btn);
+        });
+    });
+    c.querySelectorAll('.lx-rm-wp').forEach(btn => {
+        btn.addEventListener('click', () => {
+            _wps.splice(+btn.dataset.idx, 1);
+            renderWpRows();
+        });
+    });
+}
+
+function renderManageTab() {
+    const c = document.getElementById('lx-mgr-list');
+    if (!c) return;
+    const deps = getStoredDeps();
+    const rtes = getStoredRtes();
+
+    if (deps.length === 0 && rtes.length === 0) {
+        c.innerHTML = '<div class="lx-mgr-empty">No custom entries yet.<br>Use DEPLOY or ROUTE tabs to add.</div>';
+        return;
+    }
+
+    let html = '';
+    deps.forEach(d => {
+        html += `<div class="lx-mgr-row">
+            <div><div class="lx-mgr-name">${d.name}</div><div class="lx-mgr-sub">${d.type} · ${d.status} · CLR${d.clearance}</div></div>
+            <button class="lx-mgr-del" data-type="dep" data-id="${d.id}">DELETE</button>
+        </div>`;
+    });
+    rtes.forEach(r => {
+        const stops = (r.waypoints || []).length;
+        html += `<div class="lx-mgr-row">
+            <div><div class="lx-mgr-name">${r.name}</div><div class="lx-mgr-sub">${r.type} · ${stops} stops · CLR${r.clearance}</div></div>
+            <button class="lx-mgr-del" data-type="rte" data-id="${r.id}">DELETE</button>
+        </div>`;
+    });
+    c.innerHTML = html;
+
+    c.querySelectorAll('.lx-mgr-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id   = btn.dataset.id;
+            const type = btn.dataset.type;
+            if (type === 'dep') {
+                removeDep(id);
+                const idx = DEPLOYMENTS.findIndex(d => d.id === id);
+                if (idx !== -1) DEPLOYMENTS.splice(idx, 1);
+                buildDeployments();
+            } else {
+                removeRte(id);
+                const vi = vehicles.findIndex(v => v.route.id === id);
+                if (vi !== -1) { vehicles[vi].remove(); vehicles.splice(vi, 1); }
+                const ri = ROUTES.findIndex(r => r.id === id);
+                if (ri !== -1) ROUTES.splice(ri, 1);
+            }
+            renderManageTab();
+        });
+    });
+}
+
+function showMsg(el, text, ok) {
+    el.textContent = text;
+    el.className   = 'lx-msg ' + (ok ? 'ok' : 'err');
+    setTimeout(() => { el.textContent = ''; el.className = 'lx-msg'; }, 3000);
+}
+
+function injectAddUI() {
+    // ---- CSS ----
+    const style = document.createElement('style');
+    style.textContent = `
+        #lx-add-btn {
+            position:fixed; bottom:5.5em; left:1em; z-index:950;
+            width:42px; height:42px;
+            background:rgba(8,8,18,0.95); border:1px solid #00ffe7;
+            color:#00ffe7; font-size:22px; cursor:pointer;
+            font-family:'Consolas',monospace; border-radius:4px;
+            box-shadow:0 0 12px rgba(0,255,231,0.2);
+            transition:background 0.2s;
+        }
+        #lx-add-btn:hover { background:rgba(0,255,231,0.12); }
+        #lx-add-panel {
+            position:fixed; bottom:9em; left:1em; z-index:950;
+            width:340px; max-height:78vh; display:flex; flex-direction:column;
+            background:rgba(6,8,18,0.98); border:1px solid #00ffe7;
+            font-family:'Consolas','Courier New',monospace; font-size:12px;
+            color:#00ffe7; box-shadow:0 0 30px rgba(0,255,231,0.15);
+        }
+        #lx-add-panel.hidden { display:none; }
+        .lx-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:8px 12px; border-bottom:1px solid #00ffe730;
+            font-size:13px; letter-spacing:2px; font-weight:bold; flex-shrink:0;
+        }
+        .lx-ph-close { background:none; border:none; color:#00ffe7; cursor:pointer; font-size:15px; padding:0; }
+        .lx-tabs { display:flex; border-bottom:1px solid #00ffe730; flex-shrink:0; }
+        .lx-tab {
+            flex:1; padding:7px 4px; background:none; border:none;
+            border-right:1px solid #00ffe730; color:#00ffe750;
+            font-family:'Consolas',monospace; font-size:10px; letter-spacing:1px; cursor:pointer;
+            transition:all 0.15s;
+        }
+        .lx-tab:last-child { border-right:none; }
+        .lx-tab.active { color:#00ffe7; background:rgba(0,255,231,0.07); }
+        .lx-tab-body { overflow-y:auto; flex:1; }
+        .lx-tc { padding:12px; }
+        .lx-tc.hidden { display:none; }
+        .lx-field { margin-bottom:9px; }
+        .lx-field label { display:block; font-size:9px; letter-spacing:1px; opacity:0.6; margin-bottom:3px; }
+        .lx-field input, .lx-field select, .lx-field textarea {
+            width:100%; background:rgba(0,255,231,0.04); border:1px solid #00ffe730;
+            color:#00ffe7; font-family:'Consolas',monospace; font-size:11px; padding:4px 6px;
+            box-sizing:border-box; outline:none;
+        }
+        .lx-field input:focus, .lx-field select:focus { border-color:#00ffe7; }
+        .lx-field select option { background:#050d0d; }
+        .lx-field textarea { height:48px; resize:vertical; }
+        .lx-row2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+        .lx-pick {
+            padding:3px 7px; background:none; border:1px solid #00ffe740;
+            color:#00ffe770; font-family:'Consolas',monospace; font-size:10px;
+            cursor:pointer; white-space:nowrap; transition:all 0.15s;
+        }
+        .lx-pick:hover, .lx-pick.picking { color:#00ffe7; border-color:#00ffe7; background:rgba(0,255,231,0.1); }
+        .lx-pick.picking { animation:lx-blink 0.6s ease-in-out infinite; }
+        @keyframes lx-blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .lx-wps-label {
+            display:grid; grid-template-columns:24px 1fr 1fr 70px 80px 20px;
+            gap:3px; font-size:9px; opacity:0.45; letter-spacing:1px;
+            padding:0 0 4px 0; border-bottom:1px solid #00ffe715; margin-bottom:4px;
+        }
+        .lx-wp-row {
+            display:grid; grid-template-columns:24px 1fr 1fr 70px 80px 20px;
+            gap:3px; margin-bottom:3px; align-items:center;
+        }
+        .lx-wp-row input {
+            background:rgba(0,255,231,0.04); border:1px solid #00ffe720;
+            color:#00ffe7; font-family:'Consolas',monospace; font-size:10px;
+            padding:3px 4px; width:100%; box-sizing:border-box; outline:none;
+        }
+        .lx-wp-row input:focus { border-color:#00ffe760; }
+        .lx-rm-wp {
+            background:none; border:1px solid #ff333340; color:#ff3333;
+            cursor:pointer; font-size:10px; width:20px; height:20px; padding:0;
+            font-family:'Consolas',monospace;
+        }
+        .lx-rm-wp:hover { border-color:#ff3333; }
+        .lx-add-wp-btn {
+            background:none; border:1px solid #00ffe730; color:#00ffe760;
+            cursor:pointer; font-size:10px; padding:4px 10px;
+            font-family:'Consolas',monospace; margin-top:6px; letter-spacing:1px;
+        }
+        .lx-add-wp-btn:hover { color:#00ffe7; border-color:#00ffe7; }
+        .lx-submit {
+            width:100%; background:rgba(0,255,231,0.07); border:1px solid #00ffe7;
+            color:#00ffe7; font-family:'Consolas',monospace; font-size:11px;
+            letter-spacing:2px; padding:8px; cursor:pointer; margin-top:10px;
+            transition:background 0.2s;
+        }
+        .lx-submit:hover { background:rgba(0,255,231,0.18); }
+        .lx-msg { font-size:10px; padding:4px 0; letter-spacing:1px; min-height:18px; }
+        .lx-msg.ok  { color:#00ffe7; }
+        .lx-msg.err { color:#ff3333; }
+        .lx-div { border-top:1px solid #00ffe715; margin:10px 0; }
+        .lx-mgr-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:6px 0; border-bottom:1px solid #00ffe715;
+        }
+        .lx-mgr-name { font-size:11px; letter-spacing:1px; }
+        .lx-mgr-sub  { font-size:9px; opacity:0.45; margin-top:1px; }
+        .lx-mgr-del  {
+            background:none; border:1px solid #ff333360; color:#ff3333;
+            cursor:pointer; font-size:9px; letter-spacing:1px; padding:3px 7px;
+            font-family:'Consolas',monospace; flex-shrink:0;
+        }
+        .lx-mgr-del:hover { border-color:#ff3333; }
+        .lx-mgr-empty { font-size:10px; opacity:0.45; line-height:1.6; padding:6px 0; }
+        .lx-export {
+            width:100%; background:none; border:1px solid #00ffe730; color:#00ffe760;
+            font-family:'Consolas',monospace; font-size:10px; letter-spacing:1px;
+            padding:6px; cursor:pointer; margin-top:12px; transition:all 0.15s;
+        }
+        .lx-export:hover { color:#00ffe7; border-color:#00ffe7; }
+        .lx-note { font-size:9px; opacity:0.4; line-height:1.5; margin-bottom:8px; }
+    `;
+    document.head.appendChild(style);
+
+    // ---- HTML ----
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+    <button id="lx-add-btn" title="Add deployment or route">+</button>
+    <div id="lx-add-panel" class="hidden">
+        <div class="lx-ph">
+            <span>⊕ ADD ASSET DATA</span>
+            <button class="lx-ph-close" id="lx-close">✕</button>
+        </div>
+        <div class="lx-tabs">
+            <button class="lx-tab active" data-tab="dep">DEPLOY</button>
+            <button class="lx-tab"        data-tab="rte">ROUTE</button>
+            <button class="lx-tab"        data-tab="mgr">MANAGE</button>
+        </div>
+        <div class="lx-tab-body">
+
+        <!-- ── DEPLOYMENT TAB ── -->
+        <div class="lx-tc" id="lx-tc-dep">
+            <div class="lx-field">
+                <label>NAME / CALLSIGN</label>
+                <input id="dep-name" type="text" placeholder="Team Alpha">
+            </div>
+            <div class="lx-row2">
+                <div class="lx-field">
+                    <label>LATITUDE</label>
+                    <input id="dep-lat" type="number" step="any" placeholder="48.8566">
+                </div>
+                <div class="lx-field">
+                    <label>LONGITUDE</label>
+                    <input id="dep-lng" type="number" step="any" placeholder="2.3522">
+                </div>
+            </div>
+            <button class="lx-pick" id="dep-pick">⊕ CLICK MAP TO PICK COORDS</button>
+            <div style="height:8px"></div>
+            <div class="lx-row2">
+                <div class="lx-field">
+                    <label>TYPE</label>
+                    <select id="dep-type">
+                        <option value="ground">Ground Unit</option>
+                        <option value="outpost">Outpost</option>
+                        <option value="naval">Naval</option>
+                        <option value="hq">HQ</option>
+                    </select>
+                </div>
+                <div class="lx-field">
+                    <label>STATUS</label>
+                    <select id="dep-status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                        <option value="compromised">Compromised</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </div>
+            </div>
+            <div class="lx-field">
+                <label>CLEARANCE (1–5)</label>
+                <select id="dep-clr">
+                    <option>1</option><option>2</option><option>3</option>
+                    <option>4</option><option>5</option>
+                </select>
+            </div>
+            <div class="lx-field">
+                <label>NOTES (optional)</label>
+                <textarea id="dep-notes" placeholder="Intel summary, handler callsign, etc."></textarea>
+            </div>
+            <div class="lx-msg" id="dep-msg"></div>
+            <button class="lx-submit" id="dep-submit">⊕ ADD DEPLOYMENT</button>
+        </div>
+
+        <!-- ── ROUTE TAB ── -->
+        <div class="lx-tc hidden" id="lx-tc-rte">
+            <div class="lx-field">
+                <label>CALLSIGN</label>
+                <input id="rte-name" type="text" placeholder="CONDOR-7">
+            </div>
+            <div class="lx-row2">
+                <div class="lx-field">
+                    <label>VEHICLE TYPE</label>
+                    <select id="rte-type">
+                        <option value="plane">Plane</option>
+                        <option value="helicopter">Helicopter</option>
+                        <option value="ship">Ship</option>
+                    </select>
+                </div>
+                <div class="lx-field">
+                    <label>SPEED (km/h)</label>
+                    <input id="rte-speed" type="number" min="1" placeholder="860">
+                </div>
+            </div>
+            <div class="lx-row2">
+                <div class="lx-field">
+                    <label>CLEARANCE (1–5)</label>
+                    <select id="rte-clr">
+                        <option>1</option><option>2</option><option>3</option>
+                        <option>4</option><option>5</option>
+                    </select>
+                </div>
+                <div class="lx-field">
+                    <label>LOOP MODE</label>
+                    <select id="rte-loop">
+                        <option value="pingpong">Ping-pong</option>
+                        <option value="circuit">Circuit</option>
+                        <option value="once">One-way</option>
+                    </select>
+                </div>
+            </div>
+            <div class="lx-field" style="display:flex;align-items:center;gap:8px">
+                <input id="rte-path" type="checkbox" checked style="width:auto">
+                <label for="rte-path" style="margin:0;font-size:10px;letter-spacing:1px">SHOW ROUTE PATH LINE</label>
+            </div>
+            <div class="lx-div"></div>
+            <div style="font-size:9px;opacity:0.5;letter-spacing:1px;margin-bottom:6px">WAYPOINTS — add 2 or more</div>
+            <div class="lx-wps-label"><span></span><span>LAT</span><span>LNG</span><span>DWELL min</span><span>LABEL</span><span></span></div>
+            <div id="lx-wps"></div>
+            <button class="lx-add-wp-btn" id="lx-add-wp">+ ADD STOP</button>
+            <div class="lx-note" style="margin-top:8px">DWELL = real-world minutes parked at this stop before departing</div>
+            <div class="lx-msg" id="rte-msg"></div>
+            <button class="lx-submit" id="rte-submit">⊕ ADD ROUTE</button>
+        </div>
+
+        <!-- ── MANAGE TAB ── -->
+        <div class="lx-tc hidden" id="lx-tc-mgr">
+            <div class="lx-note">Custom entries only. Built-in data must be edited in AssetMap.js.</div>
+            <div id="lx-mgr-list"></div>
+            <button class="lx-export" id="lx-export">⬇ EXPORT CUSTOM JSON TO CLIPBOARD</button>
+        </div>
+
+        </div><!-- end tab-body -->
+    </div>`;
+    document.body.appendChild(wrap);
+
+    // ---- Tab switching ----
+    const panel = document.getElementById('lx-add-panel');
+    const tabs  = ['dep','rte','mgr'];
+
+    document.querySelectorAll('.lx-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            document.querySelectorAll('.lx-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            tabs.forEach(t => document.getElementById(`lx-tc-${t}`).classList.toggle('hidden', t !== tab));
+            if (tab === 'mgr') renderManageTab();
+            if (tab === 'rte') renderWpRows();
+        });
+    });
+
+    // ---- Toggle open/close ----
+    document.getElementById('lx-add-btn').addEventListener('click', () => {
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+            // Init default waypoints on first open
+            if (_wps.length === 0) {
+                _wps = [
+                    { lat:'', lng:'', dwell:'0', label:'' },
+                    { lat:'', lng:'', dwell:'0', label:'' }
+                ];
+            }
+            renderWpRows();
+        }
+    });
+    document.getElementById('lx-close').addEventListener('click', () => panel.classList.add('hidden'));
+
+    // ---- Deployment: pick from map ----
+    document.getElementById('dep-pick').addEventListener('click', function() {
+        activatePick(document.getElementById('dep-lat'), document.getElementById('dep-lng'), this);
+    });
+
+    // ---- Add waypoint ----
+    document.getElementById('lx-add-wp').addEventListener('click', () => {
+        _wps.push({ lat:'', lng:'', dwell:'0', label:'' });
+        renderWpRows();
+    });
+
+    // ---- Submit deployment ----
+    document.getElementById('dep-submit').addEventListener('click', () => {
+        const msg   = document.getElementById('dep-msg');
+        const name  = document.getElementById('dep-name').value.trim();
+        const lat   = parseFloat(document.getElementById('dep-lat').value);
+        const lng   = parseFloat(document.getElementById('dep-lng').value);
+        const type  = document.getElementById('dep-type').value;
+        const status= document.getElementById('dep-status').value;
+        const clr   = +document.getElementById('dep-clr').value;
+        const notes = document.getElementById('dep-notes').value.trim();
+
+        if (!name)              return showMsg(msg, 'NAME is required.', false);
+        if (isNaN(lat) || isNaN(lng)) return showMsg(msg, 'Valid LAT and LNG are required.', false);
+
+        const d = {
+            id: 'custom-dep-' + Date.now(),
+            name, lat, lng, type, status,
+            clearance: clr,
+            notes: notes || undefined,
+            _custom: true
+        };
+
+        DEPLOYMENTS.push(d);
+        persistDep(d);
+        buildDeployments();
+        showMsg(msg, `✓ ${name} added to map.`, true);
+
+        // Reset form
+        ['dep-name','dep-lat','dep-lng','dep-notes'].forEach(id => document.getElementById(id).value = '');
+    });
+
+    // ---- Submit route ----
+    document.getElementById('rte-submit').addEventListener('click', () => {
+        const msg  = document.getElementById('rte-msg');
+        const name = document.getElementById('rte-name').value.trim();
+        const type = document.getElementById('rte-type').value;
+        const speed= parseFloat(document.getElementById('rte-speed').value);
+        const clr  = +document.getElementById('rte-clr').value;
+        const loop = document.getElementById('rte-loop').value;
+        const showPath = document.getElementById('rte-path').checked;
+
+        if (!name)     return showMsg(msg, 'CALLSIGN is required.', false);
+        if (isNaN(speed) || speed <= 0) return showMsg(msg, 'Valid SPEED is required.', false);
+
+        // Collect waypoints from current state
+        const waypoints = _wps
+            .map(w => ({
+                pos: [parseFloat(w.lat), parseFloat(w.lng)],
+                dwellMinutes: parseFloat(w.dwell) || 0,
+                label: w.label.trim() || undefined
+            }))
+            .filter(w => !isNaN(w.pos[0]) && !isNaN(w.pos[1]));
+
+        if (waypoints.length < 2) return showMsg(msg, 'Need at least 2 valid waypoints.', false);
+
+        const r = {
+            id: 'custom-rte-' + Date.now(),
+            name, type, waypoints,
+            clearance: clr,
+            speedKmh: speed,
+            loop,
+            showPath,
+            _custom: true
+        };
+
+        ROUTES.push(r);
+        persistRte(r);
+        vehicles.push(new Vehicle(r));
+        showMsg(msg, `✓ ${name} now active on map.`, true);
+
+        // Reset form
+        document.getElementById('rte-name').value = '';
+        document.getElementById('rte-speed').value = '';
+        _wps = [
+            { lat:'', lng:'', dwell:'0', label:'' },
+            { lat:'', lng:'', dwell:'0', label:'' }
+        ];
+        renderWpRows();
+    });
+
+    // ---- Export ----
+    document.getElementById('lx-export').addEventListener('click', () => {
+        const data = {
+            DEPLOYMENTS: getStoredDeps(),
+            ROUTES: getStoredRtes()
+        };
+        const text = JSON.stringify(data, null, 2);
+        navigator.clipboard.writeText(text).then(() => {
+            document.getElementById('lx-export').textContent = '✓ COPIED TO CLIPBOARD';
+            setTimeout(() => { document.getElementById('lx-export').textContent = '⬇ EXPORT CUSTOM JSON TO CLIPBOARD'; }, 2500);
+        });
+    });
+}
+
+// ================================================================
+//  BOOT
+// ================================================================
+
+loadCustomFromStorage();
 buildDeployments();
 buildVehicles();
 requestAnimationFrame(animLoop);
+injectAddUI();
