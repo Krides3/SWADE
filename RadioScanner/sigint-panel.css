@@ -666,6 +666,10 @@
     margin-top: 0.1em;
 }
 
+/* ── Utility ────────────────────────────────────────────────── */
+/* .hidden used on lock badge and any initially-invisible elements */
+#sigint-panel .hidden { display: none !important; }
+
 /* ── Scrollbar global (thin, matches design system) ─────────── */
 #sigint-panel ::-webkit-scrollbar { width: 3px; }
 #sigint-panel ::-webkit-scrollbar-track { background: transparent; }

@@ -288,10 +288,7 @@
 
     function activateIntercept() {
         if (state.mode === 'INTERCEPT') return;
-        if (state.mode === 'EMCON') {
-            el.emconBanner.classList.remove('active');
-            if (state.mode !== 'EMCON') return;
-        }
+        el.emconBanner.classList.remove('active');
         state.mode = 'INTERCEPT';
         clearCmActive();
         el.cmIntercept.classList.add('active');
@@ -459,6 +456,8 @@
     }
 
     function executeHop(sig) {
+        // Cancel any pending hop timeout so external calls don't create duplicates
+        if (sig.hopTimeout) { clearTimeout(sig.hopTimeout); sig.hopTimeout = null; }
         const oldFreq = sig.freq;
 
         if (sig.nextHopFreq !== null) {
@@ -570,14 +569,13 @@
             el.decryptBar.style.width = '0%';
             state.waveNoise = 2200;
 
-            // Shake all unselected blocks
-            el.cipherBlocks.querySelectorAll('.sp-cipher-block:not(.correct)').forEach(b => {
+            // Re-render first so we shake the live DOM nodes
+            renderCipherBlocks();
+            el.cipherBlocks.querySelectorAll('.sp-cipher-block').forEach(b => {
                 b.classList.add('error');
-                setTimeout(() => b.classList.remove('error'), 400);
+                setTimeout(() => b.classList.remove('error'), 420);
             });
 
-            // Re-render to un-mark any partials
-            renderCipherBlocks();
             addLog('DECRYPT ERROR — Wrong sequence. Static injected into waveform.', 'hostile');
         }
     }

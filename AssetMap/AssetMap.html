@@ -6,6 +6,7 @@
     <title>LUXOR — Asset Deployment Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
     <link rel="stylesheet" href="./AssetMap.css">
+    <link rel="stylesheet" href="../RadioScanner/sigint-panel.css">
 </head>
 <body>
 
@@ -67,5 +68,94 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="./AssetMap.js"></script>
+
+<!-- ── SIGINT Radio Scrambler Panel ───────────────────── -->
+<div id="sigint-panel" class="map-panel">
+    <div id="sigint-header">
+        <span class="sp-hdr-icon">◈</span>
+        <span class="sp-hdr-title">SIGINT &middot; Radio Scrambler</span>
+        <span class="sp-hdr-ver">v2.1</span>
+        <span id="sp-status-badge">ONLINE</span>
+        <button class="sp-min-btn" id="sp-min-btn" title="Minimize / Restore">—</button>
+    </div>
+    <div id="sp-body">
+        <div id="sp-emcon-banner">&#9724; EMCON ACTIVE — ALL EMISSIONS SUPPRESSED</div>
+        <div class="sp-layout">
+            <div class="sp-main">
+                <div class="sp-section">
+                    <div class="sp-sec-label">Spectrum Waterfall — 400–500 MHz</div>
+                    <div class="sp-wf-wrap">
+                        <canvas id="sp-waterfall"  width="375" height="110"></canvas>
+                        <canvas id="sp-wf-overlay" width="375" height="110"></canvas>
+                        <div class="sp-freq-axis">
+                            <span>400</span><span>420</span><span>440</span>
+                            <span>460</span><span>480</span><span>500</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sp-section">
+                    <div class="sp-sec-label">Frequency Tuner</div>
+                    <div class="sp-tuner-row">
+                        <span id="sp-freq-readout">449.0</span>
+                        <span class="sp-freq-mhz">MHz</span>
+                        <span id="sp-lock-badge" class="hidden">&#9670; LOCKED</span>
+                    </div>
+                    <input type="range" id="sp-freq-slider" class="sp-freq-slider"
+                           min="400" max="500" step="0.1" value="449">
+                    <canvas id="sp-waveform" width="375" height="52"></canvas>
+                </div>
+                <div id="sp-decrypt-section" class="sp-section">
+                    <div class="sp-sec-label">
+                        AES Fragment Decrypt
+                        <span id="sp-decrypt-timer">0:45</span>
+                    </div>
+                    <div class="sp-decrypt-target">Target signal: <span id="sp-decrypt-callsign">—</span></div>
+                    <div id="sp-cipher-blocks" class="sp-cipher-blocks"></div>
+                    <div class="sp-decrypt-prog-label">Decrypt Progress</div>
+                    <div class="sp-decrypt-progress-track">
+                        <div id="sp-decrypt-bar"></div>
+                    </div>
+                    <div id="sp-decoded-msg"></div>
+                </div>
+                <div class="sp-section">
+                    <div class="sp-sec-label">Countermeasures</div>
+                    <div class="sp-cm-grid">
+                        <button id="cm-intercept" class="sp-cm-btn active" data-mode="INTERCEPT">
+                            <span class="cm-icon">&#9678;</span>
+                            <span class="cm-name">Intercept</span>
+                            <span class="cm-sub">Passive</span>
+                        </button>
+                        <button id="cm-jam" class="sp-cm-btn" data-mode="JAM">
+                            <span class="cm-icon">&#9889;</span>
+                            <span class="cm-name">Burst Jam</span>
+                            <span class="cm-cd-text" id="cm-jam-cd"></span>
+                            <div class="cm-cd-bar" id="cm-jam-bar"></div>
+                        </button>
+                        <button id="cm-spoof" class="sp-cm-btn" data-mode="SPOOF">
+                            <span class="cm-icon">&#8651;</span>
+                            <span class="cm-name">Spoof Sig</span>
+                            <span class="cm-cd-text" id="cm-spoof-cd"></span>
+                            <div class="cm-cd-bar" id="cm-spoof-bar"></div>
+                        </button>
+                        <button id="cm-emcon" class="sp-cm-btn" data-mode="EMCON">
+                            <span class="cm-icon">&#9210;</span>
+                            <span class="cm-name">EMCON</span>
+                            <span class="cm-sub">Silent</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="sp-section">
+                    <div class="sp-sec-label">Comms Log</div>
+                    <div id="sp-comms-log" class="sp-comms-log"></div>
+                </div>
+            </div>
+            <div class="sp-sidebar">
+                <div class="sp-sec-label">Signals</div>
+                <div id="sp-signal-list" class="sp-signal-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../RadioScanner/sigint-panel.js"></script>
 </body>
 </html>
