@@ -1,7 +1,7 @@
 /* ================================================================
    SIGINT Radio Scrambler Panel — sigint-panel.css
-   Requires: AssetMap.css (provides @font-face CyberFont, .map-panel)
-   z-index: 550  (below scanlines at 700, above map at 1)
+   Requires: radioScanner.css (provides CyberFont, body reset, .map-panel)
+   z-index: 550  (below scanlines at 700, above background at 0)
    ================================================================ */
 
 /* ── Keyframes ──────────────────────────────────────────────── */
@@ -39,7 +39,7 @@
 /* ── Panel Base ─────────────────────────────────────────────── */
 #sigint-panel {
     position: fixed;
-    left: 14px;
+    left: calc(50% - 271px);  /* centred on standalone page; draggable to anywhere */
     top: 56px;
     width: 542px;
     z-index: 550;

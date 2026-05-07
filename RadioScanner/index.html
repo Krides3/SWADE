@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR — SIGINT Radio Scrambler</title>
+    <link rel="stylesheet" href="./radioScanner.css">
+    <link rel="stylesheet" href="./sigint-panel.css">
+</head>
+<body>
+
+<!-- ── Topbar ─────────────────────────────────────────────── -->
+<div id="sr-topbar">
+    <span class="sr-bar-title">LUXOR</span>
+    <span class="sr-bar-sub">SIGINT Radio Scrambler</span>
+    <span class="sr-bar-sep"></span>
+    <span class="sr-bar-status">SCANNING</span>
+    <a class="sr-nav-back" href="../index.html">&#x2190; Terminal</a>
+</div>
+
+<!-- ── Scanlines & scan beam ──────────────────────────────── -->
+<div id="sr-scanlines"></div>
+<div id="sr-scan-beam"></div>
+
+<!-- ── Corner decorations ─────────────────────────────────── -->
+<div class="sr-corner tl">
+    <svg width="60" height="60" viewBox="0 0 60 60">
+        <polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/>
+    </svg>
+</div>
+<div class="sr-corner br">
+    <svg width="60" height="60" viewBox="0 0 60 60">
+        <polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/>
+    </svg>
+</div>
+
+<!-- ── SIGINT Panel ────────────────────────────────────────── -->
+<div id="sigint-panel" class="map-panel">
+
+    <!-- Header (drag handle) -->
+    <div id="sigint-header">
+        <span class="sp-hdr-icon">&#9672;</span>
+        <span class="sp-hdr-title">SIGINT &middot; Radio Scrambler</span>
+        <span class="sp-hdr-ver">v2.1</span>
+        <span id="sp-status-badge">ONLINE</span>
+        <button class="sp-min-btn" id="sp-min-btn" title="Minimize / Restore">&mdash;</button>
+    </div>
+
+    <!-- Collapsible body -->
+    <div id="sp-body">
+
+        <!-- EMCON active banner -->
+        <div id="sp-emcon-banner">&#9724; EMCON ACTIVE &mdash; ALL EMISSIONS SUPPRESSED</div>
+
+        <div class="sp-layout">
+
+            <!-- ════ LEFT: MAIN COLUMN ════ -->
+            <div class="sp-main">
+
+                <!-- 1. Spectrum Waterfall -->
+                <div class="sp-section">
+                    <div class="sp-sec-label">Spectrum Waterfall &mdash; 400&ndash;500 MHz</div>
+                    <div class="sp-wf-wrap">
+                        <canvas id="sp-waterfall"  width="375" height="110"></canvas>
+                        <canvas id="sp-wf-overlay" width="375" height="110"></canvas>
+                        <div class="sp-freq-axis">
+                            <span>400</span>
+                            <span>420</span>
+                            <span>440</span>
+                            <span>460</span>
+                            <span>480</span>
+                            <span>500</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Frequency Tuner -->
+                <div class="sp-section">
+                    <div class="sp-sec-label">Frequency Tuner</div>
+                    <div class="sp-tuner-row">
+                        <span id="sp-freq-readout">449.0</span>
+                        <span class="sp-freq-mhz">MHz</span>
+                        <span id="sp-lock-badge" class="hidden">&#9670; LOCKED</span>
+                    </div>
+                    <input type="range" id="sp-freq-slider" class="sp-freq-slider"
+                           min="400" max="500" step="0.1" value="449">
+                    <canvas id="sp-waveform" width="375" height="52"></canvas>
+                </div>
+
+                <!-- 3. Decryption Minigame -->
+                <div id="sp-decrypt-section" class="sp-section">
+                    <div class="sp-sec-label">
+                        AES Fragment Decrypt
+                        <span id="sp-decrypt-timer">0:45</span>
+                    </div>
+                    <div class="sp-decrypt-target">
+                        Target signal: <span id="sp-decrypt-callsign">&mdash;</span>
+                    </div>
+                    <div id="sp-cipher-blocks" class="sp-cipher-blocks"></div>
+                    <div class="sp-decrypt-prog-label">Decrypt Progress</div>
+                    <div class="sp-decrypt-progress-track">
+                        <div id="sp-decrypt-bar"></div>
+                    </div>
+                    <div id="sp-decoded-msg"></div>
+                </div>
+
+                <!-- 4. Countermeasures -->
+                <div class="sp-section">
+                    <div class="sp-sec-label">Countermeasures</div>
+                    <div class="sp-cm-grid">
+
+                        <button id="cm-intercept" class="sp-cm-btn active" data-mode="INTERCEPT">
+                            <span class="cm-icon">&#9678;</span>
+                            <span class="cm-name">Intercept</span>
+                            <span class="cm-sub">Passive</span>
+                        </button>
+
+                        <button id="cm-jam" class="sp-cm-btn" data-mode="JAM">
+                            <span class="cm-icon">&#9889;</span>
+                            <span class="cm-name">Burst Jam</span>
+                            <span class="cm-cd-text" id="cm-jam-cd"></span>
+                            <div class="cm-cd-bar" id="cm-jam-bar"></div>
+                        </button>
+
+                        <button id="cm-spoof" class="sp-cm-btn" data-mode="SPOOF">
+                            <span class="cm-icon">&#8651;</span>
+                            <span class="cm-name">Spoof Sig</span>
+                            <span class="cm-cd-text" id="cm-spoof-cd"></span>
+                            <div class="cm-cd-bar" id="cm-spoof-bar"></div>
+                        </button>
+
+                        <button id="cm-emcon" class="sp-cm-btn" data-mode="EMCON">
+                            <span class="cm-icon">&#9210;</span>
+                            <span class="cm-name">EMCON</span>
+                            <span class="cm-sub">Silent</span>
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- 5. Comms Log -->
+                <div class="sp-section">
+                    <div class="sp-sec-label">Comms Log</div>
+                    <div id="sp-comms-log" class="sp-comms-log"></div>
+                </div>
+
+            </div><!-- /.sp-main -->
+
+            <!-- ════ RIGHT: SIGNAL LIST ════ -->
+            <div class="sp-sidebar">
+                <div class="sp-sec-label">Signals</div>
+                <div id="sp-signal-list" class="sp-signal-list"></div>
+            </div>
+
+        </div><!-- /.sp-layout -->
+    </div><!-- /#sp-body -->
+
+</div><!-- /#sigint-panel -->
+
+<script src="./sigint-panel.js"></script>
+</body>
+</html>

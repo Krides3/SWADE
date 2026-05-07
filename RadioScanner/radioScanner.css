@@ -1,0 +1,186 @@
+/* ================================================================
+   SIGINT Radio Scrambler — radioScanner.css
+   Standalone page styles: body, topbar, background, scanlines.
+   Self-contained — no dependency on AssetMap.css or style.css.
+   ================================================================ */
+
+@font-face {
+    font-family: 'CyberFont';
+    src: url('../assets/fonts/Sddystopiandemo-GO7xa.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* ── Reset ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { cursor: pointer; font-family: inherit; }
+input  { font-family: inherit; }
+
+/* ── Base ───────────────────────────────────────────────────── */
+html, body {
+    height: 100%;
+    background: #0a0a14;
+    font-family: 'CyberFont', 'Consolas', 'Courier New', monospace;
+    overflow: hidden;
+    color: #eee;
+}
+
+/* ── Background grid ────────────────────────────────────────── */
+/* Subtle frequency-band grid — horizontal lines suggest spectrum tiers */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            transparent 0px, transparent 49px,
+            rgba(122, 5, 158, 0.055) 49px, rgba(122, 5, 158, 0.055) 50px
+        ),
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px, transparent 119px,
+            rgba(122, 5, 158, 0.03) 119px, rgba(122, 5, 158, 0.03) 120px
+        );
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ── Scanlines ──────────────────────────────────────────────── */
+/* Fine CRT-style scanlines, matching AssetMap aesthetic */
+#sr-scanlines {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 700;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent 0px,
+        transparent 3px,
+        rgba(0, 255, 231, 0.013) 3px,
+        rgba(0, 255, 231, 0.013) 4px
+    );
+}
+
+/* Moving scan beam */
+@keyframes sr-scan-beam {
+    0%   { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+}
+#sr-scan-beam {
+    position: fixed;
+    left: 0; right: 0;
+    height: 180px;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 229, 200, 0.010) 50%,
+        transparent 100%
+    );
+    animation: sr-scan-beam 10s linear infinite;
+    pointer-events: none;
+    z-index: 701;
+}
+
+/* ── Topbar ─────────────────────────────────────────────────── */
+@keyframes sr-blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+
+#sr-topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 46px;
+    background: rgba(8, 8, 18, 0.98);
+    border-bottom: 1px solid #7a059e;
+    display: flex;
+    align-items: center;
+    padding: 0 1.4em;
+    gap: 0.8em;
+    z-index: 1000;
+    box-shadow: 0 2px 24px rgba(122, 5, 158, 0.3);
+}
+
+.sr-bar-title {
+    font-size: 1.2em;
+    background: linear-gradient(90deg, #eee 30%, #a09d09);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+    letter-spacing: 0.18em;
+}
+
+.sr-bar-sub {
+    font-size: 0.66em;
+    color: #7a059e;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+}
+
+.sr-bar-sep { flex: 1; }
+
+.sr-bar-status {
+    font-size: 0.68em;
+    letter-spacing: 0.15em;
+    color: #00ffe7;
+    text-shadow: 0 0 8px #00ffe7;
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+.sr-bar-status::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #00ffe7;
+    box-shadow: 0 0 6px #00ffe7;
+    animation: sr-blink 2s ease-in-out infinite;
+}
+
+.sr-nav-back {
+    color: #a09d09;
+    text-decoration: none;
+    font-size: 0.78em;
+    letter-spacing: 0.12em;
+    padding: 0.3em 0.9em;
+    border: 1px solid #7a059e55;
+    border-radius: 4px;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.sr-nav-back:hover {
+    border-color: #a09d09;
+    color: #eee;
+    background: rgba(160, 157, 9, 0.1);
+}
+
+/* ── .map-panel base ────────────────────────────────────────── */
+/* Defined here so sigint-panel.css needs no external dependency */
+.map-panel {
+    position: fixed;
+    background: rgba(8, 8, 18, 0.92);
+    border: 1px solid #7a059e44;
+    border-radius: 6px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 0 20px rgba(122, 5, 158, 0.15);
+    z-index: 500;
+}
+
+/* ── Corner decorations ─────────────────────────────────────── */
+.sr-corner {
+    position: fixed;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.09;
+}
+.sr-corner.tl { top: 0; left: 0; }
+.sr-corner.br { bottom: 0; right: 0; }
+
+/* ── Scrollbar ──────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2f45; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3d0050; }
