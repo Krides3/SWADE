@@ -17,7 +17,10 @@
     const SPOOF_COOLDOWN  = 50;    // seconds before spoof is ready again
     const MAX_LOG_ENTRIES = 45;
 
-    const DECODED_MESSAGES = [
+    // ── Persistent GM config ──────────────────────────────────
+    const RADIO_STORE = 'luxorRadioConfig';
+
+    const DEFAULT_MESSAGES = [
         'STRIKE PKG ALPHA CONFIRMED — GRID 447-229 — T-MINUS 18MIN',
         'UNIT KILO MOVING TO SECTOR 7 — HOLD POSITION ECHO',
         'AIR SUPPORT DENIED — RETREAT TO RALLY PT DELTA — CODE BLACK',
@@ -34,15 +37,35 @@
         'AA3F','F0C9','1E7D','8B24','C6A0','39FE','70D1','5C88',
     ];
 
-    // ── Signal definitions ────────────────────────────────────
-    // hopMin/hopMax in seconds; friendly signals never hop
-    const signals = [
-        { id:'s1', callsign:'ECHO-7',  freq:449.2, type:'hostile',  enc:'AES-256',   hopMin:20, hopMax:40, hopTimeout:null, nextHopFreq:null },
-        { id:'s2', callsign:'KILO-9',  freq:462.8, type:'hostile',  enc:'AES-256',   hopMin:22, hopMax:38, hopTimeout:null, nextHopFreq:null },
-        { id:'s3', callsign:'DELTA-3', freq:478.1, type:'hostile',  enc:'SCRAMBLED', hopMin:18, hopMax:35, hopTimeout:null, nextHopFreq:null },
-        { id:'s4', callsign:'ALPHA-1', freq:431.5, type:'friendly', enc:'CLEAR',     hopMin:0,  hopMax:0,  hopTimeout:null, nextHopFreq:null },
-        { id:'s5', callsign:'BRAVO-4', freq:417.3, type:'friendly', enc:'CLEAR',     hopMin:0,  hopMax:0,  hopTimeout:null, nextHopFreq:null },
+    // ── Signal definitions (loaded from GM config, else defaults) ─
+    const DEFAULT_SIGNALS = [
+        { id:'s1', callsign:'ECHO-7',  freq:449.2, type:'hostile',  enc:'AES-256',   hopMin:20, hopMax:40 },
+        { id:'s2', callsign:'KILO-9',  freq:462.8, type:'hostile',  enc:'AES-256',   hopMin:22, hopMax:38 },
+        { id:'s3', callsign:'DELTA-3', freq:478.1, type:'hostile',  enc:'SCRAMBLED', hopMin:18, hopMax:35 },
+        { id:'s4', callsign:'ALPHA-1', freq:431.5, type:'friendly', enc:'CLEAR',     hopMin:0,  hopMax:0  },
+        { id:'s5', callsign:'BRAVO-4', freq:417.3, type:'friendly', enc:'CLEAR',     hopMin:0,  hopMax:0  },
     ];
+
+    function loadRadioConfig() {
+        try { return JSON.parse(localStorage.getItem(RADIO_STORE) || 'null'); }
+        catch (e) { return null; }
+    }
+
+    function saveRadioConfig() {
+        localStorage.setItem(RADIO_STORE, JSON.stringify({
+            signals: signals.map(s => ({
+                id: s.id, callsign: s.callsign, freq: s.freq,
+                type: s.type, enc: s.enc, hopMin: s.hopMin, hopMax: s.hopMax
+            })),
+            decodedMessages: DECODED_MESSAGES
+        }));
+    }
+
+    const _savedConfig = loadRadioConfig();
+    let signals = (_savedConfig ? _savedConfig.signals : DEFAULT_SIGNALS).map(s => ({
+        ...s, hopTimeout: null, nextHopFreq: null
+    }));
+    let DECODED_MESSAGES = _savedConfig ? [..._savedConfig.decodedMessages] : [...DEFAULT_MESSAGES];
 
     // ── Mutable state ─────────────────────────────────────────
     const state = {
@@ -137,9 +160,13 @@
 
         // Boot log
         addLog('SIGINT SYSTEM ONLINE — SCANNING 400–500 MHz', 'sys');
-        setTimeout(() => addLog('HOSTILE SIGNALS DETECTED: ECHO-7 · KILO-9 · DELTA-3', 'hostile'), 700);
-        setTimeout(() => addLog('FRIENDLY NET NOMINAL: ALPHA-1 · BRAVO-4', 'friendly'), 1400);
+        const _hostile  = signals.filter(s => s.type === 'hostile').map(s => s.callsign).join(' · ');
+        const _friendly = signals.filter(s => s.type === 'friendly').map(s => s.callsign).join(' · ');
+        if (_hostile)  setTimeout(() => addLog('HOSTILE SIGNALS DETECTED: ' + _hostile,  'hostile'),  700);
+        if (_friendly) setTimeout(() => addLog('FRIENDLY NET NOMINAL: ' + _friendly, 'friendly'), 1400);
         setTimeout(() => addLog('USE TUNER TO LOCK — CLICK SIGNALS TO AUTO-TUNE', 'dim'), 2100);
+
+        if (window.LuxorAuth && LuxorAuth.isAdmin()) injectGMPanel();
 
         rafId = requestAnimationFrame(animLoop);
     }
@@ -934,6 +961,349 @@
             x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         ctx.stroke();
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // OVERLORD GM CONFIG PANEL
+    // ══════════════════════════════════════════════════════════
+    function injectGMPanel() {
+        const style = document.createElement('style');
+        style.textContent = `
+            #gm-toggle {
+                position:fixed; bottom:14px; right:14px; z-index:1100;
+                background:rgba(6,8,18,0.95); border:1px solid #b8a800;
+                color:#b8a800; font-family:'Consolas',monospace; font-size:11px;
+                letter-spacing:2px; padding:7px 14px; cursor:pointer;
+                transition:background 0.2s; box-shadow:0 0 12px rgba(184,168,0,0.15);
+            }
+            #gm-toggle:hover { background:rgba(184,168,0,0.1); }
+            #gm-panel {
+                position:fixed; top:60px; right:14px; z-index:1090;
+                width:370px; max-height:82vh; display:flex; flex-direction:column;
+                background:rgba(6,8,18,0.98); border:1px solid #b8a800;
+                font-family:'Consolas','Courier New',monospace; font-size:12px;
+                color:#b8a800; box-shadow:0 0 30px rgba(184,168,0,0.15);
+            }
+            #gm-panel.hidden { display:none; }
+            #gm-hdr {
+                display:flex; justify-content:space-between; align-items:center;
+                padding:9px 12px; border-bottom:1px solid #b8a80040;
+                font-size:11px; letter-spacing:2px; font-weight:bold;
+                flex-shrink:0; cursor:move; user-select:none;
+            }
+            #gm-close-btn {
+                background:none; border:none; color:#b8a800; cursor:pointer;
+                font-size:14px; padding:0;
+            }
+            .gm-tabs {
+                display:flex; border-bottom:1px solid #b8a80040; flex-shrink:0;
+            }
+            .gm-tab {
+                flex:1; padding:7px 4px; background:none; border:none;
+                border-right:1px solid #b8a80040; color:#b8a80060;
+                font-family:'Consolas',monospace; font-size:10px; letter-spacing:1px;
+                cursor:pointer; transition:all 0.15s;
+            }
+            .gm-tab:last-child { border-right:none; }
+            .gm-tab.active { color:#b8a800; background:rgba(184,168,0,0.07); }
+            .gm-body { overflow-y:auto; flex:1; }
+            .gm-tc { padding:12px; }
+            .gm-tc.hidden { display:none; }
+            .gm-section-label {
+                font-size:9px; letter-spacing:1.5px; color:#b8a80070;
+                margin-bottom:8px; text-transform:uppercase;
+            }
+            .gm-sig-hdr, .gm-sig-row {
+                display:grid;
+                grid-template-columns:72px 50px 60px 60px 60px 22px;
+                gap:4px; align-items:center;
+            }
+            .gm-sig-hdr {
+                font-size:9px; opacity:0.45; letter-spacing:1px;
+                padding:0 0 4px; border-bottom:1px solid #b8a80020; margin-bottom:4px;
+            }
+            .gm-sig-row {
+                padding:4px 0; border-bottom:1px solid #b8a80018; font-size:11px;
+            }
+            .gm-sig-row:last-child { border-bottom:none; }
+            .gm-hostile  { color:#e74c3c; }
+            .gm-friendly { color:#00e5c8; }
+            .gm-del {
+                background:none; border:1px solid #e74c3c60; color:#e74c3c;
+                cursor:pointer; font-size:9px; width:20px; height:20px;
+                padding:0; font-family:'Consolas',monospace; transition:all 0.15s;
+            }
+            .gm-del:hover { border-color:#e74c3c; background:rgba(231,76,60,0.1); }
+            .gm-divider { border-top:1px solid #b8a80025; margin:10px 0; }
+            .gm-form-label {
+                font-size:9px; letter-spacing:1.5px; color:#b8a80070; margin-bottom:8px;
+            }
+            .gm-field { margin-bottom:7px; }
+            .gm-field label {
+                display:block; font-size:9px; letter-spacing:1px;
+                color:#b8a80060; margin-bottom:3px;
+            }
+            .gm-field input, .gm-field select, .gm-field textarea {
+                width:100%; background:rgba(184,168,0,0.04); border:1px solid #b8a80040;
+                color:#b8a800; font-family:'Consolas',monospace; font-size:11px;
+                padding:4px 6px; box-sizing:border-box; outline:none;
+            }
+            .gm-field input:focus, .gm-field select:focus, .gm-field textarea:focus {
+                border-color:#b8a800;
+            }
+            .gm-field select option { background:#06080f; }
+            .gm-field textarea { height:52px; resize:vertical; }
+            .gm-row2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+            .gm-btn {
+                width:100%; background:rgba(184,168,0,0.07); border:1px solid #b8a80070;
+                color:#b8a800; font-family:'Consolas',monospace; font-size:10px;
+                letter-spacing:1.5px; padding:7px; cursor:pointer;
+                transition:background 0.2s; margin-top:8px;
+            }
+            .gm-btn:hover { background:rgba(184,168,0,0.2); }
+            .gm-msg-row {
+                display:flex; align-items:flex-start; gap:6px;
+                padding:5px 0; border-bottom:1px solid #b8a80018;
+                font-size:10px; line-height:1.4; color:#b8a80090;
+            }
+            .gm-msg-row:last-child { border-bottom:none; }
+            .gm-msg-text { flex:1; word-break:break-word; }
+            .gm-err  { color:#e74c3c; font-size:9px; letter-spacing:1px; margin:4px 0; min-height:14px; }
+            .gm-note { font-size:9px; color:#b8a80060; line-height:1.5; margin-bottom:8px; }
+            .gm-empty { font-size:10px; color:#b8a80040; padding:6px 0; }
+            #gm-hop-fields { margin-top:0; }
+        `;
+        document.head.appendChild(style);
+
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `
+        <button id="gm-toggle">⚙ GM CONFIG</button>
+        <div id="gm-panel" class="hidden">
+            <div id="gm-hdr">
+                <span>⚙ OVERLORD SIGNAL CONFIG</span>
+                <button id="gm-close-btn">✕</button>
+            </div>
+            <div class="gm-tabs">
+                <button class="gm-tab active" data-tab="sigs">SIGNALS</button>
+                <button class="gm-tab" data-tab="msgs">MESSAGES</button>
+            </div>
+            <div class="gm-body">
+                <div class="gm-tc" id="gm-tc-sigs">
+                    <div class="gm-section-label">Active Signals</div>
+                    <div id="gm-sig-rows"></div>
+                    <div class="gm-divider"></div>
+                    <div class="gm-form-label">▸ ADD SIGNAL</div>
+                    <div class="gm-row2">
+                        <div class="gm-field">
+                            <label>CALLSIGN</label>
+                            <input id="gm-cs" placeholder="ECHO-7" autocomplete="off">
+                        </div>
+                        <div class="gm-field">
+                            <label>FREQUENCY (MHz)</label>
+                            <input id="gm-freq" type="number" min="400" max="500" step="0.1" placeholder="449.0">
+                        </div>
+                    </div>
+                    <div class="gm-row2">
+                        <div class="gm-field">
+                            <label>TYPE</label>
+                            <select id="gm-type">
+                                <option value="hostile">HOSTILE</option>
+                                <option value="friendly">FRIENDLY</option>
+                            </select>
+                        </div>
+                        <div class="gm-field">
+                            <label>ENCRYPTION</label>
+                            <select id="gm-enc">
+                                <option value="AES-256">AES-256 (decryptable)</option>
+                                <option value="SCRAMBLED">SCRAMBLED (decryptable)</option>
+                                <option value="CLEAR">CLEAR</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="gm-row2" id="gm-hop-fields">
+                        <div class="gm-field">
+                            <label>HOP MIN (sec)</label>
+                            <input id="gm-hopmin" type="number" min="5" value="20">
+                        </div>
+                        <div class="gm-field">
+                            <label>HOP MAX (sec)</label>
+                            <input id="gm-hopmax" type="number" min="5" value="40">
+                        </div>
+                    </div>
+                    <div id="gm-sig-err" class="gm-err"></div>
+                    <button class="gm-btn" id="gm-add-sig">+ ADD SIGNAL</button>
+                </div>
+                <div class="gm-tc hidden" id="gm-tc-msgs">
+                    <div class="gm-note">These messages appear on successful AES-256 / SCRAMBLED decrypt. One is chosen at random each time players crack a signal.</div>
+                    <div id="gm-msg-rows"></div>
+                    <div class="gm-divider"></div>
+                    <div class="gm-form-label">▸ ADD DECODED MESSAGE</div>
+                    <div class="gm-field">
+                        <textarea id="gm-new-msg" placeholder="STRIKE PKG ALPHA CONFIRMED — GRID 447-229 — T-MINUS 18MIN"></textarea>
+                    </div>
+                    <div id="gm-msg-err" class="gm-err"></div>
+                    <button class="gm-btn" id="gm-add-msg">+ ADD MESSAGE</button>
+                </div>
+            </div>
+        </div>`;
+        document.body.appendChild(wrap);
+
+        const panel     = document.getElementById('gm-panel');
+        const toggleBtn = document.getElementById('gm-toggle');
+        const closeBtn  = document.getElementById('gm-close-btn');
+        const gmHdr     = document.getElementById('gm-hdr');
+        const typeSelect = document.getElementById('gm-type');
+        const hopFields  = document.getElementById('gm-hop-fields');
+
+        // Toggle
+        toggleBtn.addEventListener('click', () => {
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) { renderGMSigs(); renderGMMsgs(); }
+        });
+        closeBtn.addEventListener('click', () => panel.classList.add('hidden'));
+
+        // Drag
+        let _dragging = false, _ox = 0, _oy = 0;
+        gmHdr.addEventListener('mousedown', e => {
+            if (e.target === closeBtn) return;
+            _dragging = true;
+            _ox = e.clientX - panel.offsetLeft;
+            _oy = e.clientY - panel.offsetTop;
+            panel.style.transition = 'none';
+            e.preventDefault();
+        });
+        document.addEventListener('mousemove', e => {
+            if (!_dragging) return;
+            panel.style.left  = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, e.clientX - _ox)) + 'px';
+            panel.style.top   = Math.max(0, Math.min(window.innerHeight - 60, e.clientY - _oy)) + 'px';
+            panel.style.right = 'auto';
+        });
+        document.addEventListener('mouseup', () => { _dragging = false; });
+
+        // Tabs
+        document.querySelectorAll('.gm-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.gm-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const t = tab.dataset.tab;
+                document.getElementById('gm-tc-sigs').classList.toggle('hidden', t !== 'sigs');
+                document.getElementById('gm-tc-msgs').classList.toggle('hidden', t !== 'msgs');
+            });
+        });
+
+        // Show/hide hop fields for friendly signals
+        typeSelect.addEventListener('change', () => {
+            hopFields.style.display = typeSelect.value === 'hostile' ? '' : 'none';
+        });
+
+        // ── Render signal roster ──────────────────────────────
+        function renderGMSigs() {
+            const container = document.getElementById('gm-sig-rows');
+            container.innerHTML = '';
+            if (!signals.length) {
+                container.innerHTML = '<div class="gm-empty">No signals configured.</div>';
+                return;
+            }
+            const hdr = document.createElement('div');
+            hdr.className = 'gm-sig-hdr';
+            hdr.innerHTML = '<span>CALLSIGN</span><span>FREQ</span><span>TYPE</span><span>ENC</span><span>HOP</span><span></span>';
+            container.appendChild(hdr);
+
+            signals.forEach((sig, idx) => {
+                const row = document.createElement('div');
+                row.className = 'gm-sig-row';
+                const cls = sig.type === 'hostile' ? 'gm-hostile' : 'gm-friendly';
+                const hop = sig.hopMin > 0 ? sig.hopMin + '–' + sig.hopMax + 's' : '—';
+                row.innerHTML = `
+                    <span class="${cls}">${sig.callsign}</span>
+                    <span>${sig.freq.toFixed(1)}</span>
+                    <span class="${cls}" style="font-size:9px">${sig.type.toUpperCase()}</span>
+                    <span style="font-size:9px;opacity:0.7">${sig.enc}</span>
+                    <span style="font-size:9px;opacity:0.7">${hop}</span>
+                    <button class="gm-del" data-idx="${idx}">✕</button>`;
+                container.appendChild(row);
+            });
+
+            container.querySelectorAll('.gm-del').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const i   = parseInt(btn.dataset.idx);
+                    const sig = signals[i];
+                    if (sig.hopTimeout) { clearTimeout(sig.hopTimeout); sig.hopTimeout = null; }
+                    if (state.lockedSignal === sig) loseLock(false);
+                    signals.splice(i, 1);
+                    saveRadioConfig();
+                    renderSignalList();
+                    renderGMSigs();
+                    addLog('[GM] SIGNAL ' + sig.callsign + ' REMOVED FROM SCANNER', 'sys');
+                });
+            });
+        }
+
+        // ── Render decoded messages list ──────────────────────
+        function renderGMMsgs() {
+            const container = document.getElementById('gm-msg-rows');
+            container.innerHTML = '';
+            if (!DECODED_MESSAGES.length) {
+                container.innerHTML = '<div class="gm-empty">No messages yet. Add some below.</div>';
+                return;
+            }
+            DECODED_MESSAGES.forEach((msg, idx) => {
+                const row = document.createElement('div');
+                row.className = 'gm-msg-row';
+                row.innerHTML = `
+                    <span class="gm-msg-text">${idx + 1}. ${msg}</span>
+                    <button class="gm-del" data-idx="${idx}">✕</button>`;
+                container.appendChild(row);
+            });
+            container.querySelectorAll('.gm-del').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    DECODED_MESSAGES.splice(parseInt(btn.dataset.idx), 1);
+                    saveRadioConfig();
+                    renderGMMsgs();
+                });
+            });
+        }
+
+        // ── Add signal ────────────────────────────────────────
+        document.getElementById('gm-add-sig').addEventListener('click', () => {
+            const errEl  = document.getElementById('gm-sig-err');
+            const cs     = document.getElementById('gm-cs').value.trim().toUpperCase();
+            const freq   = parseFloat(document.getElementById('gm-freq').value);
+            const type   = typeSelect.value;
+            const enc    = document.getElementById('gm-enc').value;
+            const hopMin = type === 'hostile' ? (parseInt(document.getElementById('gm-hopmin').value) || 20) : 0;
+            const hopMax = type === 'hostile' ? (parseInt(document.getElementById('gm-hopmax').value) || 40) : 0;
+
+            if (!cs)                              { errEl.textContent = 'CALLSIGN required'; return; }
+            if (isNaN(freq)||freq<400||freq>500)  { errEl.textContent = 'FREQ must be 400–500 MHz'; return; }
+            if (type==='hostile' && hopMin>=hopMax){ errEl.textContent = 'HOP MAX must exceed HOP MIN'; return; }
+            errEl.textContent = '';
+
+            const newSig = { id:'gm-'+Date.now(), callsign:cs, freq, type, enc, hopMin, hopMax, hopTimeout:null, nextHopFreq:null };
+            signals.push(newSig);
+            if (type === 'hostile') scheduleHop(newSig);
+            saveRadioConfig();
+            renderSignalList();
+            renderGMSigs();
+            document.getElementById('gm-cs').value   = '';
+            document.getElementById('gm-freq').value = '';
+            addLog('[GM] SIGNAL ' + cs + ' ADDED @ ' + freq.toFixed(1) + ' MHz', 'sys');
+        });
+
+        // ── Add decoded message ───────────────────────────────
+        document.getElementById('gm-add-msg').addEventListener('click', () => {
+            const errEl = document.getElementById('gm-msg-err');
+            const msg   = document.getElementById('gm-new-msg').value.trim().toUpperCase();
+            if (!msg) { errEl.textContent = 'Message cannot be empty'; return; }
+            errEl.textContent = '';
+            DECODED_MESSAGES.push(msg);
+            saveRadioConfig();
+            renderGMMsgs();
+            document.getElementById('gm-new-msg').value = '';
+        });
+
+        renderGMSigs();
+        renderGMMsgs();
     }
 
     // ══════════════════════════════════════════════════════════

@@ -1548,4 +1548,4 @@ buildDeployments();
 buildVehicles();
 setClearance(PLAYER_CLEARANCE);
 requestAnimationFrame(animLoop);
-injectAddUI();
+if (window.LuxorAuth && LuxorAuth.isAdmin()) injectAddUI();

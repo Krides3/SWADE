@@ -86,22 +86,23 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el) el.textContent = text;
   }
 });
-// Boot overlay — hide after CSS animation completes
+// Boot overlay — only plays once per browser (persists in localStorage)
 document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.getElementById('boot-overlay');
   if (!overlay) return;
 
-  if (sessionStorage.getItem('swadeLaunchPlayed')) {
+  if (localStorage.getItem('swadeLaunchPlayed')) {
     overlay.style.display = 'none';
   } else {
-    // Boot bar animation is 3s; fade out shortly after it finishes
+    // Mark as played immediately so navigating away mid-animation doesn't reset it
+    localStorage.setItem('swadeLaunchPlayed', 'true');
+
     setTimeout(() => {
       overlay.classList.add('fade-out');
     }, 3200);
 
     setTimeout(() => {
       overlay.style.display = 'none';
-      sessionStorage.setItem('swadeLaunchPlayed', 'true');
     }, 4400); // 3.2s + 1.2s fade-out
   }
 });
