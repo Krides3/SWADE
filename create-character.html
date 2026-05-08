@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <title>Character Creation</title>
     <link rel="stylesheet" href="./style.css" />
-    <script src="./script.js"></script>
+    <script src="./auth.js"></script>
+<script>LuxorAuth.requireAuth('login.html');</script>
+<script src="./script.js"></script>
 </head>
 <body>
 <button type="button" onclick="window.location.href='index.html'">Back to Character Sheet</button>

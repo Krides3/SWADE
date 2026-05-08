@@ -311,6 +311,26 @@ body::after {
     color: var(--text-dim);
     letter-spacing: 0.1em;
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.nav-logout-btn {
+    background: transparent;
+    border: 1px solid rgba(192,57,43,0.35);
+    color: #c0392b;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    padding: 4px 0;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.15s, border-color 0.15s;
+}
+.nav-logout-btn:hover {
+    background: rgba(192,57,43,0.1);
+    border-color: #e74c3c;
+    color: #e74c3c;
 }
 .status-dot {
     display: inline-block;

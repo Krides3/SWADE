@@ -15,6 +15,8 @@
     <span class="bar-sub">Asset Deployment Map</span>
     <span class="bar-sep"></span>
     <span class="bar-status">LIVE FEED</span>
+    <span id="map-user-badge" style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:#6b6860;letter-spacing:0.15em;"></span>
+    <button id="map-logout-btn" style="background:transparent;border:1px solid rgba(192,57,43,0.35);color:#c0392b;font-family:'Share Tech Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;padding:3px 10px;cursor:pointer;">LOGOUT</button>
     <a class="nav-back" href="../index.html">&#x2190; Terminal</a>
 </div>
 
@@ -65,6 +67,21 @@
     <div class="legend-item"><span class="legend-icon">&#x1F681;</span>Helicopter</div>
 </div>
 
+<script src="../auth.js"></script>
+<script>
+    LuxorAuth.requireAuth('../login.html');
+    (function () {
+        const s = LuxorAuth.getSession();
+        if (s) {
+            const badge = document.getElementById('map-user-badge');
+            if (badge) badge.textContent = '▸ ' + s.username;
+        }
+        const logoutBtn = document.getElementById('map-logout-btn');
+        if (logoutBtn) logoutBtn.addEventListener('click', function () {
+            LuxorAuth.logout('../login.html');
+        });
+    })();
+</script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="./AssetMap.js"></script>
 </body>

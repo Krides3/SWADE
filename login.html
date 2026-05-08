@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR — Operator Login</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --gold:      #b8a800;
+            --gold-glow: #e8d400;
+            --gold-dim:  #6b6200;
+            --bg-deep:   #0a0c12;
+            --bg-panel:  #141824;
+            --border:    #2a2f45;
+            --text:      #d4d0b0;
+            --text-dim:  #6b6860;
+            --cyan:      #00e5c8;
+            --danger:    #c0392b;
+        }
+
+        body {
+            background: var(--bg-deep);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Scanline effect */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 3px,
+                rgba(0,0,0,0.08) 3px,
+                rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Moving scanline */
+        body::after {
+            content: '';
+            position: fixed;
+            left: 0; right: 0;
+            height: 3px;
+            background: rgba(184,168,0,0.08);
+            animation: scanMove 6s linear infinite;
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        @keyframes scanMove {
+            0%   { top: -3px; }
+            100% { top: 100vh; }
+        }
+
+        @keyframes pulseGold {
+            0%,100% { text-shadow: 0 0 8px var(--gold), 0 0 20px var(--gold-dim); }
+            50%      { text-shadow: 0 0 20px var(--gold-glow), 0 0 50px var(--gold), 0 0 80px var(--gold-dim); }
+        }
+
+        @keyframes blink {
+            0%,100% { opacity: 1; }
+            50%      { opacity: 0; }
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes errShake {
+            0%,100% { transform: translateX(0); }
+            20%,60% { transform: translateX(-6px); }
+            40%,80% { transform: translateX(6px); }
+        }
+
+        .login-wrap {
+            position: relative;
+            width: 420px;
+            max-width: calc(100vw - 40px);
+            animation: fadeUp 0.6s ease both;
+        }
+
+        /* Corner decorations */
+        .corner { position: absolute; pointer-events: none; }
+        .corner.tl { top: -2px; left: -2px; }
+        .corner.br { bottom: -2px; right: -2px; }
+
+        .login-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 40px 36px 36px;
+        }
+
+        .login-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: var(--gold);
+            letter-spacing: 0.18em;
+            text-align: center;
+            animation: pulseGold 3s ease-in-out infinite;
+            margin-bottom: 4px;
+        }
+
+        .login-sub {
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.72rem;
+            letter-spacing: 0.25em;
+            margin-bottom: 32px;
+        }
+
+        .login-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin-bottom: 28px;
+        }
+
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            color: var(--gold-dim);
+            margin-bottom: 6px;
+        }
+
+        .field-input {
+            width: 100%;
+            background: #0d1018;
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.95rem;
+            padding: 10px 12px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .field-input:focus {
+            border-color: var(--gold-dim);
+            box-shadow: 0 0 0 1px var(--gold-dim), inset 0 0 8px rgba(184,168,0,0.04);
+        }
+
+        /* Don't uppercase password field */
+        #pw { text-transform: none; letter-spacing: 0.05em; }
+
+        .login-btn {
+            width: 100%;
+            margin-top: 8px;
+            padding: 13px;
+            background: transparent;
+            border: 1px solid var(--gold-dim);
+            color: var(--gold);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 0.3em;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .login-btn:hover {
+            background: rgba(184,168,0,0.08);
+            border-color: var(--gold);
+        }
+
+        .login-btn:active {
+            background: rgba(184,168,0,0.15);
+        }
+
+        .error-msg {
+            margin-top: 16px;
+            padding: 10px 12px;
+            background: rgba(192,57,43,0.12);
+            border: 1px solid rgba(192,57,43,0.4);
+            color: #e74c3c;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            display: none;
+        }
+
+        .error-msg.visible {
+            display: block;
+            animation: errShake 0.35s ease;
+        }
+
+        .login-footer {
+            margin-top: 28px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1em;
+            background: var(--gold);
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Corner decorations -->
+<div class="corner tl">
+    <svg width="50" height="50" viewBox="0 0 60 60">
+        <polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/>
+    </svg>
+</div>
+<div class="corner br">
+    <svg width="50" height="50" viewBox="0 0 60 60">
+        <polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/>
+    </svg>
+</div>
+
+<div class="login-wrap">
+    <div class="login-box">
+        <div class="login-logo">LUXOR</div>
+        <div class="login-sub">// TACTICAL OPERATIONS TERMINAL //</div>
+        <hr class="login-divider">
+
+        <form id="login-form" autocomplete="off">
+            <div class="field-group">
+                <label class="field-label" for="un">▸ OPERATOR CALLSIGN</label>
+                <input class="field-input" type="text" id="un" name="username"
+                       autocomplete="off" spellcheck="false" required>
+            </div>
+            <div class="field-group">
+                <label class="field-label" for="pw">▸ ACCESS CODE</label>
+                <input class="field-input" type="password" id="pw" name="password"
+                       autocomplete="off" required>
+            </div>
+            <button class="login-btn" type="submit">AUTHENTICATE<span class="cursor"></span></button>
+        </form>
+
+        <div class="error-msg" id="err-msg">⚠ &nbsp;<span id="err-text"></span></div>
+
+        <div class="login-footer">LUXOR TERMINAL v2.4.1 &nbsp;·&nbsp; ENCRYPTED CHANNEL &nbsp;·&nbsp; AUTHORIZED PERSONNEL ONLY</div>
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script>
+    // If already logged in, go straight to terminal
+    if (LuxorAuth.getSession()) {
+        window.location.replace('index.html');
+    }
+
+    document.getElementById('login-form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const username = document.getElementById('un').value;
+        const password = document.getElementById('pw').value;
+        const result   = LuxorAuth.login(username, password);
+        if (result.ok) {
+            window.location.replace('index.html');
+        } else {
+            const errEl = document.getElementById('err-msg');
+            document.getElementById('err-text').textContent = result.error;
+            errEl.classList.remove('visible');
+            void errEl.offsetWidth; // force reflow to re-trigger animation
+            errEl.classList.add('visible');
+            document.getElementById('pw').value = '';
+            document.getElementById('pw').focus();
+        }
+    });
+</script>
+</body>
+</html>

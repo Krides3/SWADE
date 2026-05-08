@@ -4,8 +4,28 @@
 //  Custom entries added in-browser persist via localStorage.
 // ================================================================
 
-// Default player clearance shown on load (1–5).
+// Default player clearance — overridden by auth session below.
 let PLAYER_CLEARANCE = 1;
+
+// ── Auth: set clearance from session, lock panel for non-admin ──
+(function () {
+    if (!window.LuxorAuth) return;
+    const session = LuxorAuth.getSession();
+    if (!session) return;
+    if (!LuxorAuth.isAdmin()) {
+        PLAYER_CLEARANCE = session.clearance || 1;
+        document.addEventListener('DOMContentLoaded', function () {
+            const label = document.querySelector('#clearance-panel .panel-label');
+            if (label) label.textContent = 'Clearance: ' + PLAYER_CLEARANCE;
+            document.querySelectorAll('.cl-btn').forEach(b => {
+                b.disabled = true;
+                b.style.cursor = 'default';
+                b.style.pointerEvents = 'none';
+                if (+b.dataset.level !== PLAYER_CLEARANCE) b.style.opacity = '0.22';
+            });
+        });
+    }
+})();
 
 // Animation speed multiplier. 300 = vehicles move 300x real-world speed.
 const TIME_SCALE = 300;
@@ -1526,5 +1546,6 @@ function injectAddUI() {
 loadCustomFromStorage();
 buildDeployments();
 buildVehicles();
+setClearance(PLAYER_CLEARANCE);
 requestAnimationFrame(animLoop);
 injectAddUI();

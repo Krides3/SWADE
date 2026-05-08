@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   hamburger.addEventListener('click', function () {
-    navbar.classList.contains('nav-open') ? closeNav() : openNav();
+    navbar.classList.contains('open') ? closeNav() : openNav();
   });
 
   if (overlay) overlay.addEventListener('click', closeNav);
@@ -31,11 +31,21 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Generate a random session ID on first load
-  if (!sessionStorage.getItem('sessionId')) {
-    const id = Math.random().toString(36).slice(2, 10).toUpperCase();
-    sessionStorage.setItem('sessionId', id);
+  // Show logged-in username in nav footer
+  const session   = window.LuxorAuth ? LuxorAuth.getSession() : null;
+  const nameEl    = document.getElementById('nav-username');
+  const logoutBtn = document.getElementById('nav-logout');
+
+  if (nameEl && session) {
+    nameEl.textContent = session.username;
   }
-  const sessionEl = document.querySelector('.session-id');
-  if (sessionEl) sessionEl.textContent = sessionStorage.getItem('sessionId');
+
+  if (logoutBtn) {
+    // Detect subdirectory depth so logout always reaches login.html
+    const depth = (window.location.pathname.match(/\//g) || []).length;
+    const loginUrl = depth > 2 ? '../login.html' : 'login.html';
+    logoutBtn.addEventListener('click', function () {
+      LuxorAuth.logout(loginUrl);
+    });
+  }
 });
