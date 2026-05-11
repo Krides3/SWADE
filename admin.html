@@ -312,6 +312,21 @@
                 <div class="form-msg" id="pw-msg"></div>
             </div>
 
+            <!-- ── Minigame Control ─────────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ MINIGAME CONTROL</div>
+                <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
+                    Each minigame has an embedded Overlord panel. Open the terminal to configure sequences,
+                    difficulty, and game state. Changes persist for all connected operators.
+                </p>
+                <div id="minigame-status-grid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                    <a href="hack.html"     class="admin-btn" style="text-decoration:none;display:inline-block;">▦ HACKING TERMINAL</a>
+                    <a href="bomb.html"     class="admin-btn" style="text-decoration:none;display:inline-block;opacity:0.45;pointer-events:none;">◉ BOMB DEFUSAL</a>
+                    <a href="lockpick.html" class="admin-btn" style="text-decoration:none;display:inline-block;opacity:0.45;pointer-events:none;">⌗ LOCKPICK</a>
+                </div>
+            </div>
+
         </div><!-- /.admin-main -->
     </main>
 </div>
@@ -428,6 +443,37 @@ document.getElementById('pw-change-btn').addEventListener('click', function () {
 });
 
 renderRoster();
+
+// ── Minigame status grid ─────────────────────────────────────
+(function renderMinigameStatus() {
+    const grid = document.getElementById('minigame-status-grid');
+    if (!grid) return;
+
+    const games = [
+        { key: 'luxorHackConfig', stateKey: 'luxorHackState', label: '▦ HACKING TERMINAL', href: 'hack.html' }
+    ];
+
+    games.forEach(function (game) {
+        let cfg = {}, state = {};
+        try { cfg   = JSON.parse(localStorage.getItem(game.key)      || '{}'); } catch(e) {}
+        try { state = JSON.parse(localStorage.getItem(game.stateKey) || '{}'); } catch(e) {}
+
+        const phase = state.phase || 'idle';
+        const phaseColors = { idle: '#6b6860', active: '#00e5c8', won: '#00e5c8', lost: '#c0392b' };
+        const phaseLabels = { idle: 'STANDBY', active: 'BREACH ACTIVE', won: 'ACCESS GRANTED', lost: 'TRACE DETECTED' };
+        const color = phaseColors[phase] || '#6b6860';
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg-panel);border:1px solid var(--border);font-family:\'Share Tech Mono\',monospace;font-size:0.68rem;letter-spacing:0.1em;';
+        row.innerHTML = `
+            <span style="color:var(--gold)">${game.label}</span>
+            <span style="color:${color}">${phaseLabels[phase]}</span>
+            <span style="color:var(--text-dim)">${state.startedBy ? 'OPR: ' + state.startedBy : '—'}</span>
+            <span style="color:var(--text-dim)">${cfg.targetName || '—'}</span>
+        `;
+        grid.appendChild(row);
+    });
+})();
 </script>
 </body>
 </html>
