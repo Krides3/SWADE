@@ -322,6 +322,21 @@ body {
     animation: rotor-spin 0.18s linear infinite;
 }
 
+/* ─── MISSION MARKER ─────────────────────────────────── */
+.dm-mission {
+    position: relative;
+    background: #7a059e;
+    border: 2px solid #c060f0;
+    border-radius: 3px;
+    transform: rotate(45deg);
+    box-shadow: 0 0 10px rgba(160,60,220,0.7), 0 0 22px rgba(122,5,158,0.4);
+    animation: mission-pulse 2s ease-in-out infinite;
+}
+@keyframes mission-pulse {
+    0%,100% { box-shadow: 0 0 10px rgba(160,60,220,0.7), 0 0 22px rgba(122,5,158,0.4); }
+    50%      { box-shadow: 0 0 18px rgba(160,60,220,1),   0 0 40px rgba(122,5,158,0.7); }
+}
+
 /* ─── ROUTE PATH ──────────────────────────────────────── */
 .lx-route {
     stroke-dasharray: 7 5;

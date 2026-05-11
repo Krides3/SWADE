@@ -809,6 +809,11 @@ function shipSVG() {
 // ---- Leaflet icon factories ----
 
 function makeDeployIcon(d) {
+    if (d.type === 'mission') {
+        const sz = 18;
+        const html = `<div class="dm-mission" style="width:${sz}px;height:${sz}px;"></div>`;
+        return L.divIcon({ html, className: '', iconSize: [sz, sz], iconAnchor: [sz/2, sz/2], tooltipAnchor: [sz/2+4, 0] });
+    }
     const cc = { active:'c-active', inactive:'c-inactive', compromised:'c-compr', unknown:'c-unknown' }[d.status] || 'c-active';
     const tc = { hq:'dm-hq', outpost:'dm-outpost', naval:'dm-naval', ground:'' }[d.type] || '';
     const sz = d.type === 'hq' ? 20 : 14;
@@ -1456,6 +1461,7 @@ function injectAddUI() {
                 <div class="lx-field">
                     <label>TYPE</label>
                     <select id="dep-type">
+                        <option value="mission">⬧ Mission</option>
                         <option value="ground">Ground Unit</option>
                         <option value="outpost">Outpost</option>
                         <option value="naval">Naval</option>
