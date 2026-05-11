@@ -392,6 +392,64 @@ const DEPLOYMENTS = [
         lat: -33.8688, lng: 151.2093,
         clearance: 2, type: 'ground', status: 'inactive',
         notes: 'Standby. Awaiting Pacific theater activation orders.'
+    },
+
+    // ── CLEARANCE 1 — PATROL / GUARD DETAILS ─────────────────────
+    {
+        id: 'guard-rotterdam',
+        name: 'Guard Post Rotterdam',
+        lat: 51.9244, lng: 4.4777,
+        clearance: 1, type: 'outpost', status: 'active',
+        notes: 'Port cargo facility. 6-man rotation. 12hr shifts. No incidents.'
+    },
+    {
+        id: 'patrol-libya',
+        name: 'Patrol Unit Jackal',
+        lat: 31.2001, lng: 14.5502,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Coastal road sweep. 2 vehicles, 8 contractors. Daily 0600-1800.'
+    },
+    {
+        id: 'checkpoint-balkan',
+        name: 'Checkpoint Bravo-4',
+        lat: 44.8025, lng: 20.4651,
+        clearance: 1, type: 'outpost', status: 'active',
+        notes: 'Road access control for client compound. Low threat. Routine.'
+    },
+    {
+        id: 'escort-colombia',
+        name: 'Escort Detail Condor',
+        lat: 4.7110, lng: -74.0721,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Executive protection. Mining exec client. Bogotá metro area.'
+    },
+    {
+        id: 'perimeter-iraq',
+        name: 'Perimeter Team Wolf',
+        lat: 33.3152, lng: 44.3661,
+        clearance: 1, type: 'outpost', status: 'active',
+        notes: 'Outer perimeter, energy facility. 4-post rotation. Quiet sector.'
+    },
+    {
+        id: 'patrol-kenya',
+        name: 'Patrol Unit Osprey',
+        lat: 1.2921, lng: 40.1200,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Rural sweep route. NGO convoy protection. Weekly schedule.'
+    },
+    {
+        id: 'guard-frankfurt',
+        name: 'Guard Detail Eagle',
+        lat: 50.0379, lng: 8.5622,
+        clearance: 1, type: 'outpost', status: 'active',
+        notes: 'Private terminal security. VIP client logistics hub. Low-key.'
+    },
+    {
+        id: 'checkpoint-sinai',
+        name: 'Checkpoint Sierra-2',
+        lat: 30.0131, lng: 33.0458,
+        clearance: 1, type: 'outpost', status: 'inactive',
+        notes: 'Standby. Contract pending renewal. Equipment cached on-site.'
     }
 ];
 
