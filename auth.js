@@ -43,7 +43,7 @@
   }
 
   function getSession() {
-    try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); }
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }
     catch (e) { return null; }
   }
 
@@ -70,12 +70,12 @@
       return { ok: false, error: 'ACCESS DENIED — INVALID CREDENTIALS' };
     }
     const session = { username: user.username, role: user.role, clearance: user.clearance };
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
     return { ok: true, session };
   }
 
   function logout(loginUrl) {
-    sessionStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_KEY);
     window.location.replace(loginUrl || 'login.html');
   }
 

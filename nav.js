@@ -48,4 +48,14 @@ document.addEventListener('DOMContentLoaded', function () {
       LuxorAuth.logout(loginUrl);
     });
   }
+
+  // When embedded in an iframe (multiview), hide sidebar nav and collapse the margin
+  if (window.self !== window.top) {
+    if (navbar)    navbar.style.display = 'none';
+    if (hamburger) hamburger.style.display = 'none';
+    const main = document.querySelector('.main');
+    if (main) { main.style.marginLeft = '0'; main.style.paddingTop = '0.5rem'; }
+    const navOverlay = document.getElementById('nav-overlay');
+    if (navOverlay) navOverlay.style.display = 'none';
+  }
 });

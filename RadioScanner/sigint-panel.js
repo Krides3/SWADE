@@ -149,7 +149,6 @@
         el.wfCtx.fillStyle = '#040410';
         el.wfCtx.fillRect(0, 0, el.waterfallCv.width, el.waterfallCv.height);
 
-        setupDrag();
         setupMinimize();
         setupSlider();
         setupCountermeasures();
@@ -169,45 +168,6 @@
         if (window.LuxorAuth && LuxorAuth.isAdmin()) injectGMPanel();
 
         rafId = requestAnimationFrame(animLoop);
-    }
-
-    // ══════════════════════════════════════════════════════════
-    // DRAG
-    // ══════════════════════════════════════════════════════════
-    function setupDrag() {
-        let dragging = false, ox = 0, oy = 0;
-
-        function startDrag(cx, cy) {
-            dragging = true;
-            ox = cx - el.panel.offsetLeft;
-            oy = cy - el.panel.offsetTop;
-            el.panel.style.transition = 'none';
-        }
-        function moveDrag(cx, cy) {
-            if (!dragging) return;
-            const maxX = window.innerWidth  - el.panel.offsetWidth;
-            const maxY = window.innerHeight - 60;
-            el.panel.style.left = Math.max(0, Math.min(maxX, cx - ox)) + 'px';
-            el.panel.style.top  = Math.max(0, Math.min(maxY, cy - oy)) + 'px';
-        }
-
-        el.header.addEventListener('mousedown', e => {
-            if (e.target === el.minBtn) return;
-            startDrag(e.clientX, e.clientY);
-            e.preventDefault();
-        });
-        document.addEventListener('mousemove',  e => moveDrag(e.clientX, e.clientY));
-        document.addEventListener('mouseup',    () => { dragging = false; });
-
-        el.header.addEventListener('touchstart', e => {
-            if (e.target === el.minBtn) return;
-            startDrag(e.touches[0].clientX, e.touches[0].clientY);
-            e.preventDefault();
-        }, { passive: false });
-        document.addEventListener('touchmove', e => {
-            moveDrag(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
-        document.addEventListener('touchend', () => { dragging = false; });
     }
 
     // ══════════════════════════════════════════════════════════

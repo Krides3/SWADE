@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>LUXOR — Mission View</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ── Mission View overrides ──────────────────────────────── */
+        .app { height: 100vh; overflow: hidden; }
+
+        .mv-main {
+            margin-left: var(--navbar-w);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 0;
+        }
+
+        /* ── Toolbar ─────────────────────────────────────────────── */
+        .mv-toolbar {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0 0.85rem;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+        .mv-toolbar-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.56rem;
+            color: var(--text-dim);
+            letter-spacing: 0.16em;
+            flex-shrink: 0;
+        }
+        .mv-layout-btn {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.56rem;
+            letter-spacing: 0.1em;
+            padding: 0.22rem 0.6rem;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: border-color 0.15s, color 0.15s, background 0.15s;
+            white-space: nowrap;
+        }
+        .mv-layout-btn:hover  { border-color: var(--gold-dim); color: var(--gold); }
+        .mv-layout-btn.active { border-color: var(--gold); color: var(--gold); background: rgba(184,168,0,0.05); }
+
+        .mv-sep { width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+        .mv-save-info {
+            margin-left: auto;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.52rem;
+            color: var(--text-dim);
+            letter-spacing: 0.12em;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+        .mv-save-info.saved { color: var(--cyan); }
+
+        /* ── Pane grid ───────────────────────────────────────────── */
+        .mv-grid {
+            flex: 1;
+            display: grid;
+            gap: 3px;
+            background: #0d0f18;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .mv-grid.l-1  { grid-template-columns: 1fr;       grid-template-rows: 1fr; }
+        .mv-grid.l-2h { grid-template-columns: 1fr 1fr;   grid-template-rows: 1fr; }
+        .mv-grid.l-2v { grid-template-columns: 1fr;       grid-template-rows: 1fr 1fr; }
+        .mv-grid.l-4  { grid-template-columns: 1fr 1fr;   grid-template-rows: 1fr 1fr; }
+
+        /* ── Individual pane ─────────────────────────────────────── */
+        .mv-pane {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-deep);
+            overflow: hidden;
+            min-height: 0;
+        }
+        .mv-pane-bar {
+            height: 28px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+            gap: 0.4rem;
+            flex-shrink: 0;
+        }
+        .mv-pane-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--gold-dim);
+            flex-shrink: 0;
+        }
+        .mv-pane-sel {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--gold);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.56rem;
+            letter-spacing: 0.1em;
+            cursor: pointer;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            min-width: 0;
+        }
+        .mv-pane-sel option {
+            background: var(--bg-card);
+            color: var(--text);
+            font-size: 0.8rem;
+        }
+        .mv-pane-reload {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.5rem;
+            padding: 1px 5px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: color 0.15s, border-color 0.15s;
+            letter-spacing: 0.08em;
+        }
+        .mv-pane-reload:hover { color: var(--cyan); border-color: var(--cyan); }
+
+        .mv-pane-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            display: block;
+            min-height: 0;
+        }
+        .mv-pane-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            color: var(--text-dim);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.58rem;
+            letter-spacing: 0.2em;
+        }
+        .mv-pane-empty-icon {
+            font-size: 2rem;
+            opacity: 0.15;
+        }
+
+        /* ── Mobile: collapse to vertical stacks ─────────────────── */
+        @media (max-width: 700px) {
+            .mv-main { margin-left: 0; }
+            .mv-grid.l-2h,
+            .mv-grid.l-4  { grid-template-columns: 1fr; grid-template-rows: repeat(auto-fill, minmax(200px, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">// MISSION VIEW //</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">LOADING MODULES...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"              data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"  data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"              data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"              data-icon="04">Tools</a></li>
+            <li><a href="dice.html"               data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"              data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html" data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"               data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"           data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"               data-icon="10">Hacking</a></li>
+            <li><a href="multiview.html"          data-icon="11">Mission View</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">
+                ◈ OVERLORD PANEL
+            </a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">——————</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main mv-main">
+
+        <!-- Toolbar -->
+        <div class="mv-toolbar">
+            <span class="mv-toolbar-label">LAYOUT:</span>
+            <button class="mv-layout-btn" data-layout="1"  onclick="setLayout('1')">▣ SINGLE</button>
+            <button class="mv-layout-btn" data-layout="2h" onclick="setLayout('2h')">▣▣ SPLIT-H</button>
+            <button class="mv-layout-btn" data-layout="2v" onclick="setLayout('2v')">▤ SPLIT-V</button>
+            <button class="mv-layout-btn" data-layout="4"  onclick="setLayout('4')">⊞ QUAD</button>
+            <div class="mv-sep"></div>
+            <span class="mv-save-info" id="mv-save-info">LAYOUT SAVED</span>
+        </div>
+
+        <!-- Pane grid -->
+        <div class="mv-grid l-1" id="mv-grid"></div>
+
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<script src="./auth.js"></script>
+<script>
+    LuxorAuth.requireAuth('login.html');
+    (function () {
+        const s = LuxorAuth.getSession();
+        if (s && LuxorAuth.isAdmin()) {
+            const al = document.getElementById('admin-nav-link');
+            if (al) al.style.display = 'block';
+        }
+    })();
+    setTimeout(function () {
+        const l = document.getElementById('page-loader');
+        if (l) { l.classList.add('ml-out'); setTimeout(() => l.remove(), 420); }
+    }, 680);
+</script>
+<script src="./nav.js"></script>
+<script>
+/* ================================================================
+   MISSION VIEW — configurable multi-terminal split screen
+   Layout + pane selections saved to localStorage.
+   ================================================================ */
+(function () {
+    'use strict';
+
+    const MV_KEY = 'luxorMultiviewLayout';
+
+    const TOOLS = [
+        { id: '',          label: '— SELECT MODULE —',   url: null },
+        { id: 'hack',      label: 'HACKING TERMINAL',    url: 'hack.html' },
+        { id: 'radio',     label: 'RADIO SCRAMBLER',     url: 'RadioScanner/index.html' },
+        { id: 'map',       label: 'ASSET MAP',           url: 'AssetMap/AssetMap.html' },
+        { id: 'dice',      label: 'DICE ROLLER',         url: 'dice.html' },
+        { id: 'timer',     label: 'MISSION TIMER',       url: 'timer.html' },
+        { id: 'comms',     label: 'HQ COMMS',            url: 'comms.html' },
+        { id: 'bomb',      label: 'BOMB DEFUSAL',        url: 'bomb.html' },
+        { id: 'lockpick',  label: 'LOCKPICK INTERFACE',  url: 'lockpick.html' },
+    ];
+
+    const PANE_COUNT = { '1': 1, '2h': 2, '2v': 2, '4': 4 };
+
+    let mvLayout = '1';
+    let mvPanes  = ['', '', '', ''];  // tool id per slot (always 4)
+
+    /* ── Persistence ─────────────────────────────────────────── */
+    function load() {
+        try {
+            const s = JSON.parse(localStorage.getItem(MV_KEY) || 'null');
+            if (s) {
+                mvLayout = s.layout || '1';
+                mvPanes  = (s.panes  || []).concat(['','','','']).slice(0, 4);
+            }
+        } catch (e) {}
+    }
+
+    function save() {
+        localStorage.setItem(MV_KEY, JSON.stringify({ layout: mvLayout, panes: mvPanes }));
+        const info = document.getElementById('mv-save-info');
+        if (info) {
+            info.textContent = 'SAVED ✓';
+            info.classList.add('saved');
+            clearTimeout(info._t);
+            info._t = setTimeout(() => {
+                info.textContent = 'LAYOUT SAVED';
+                info.classList.remove('saved');
+            }, 1800);
+        }
+    }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    window.setLayout = function (layout) {
+        if (!PANE_COUNT[layout]) return;
+        mvLayout = layout;
+        renderGrid();
+        save();
+        document.querySelectorAll('.mv-layout-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.layout === layout);
+        });
+    };
+
+    /* ── Grid render ─────────────────────────────────────────── */
+    function renderGrid() {
+        const grid = document.getElementById('mv-grid');
+        if (!grid) return;
+        grid.className = 'mv-grid l-' + mvLayout;
+        grid.innerHTML = '';
+        const count = PANE_COUNT[mvLayout] || 1;
+        for (let i = 0; i < count; i++) {
+            grid.appendChild(buildPane(i));
+        }
+    }
+
+    function buildPane(slot) {
+        const pane = document.createElement('div');
+        pane.className = 'mv-pane';
+
+        /* bar */
+        const bar = document.createElement('div');
+        bar.className = 'mv-pane-bar';
+
+        const dot = document.createElement('span');
+        dot.className = 'mv-pane-dot';
+
+        const sel = document.createElement('select');
+        sel.className = 'mv-pane-sel';
+        TOOLS.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.id;
+            opt.textContent = t.label;
+            if (t.id === mvPanes[slot]) opt.selected = true;
+            sel.appendChild(opt);
+        });
+        sel.addEventListener('change', () => {
+            mvPanes[slot] = sel.value;
+            updateDot(dot, sel.value);
+            loadPaneContent(pane, sel.value);
+            save();
+        });
+
+        const reloadBtn = document.createElement('button');
+        reloadBtn.className = 'mv-pane-reload';
+        reloadBtn.textContent = '↺ RELOAD';
+        reloadBtn.title = 'Reload this pane';
+        reloadBtn.addEventListener('click', () => {
+            loadPaneContent(pane, mvPanes[slot]);
+        });
+
+        updateDot(dot, mvPanes[slot]);
+        bar.appendChild(dot);
+        bar.appendChild(sel);
+        bar.appendChild(reloadBtn);
+        pane.appendChild(bar);
+
+        loadPaneContent(pane, mvPanes[slot]);
+        return pane;
+    }
+
+    function updateDot(dot, toolId) {
+        dot.style.background = toolId ? 'var(--cyan)' : 'var(--gold-dim)';
+        dot.style.boxShadow  = toolId ? '0 0 4px var(--cyan)' : 'none';
+    }
+
+    function loadPaneContent(pane, toolId) {
+        /* Remove everything after the bar */
+        const bar = pane.querySelector('.mv-pane-bar');
+        while (pane.lastChild !== bar) pane.removeChild(pane.lastChild);
+
+        const tool = TOOLS.find(t => t.id === toolId);
+
+        if (!tool || !tool.url) {
+            const empty = document.createElement('div');
+            empty.className = 'mv-pane-empty';
+            empty.innerHTML = '<div class="mv-pane-empty-icon">⊡</div><span>SELECT A MODULE ABOVE</span>';
+            pane.appendChild(empty);
+        } else {
+            const iframe = document.createElement('iframe');
+            iframe.className = 'mv-pane-frame';
+            iframe.src = tool.url;
+            iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-popups-to-escape-sandbox';
+            iframe.title  = tool.label;
+            iframe.loading = 'lazy';
+            pane.appendChild(iframe);
+        }
+    }
+
+    /* ── Init ────────────────────────────────────────────────── */
+    load();
+    renderGrid();
+
+    /* Sync layout button active state */
+    document.querySelectorAll('.mv-layout-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.layout === mvLayout);
+    });
+
+})();
+</script>
+</body>
+</html>

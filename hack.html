@@ -265,7 +265,19 @@
         .hle.warn    .hle-m { color: var(--warn); }
 
         /* ════ OVERLORD ADMIN ════════════════════════════════════════ */
-        .hack-admin-panel { background: var(--bg-card); border: 1px solid var(--gold-dim); display: none; }
+        .overlord-toggle-row { display: none; }
+        .overlord-toggle-btn {
+            width: 100%; background: rgba(184,168,0,0.03);
+            border: 1px solid var(--gold-dim); color: var(--gold);
+            font-family: 'Share Tech Mono', monospace; font-size: 0.62rem;
+            letter-spacing: 0.2em; padding: 0.42rem 0.75rem; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.15s;
+        }
+        .overlord-toggle-btn:hover { background: rgba(184,168,0,0.08); }
+        .overlord-toggle-btn .otb-arrow { font-size: 0.7rem; transition: transform 0.2s; }
+        .overlord-toggle-btn.open .otb-arrow { transform: rotate(90deg); }
+        .hack-admin-panel { background: var(--bg-card); border: 1px solid var(--gold-dim); border-top: none; display: none; }
         .hack-admin-hdr {
             background: rgba(184,168,0,0.05); border-bottom: 1px solid var(--gold-dim);
             padding: 0.42rem 0.75rem;
@@ -401,10 +413,18 @@
                 </div>
             </div>
 
+            <!-- Overlord toggle (admin only) -->
+            <div class="overlord-toggle-row" id="overlord-toggle-row">
+                <button class="overlord-toggle-btn" id="overlord-toggle-btn" onclick="toggleOverlordPanel()">
+                    <span>◈ OVERLORD CONTROLS — CIPHER TERMINAL</span>
+                    <span class="otb-arrow">▶</span>
+                </button>
+            </div>
+
             <!-- Overlord admin panel -->
             <div class="hack-admin-panel" id="hack-admin-panel">
                 <div class="hack-admin-hdr">
-                    <span>◈ OVERLORD CONTROLS — CIPHER TERMINAL</span>
+                    <span id="adm-status-inline">Phase: IDLE</span>
                     <button class="adm-btn adm-dim" id="adm-toggle-btn" onclick="toggleEnabled()">DISABLE</button>
                 </div>
                 <div class="hack-admin-body">
@@ -1181,10 +1201,19 @@
     /* ── Admin panel ───────────────────────────────────────────── */
     function initAdmin() {
         if (!isAdmin) return;
-        const panel = document.getElementById('hack-admin-panel');
-        if (panel) panel.style.display = 'block';
+        const row = document.getElementById('overlord-toggle-row');
+        if (row) row.style.display = 'flex';
         populateAdmin();
     }
+
+    window.toggleOverlordPanel = function () {
+        const panel = document.getElementById('hack-admin-panel');
+        const btn   = document.getElementById('overlord-toggle-btn');
+        if (!panel) return;
+        const isOpen = panel.style.display === 'block';
+        panel.style.display = isOpen ? 'none' : 'block';
+        if (btn) btn.classList.toggle('open', !isOpen);
+    };
 
     function populateAdmin() {
         const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
@@ -1202,14 +1231,15 @@
     }
 
     function renderAdminStatus() {
-        const el = document.getElementById('adm-status');
-        if (!el) return;
         const colors = { idle:'var(--text-dim)', active:'var(--cyan)', won:'var(--cyan)', lost:'var(--danger)' };
         const color  = colors[state.phase] || 'var(--text-dim)';
         let txt = `Phase: <span style="color:${color}">${state.phase.toUpperCase()}</span>`;
         if (state.startedBy) txt += ` &nbsp;|&nbsp; Operator: ${esc(state.startedBy)}`;
         if (state.answer)    txt += ` &nbsp;|&nbsp; Answer: <span style="color:var(--warn)">${esc(state.answer)}</span>`;
-        el.innerHTML = txt;
+        const body   = document.getElementById('adm-status');
+        const inline = document.getElementById('adm-status-inline');
+        if (body)   body.innerHTML   = txt;
+        if (inline) inline.innerHTML = txt;
     }
 
     /* ── Cross-tab sync ────────────────────────────────────────── */
