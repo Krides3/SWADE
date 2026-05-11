@@ -28,19 +28,29 @@
     localStorage.setItem(STORE_KEY, JSON.stringify(u));
   }
 
-  // Seed OVERLORD account on first run
-  function ensureOverlord() {
+  // Default roster — update via Admin Panel → LOCK IN ROSTER
+  const DEFAULT_USERS = [
+    { username: 'OVERLORD', passwordHash: hash(DEFAULT_PW), role: 'admin', clearance: 5 }
+  ];
+
+  // Sync default accounts on every page load — adds missing, updates existing
+  function ensureDefaults() {
     const users = getUsers();
-    if (!users.find(u => u.username === 'OVERLORD')) {
-      users.unshift({
-        username: 'OVERLORD',
-        passwordHash: hash(DEFAULT_PW),
-        role: 'admin',
-        clearance: 5
-      });
-      saveUsers(users);
-    }
+    let changed = false;
+    DEFAULT_USERS.forEach(function (def) {
+      const idx = users.findIndex(u => u.username === def.username);
+      if (idx === -1) {
+        users.push(Object.assign({}, def));
+        changed = true;
+      } else if (users[idx].passwordHash !== def.passwordHash) {
+        users[idx] = Object.assign({}, def);
+        changed = true;
+      }
+    });
+    if (changed) saveUsers(users);
   }
+
+  function ensureOverlord() { ensureDefaults(); }
 
   function getSession() {
     try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); }

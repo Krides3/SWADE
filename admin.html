@@ -312,6 +312,35 @@
                 <div class="form-msg" id="pw-msg"></div>
             </div>
 
+            <!-- ── Backup / Restore ────────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ OPERATOR DATA BACKUP</div>
+                <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
+                    Export all operator accounts to a file. Import to restore after clearing browser data or switching devices.
+                    The file contains hashed credentials — keep it secure.
+                </p>
+                <div style="display:flex;gap:0.75rem;align-items:flex-start;flex-wrap:wrap;">
+                    <button class="admin-btn" id="export-btn">⬇ EXPORT ROSTER</button>
+                    <label class="admin-btn" style="cursor:pointer;display:inline-block;">
+                        ⬆ IMPORT ROSTER
+                        <input type="file" id="import-file" accept=".json" style="display:none">
+                    </label>
+                </div>
+                <div class="form-msg" id="backup-msg"></div>
+            </div>
+
+            <!-- ── Lock In Roster ──────────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ LOCK IN ROSTER (PERMANENT SAVE)</div>
+                <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
+                    Bakes the current roster into <code style="color:var(--gold)">auth.js</code> as permanent defaults.
+                    Download the file, replace the existing <code style="color:var(--gold)">auth.js</code>, then push to git.
+                    After that, accounts auto-restore even if browser data is cleared.
+                </p>
+                <button class="admin-btn" id="lock-roster-btn">⬇ DOWNLOAD UPDATED AUTH.JS</button>
+                <div class="form-msg" id="lock-msg"></div>
+            </div>
+
             <!-- ── Minigame Control ─────────────────────────────── -->
             <div class="admin-section">
                 <div class="admin-section-title">▸ MINIGAME CONTROL</div>
@@ -474,6 +503,67 @@ renderRoster();
         grid.appendChild(row);
     });
 })();
+
+// ── Lock In Roster ───────────────────────────────────────────
+document.getElementById('lock-roster-btn').addEventListener('click', function () {
+    const msg = document.getElementById('lock-msg');
+    fetch('./auth.js')
+        .then(r => r.text())
+        .then(function (src) {
+            const users    = LuxorAuth.getUsers();
+            const newBlock = 'const DEFAULT_USERS = ' + JSON.stringify(users) + ';';
+            const updated  = src.replace(/const DEFAULT_USERS\s*=\s*\[[\s\S]*?\];/, newBlock);
+            const blob     = new Blob([updated], { type: 'application/javascript' });
+            const url      = URL.createObjectURL(blob);
+            const a        = document.createElement('a');
+            a.href     = url;
+            a.download = 'auth.js';
+            a.click();
+            URL.revokeObjectURL(url);
+            msg.className  = 'form-msg ok';
+            msg.textContent = '✓ DOWNLOADED — replace auth.js in your project and push to git';
+        })
+        .catch(function () {
+            msg.className  = 'form-msg err';
+            msg.textContent = '⚠ FAILED — could not read auth.js (try running from a local server)';
+        });
+});
+
+// ── Backup / Restore ─────────────────────────────────────────
+document.getElementById('export-btn').addEventListener('click', function () {
+    const users = LuxorAuth.getUsers();
+    const blob  = new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' });
+    const url   = URL.createObjectURL(blob);
+    const a     = document.createElement('a');
+    const date  = new Date().toISOString().slice(0,10);
+    a.href     = url;
+    a.download = 'luxor-roster-' + date + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+document.getElementById('import-file').addEventListener('change', function () {
+    const file = this.files[0];
+    const msg  = document.getElementById('backup-msg');
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!Array.isArray(data)) throw new Error('invalid format');
+            localStorage.setItem('luxorUsers', JSON.stringify(data));
+            msg.className  = 'form-msg ok';
+            msg.textContent = '✓ ROSTER RESTORED — ' + data.length + ' OPERATOR(S) LOADED';
+            renderRoster();
+        } catch (err) {
+            msg.className  = 'form-msg err';
+            msg.textContent = '⚠ IMPORT FAILED — INVALID FILE';
+        }
+        document.getElementById('import-file').value = '';
+    };
+    reader.readAsText(file);
+});
 </script>
 </body>
 </html>
