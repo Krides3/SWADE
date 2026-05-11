@@ -14,6 +14,8 @@ let PLAYER_CLEARANCE = 1;
     if (!session) return;
     if (!LuxorAuth.isAdmin()) {
         PLAYER_CLEARANCE = session.clearance || 1;
+    } else {
+        PLAYER_CLEARANCE = 5; // Overlord starts at max; use slider to preview lower clearances
         document.addEventListener('DOMContentLoaded', function () {
             const label = document.querySelector('#clearance-panel .panel-label');
             if (label) label.textContent = 'Clearance: ' + PLAYER_CLEARANCE;
@@ -829,8 +831,7 @@ function vehicleTT(v) {
 const deployMarkers = {};
 
 function canSeeDeployment(d) {
-    const admin = window.LuxorAuth && LuxorAuth.isAdmin();
-    return admin || PLAYER_CLEARANCE >= d.clearance;
+    return PLAYER_CLEARANCE >= d.clearance;
 }
 
 function buildDeployments() {
@@ -916,8 +917,7 @@ class Vehicle {
     }
 
     _canSee() {
-        const admin = window.LuxorAuth && LuxorAuth.isAdmin();
-        return admin || PLAYER_CLEARANCE >= this.route.clearance;
+        return PLAYER_CLEARANCE >= this.route.clearance;
     }
 
     updateVisibility() {
