@@ -3,272 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>LUXOR — Breach Protocol</title>
+    <title>LUXOR — Cipher Terminal</title>
     <link rel="stylesheet" href="./style.css">
     <style>
-        /* ══ Hack page overrides ══════════════════════════════════════ */
-        .hack-wrap {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+        /* ════════════════════════════════════════════════════════
+           CIPHER TERMINAL — hack.html styles
+           ════════════════════════════════════════════════════════ */
 
-        /* Status bar */
-        .hack-statusbar {
+        .cipher-wrap { display: flex; flex-direction: column; gap: 1rem; }
+
+        /* ── Status bar ───────────────────────────────────────── */
+        .cipher-statusbar {
             background: var(--bg-panel);
             border: 1px solid var(--border);
-            padding: 0.7rem 1rem;
+            padding: 0.65rem 1rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 0.5rem;
         }
-        .hack-target-block { display: flex; flex-direction: column; gap: 2px; }
-        .hack-target-name {
-            font-family: 'Orbitron', monospace;
-            font-size: 0.88rem;
-            color: var(--gold);
-            letter-spacing: 0.12em;
-        }
-        .hack-target-sub {
+        .cipher-target-block { display: flex; flex-direction: column; gap: 2px; }
+        .cipher-target-name  { font-family: 'Orbitron', monospace; font-size: 0.85rem; color: var(--gold); letter-spacing: 0.12em; }
+        .cipher-target-sub   { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.14em; }
+        .cipher-phase-badge  {
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.6rem;
-            color: var(--text-dim);
+            font-size: 0.65rem;
             letter-spacing: 0.14em;
-        }
-        .hack-phase-badge {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.68rem;
-            letter-spacing: 0.15em;
-            padding: 3px 10px;
+            padding: 3px 9px;
             border: 1px solid var(--border);
             color: var(--text-dim);
         }
-        .hack-phase-badge.active {
-            color: var(--cyan);
-            border-color: var(--cyan);
-            background: rgba(0,229,200,0.05);
-            animation: blink 2s ease-in-out infinite;
-        }
-        .hack-phase-badge.won {
-            color: var(--cyan);
-            border-color: var(--cyan);
-            background: rgba(0,229,200,0.08);
-        }
-        .hack-phase-badge.lost {
-            color: var(--danger);
-            border-color: var(--danger);
-            background: rgba(192,57,43,0.08);
-        }
-        .hack-timer {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--gold);
-            letter-spacing: 0.06em;
-            min-width: 82px;
-            text-align: right;
-            animation: pulseGold 3s ease-in-out infinite;
-        }
-        .hack-timer.danger {
-            color: var(--danger);
-            text-shadow: 0 0 10px var(--danger);
-            animation: blink 0.5s step-end infinite;
-        }
-        .hack-timer.inactive {
-            color: var(--text-dim);
-            animation: none;
-            font-size: 1rem;
-            opacity: 0.4;
-        }
+        .cipher-phase-badge.active { color: var(--cyan);   border-color: var(--cyan);   background: rgba(0,229,200,0.04); animation: blink 2s ease-in-out infinite; }
+        .cipher-phase-badge.won    { color: var(--cyan);   border-color: var(--cyan);   background: rgba(0,229,200,0.07); }
+        .cipher-phase-badge.lost   { color: var(--danger); border-color: var(--danger); background: rgba(192,57,43,0.07); }
 
-        /* ── Game layout ───────────────────────────────────────────── */
-        .hack-game {
-            display: grid;
-            grid-template-columns: 1fr 270px;
-            gap: 1rem;
-        }
-
-        /* ── Matrix panel ──────────────────────────────────────────── */
-        .hack-matrix-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-        }
-        .hack-panel-header {
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
-            padding: 0.5rem 0.75rem;
+        /* ── The "green screen" terminal ──────────────────────── */
+        .cipher-terminal {
+            background: #05100a;
+            border: 1px solid #1c3a25;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.62rem;
-            color: var(--gold-dim);
-            letter-spacing: 0.2em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .hack-matrix {
-            display: grid;
-            padding: 0.75rem;
-            gap: 5px;
-        }
-        .hack-cell {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: clamp(0.7rem, 2.2vw, 0.9rem);
-            border: 1px solid var(--border);
-            transition: all 0.1s;
-            letter-spacing: 0.04em;
-            color: var(--text-dim);
-            background: var(--bg-panel);
-            user-select: none;
             position: relative;
+            overflow: hidden;
         }
-        .hack-cell.valid {
-            cursor: pointer;
-            border-color: rgba(0,229,200,0.45);
-            color: var(--cyan);
-            background: rgba(0,229,200,0.04);
-        }
-        .hack-cell.valid:hover {
-            background: rgba(0,229,200,0.13);
-            color: #fff;
-            border-color: var(--cyan);
-            box-shadow: inset 0 0 10px rgba(0,229,200,0.1), 0 0 6px rgba(0,229,200,0.15);
-        }
-        .hack-cell.selected {
-            border-color: var(--gold);
-            color: var(--gold);
-            background: rgba(184,168,0,0.08);
-            box-shadow: inset 0 0 8px rgba(184,168,0,0.08);
-        }
-        .hack-cell.selected::after {
+        .cipher-terminal::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: repeating-linear-gradient(
-                45deg, transparent, transparent 3px,
-                rgba(184,168,0,0.03) 3px, rgba(184,168,0,0.03) 6px
-            );
-        }
-        .hack-cell.inactive {
-            opacity: 0.18;
-            cursor: not-allowed;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+            pointer-events: none;
+            z-index: 5;
         }
 
-        /* ── Right panel ───────────────────────────────────────────── */
-        .hack-right {
+        .cipher-term-header {
+            background: #08180d;
+            border-bottom: 1px solid #1c3a25;
+            padding: 0.5rem 0.75rem;
+        }
+        .cth-title  { font-size: 0.6rem;  color: #3d7a50; letter-spacing: 0.12em; }
+        .cth-target { font-size: 0.72rem; color: #6dcc82; letter-spacing: 0.1em;  margin: 2px 0; }
+        .cth-warn   { font-size: 0.56rem; color: #a03020; letter-spacing: 0.1em;  }
+
+        /* ── Body: grid columns + sidebar ─────────────────────── */
+        .cipher-body {
+            display: grid;
+            grid-template-columns: 1fr 230px;
+        }
+
+        /* Word grid */
+        .cipher-grid {
+            padding: 0.65rem 0.85rem;
+            border-right: 1px solid #1c3a25;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            column-gap: 0.6rem;
+            row-gap: 1px;
+        }
+        .cipher-line {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+            white-space: nowrap;
+        }
+        .c-addr { font-size: 0.56rem; color: #254a30; flex-shrink: 0; letter-spacing: 0.04em; }
+        .c-junk { font-size: 0.68rem; color: #254a30; }
+        .c-word {
+            font-size: 0.72rem;
+            color: #6dcc82;
+            cursor: pointer;
+            transition: color 0.1s, text-shadow 0.1s;
+            position: relative;
+        }
+        .c-word:hover        { color: #c0ffcc; text-shadow: 0 0 7px rgba(109,204,130,0.7); }
+        .c-word.w-guessed    { color: #853a28; cursor: not-allowed; text-decoration: line-through; opacity: 0.7; }
+        .c-word.w-correct    { color: var(--gold); text-shadow: 0 0 8px rgba(184,168,0,0.6); cursor: default; }
+        .c-word.w-locked     { color: #1c3a25; cursor: not-allowed; }
+
+        /* Sidebar */
+        .cipher-sidebar {
+            padding: 0.65rem 0.75rem;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
         }
-        .hack-sequences-panel,
-        .hack-buffer-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+        .cs-label {
+            font-size: 0.55rem;
+            color: #254a30;
+            letter-spacing: 0.2em;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #1c3a25;
         }
-        .hack-seq-list {
-            padding: 0.6rem 0.7rem;
+        /* Attempts pips */
+        .cs-pips {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .cs-pip {
+            width: 13px; height: 13px;
+            background: #3d7a50;
+            border: 1px solid #3d7a50;
+            transition: all 0.25s;
+        }
+        .cs-pip.used { background: transparent; border-color: #1c3a25; }
+        .cs-pip-label {
+            font-size: 0.56rem;
+            color: #3d7a50;
+            letter-spacing: 0.1em;
+            margin-top: 2px;
+        }
+        /* Guess history */
+        .cs-history {
             display: flex;
             flex-direction: column;
-            gap: 0.55rem;
+            gap: 0.22rem;
+            max-height: 220px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #1c3a25 transparent;
         }
-        .hack-seq {
-            border: 1px solid var(--border);
-            padding: 0.45rem 0.6rem;
-            background: var(--bg-panel);
-            transition: border-color 0.2s, background 0.2s;
+        .cs-guess {
+            font-size: 0.62rem;
+            color: #3d7a50;
+            letter-spacing: 0.08em;
+            line-height: 1.5;
         }
-        .hack-seq.completed {
-            border-color: rgba(0,229,200,0.35);
-            background: rgba(0,229,200,0.03);
-        }
-        .hack-seq-label {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.58rem;
-            color: var(--text-dim);
-            letter-spacing: 0.14em;
-            margin-bottom: 0.3rem;
-            display: flex;
-            justify-content: space-between;
-        }
-        .hack-seq-label .seq-check { color: var(--cyan); }
-        .hack-seq-codes {
-            display: flex;
-            gap: 3px;
-            flex-wrap: wrap;
-        }
-        .hack-seq-code {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.76rem;
-            color: var(--purple-bright);
-            background: var(--bg-deep);
-            border: 1px solid var(--purple-dim);
-            padding: 1px 5px;
-            letter-spacing: 0.06em;
-            transition: all 0.15s;
-        }
-        .hack-seq-code.matched {
-            color: var(--cyan);
-            border-color: rgba(0,229,200,0.5);
-            background: rgba(0,229,200,0.06);
-        }
+        .cs-guess .gw { color: #6dcc82; }
+        .cs-guess .gr { color: var(--gold); font-weight: bold; }
+        .cs-guess.perfect .gw { color: var(--gold); }
+        .cs-guess.perfect .gr { color: var(--cyan); }
+        .cs-cursor { font-size: 0.62rem; color: #6dcc82; animation: blink 0.8s step-end infinite; }
 
-        /* Buffer */
-        .hack-buffer-slots {
-            padding: 0.6rem 0.7rem;
-            display: flex;
-            gap: 3px;
-        }
-        .hack-buffer-slot {
-            flex: 1;
-            height: 36px;
-            border: 1px solid var(--border);
-            background: var(--bg-panel);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* ── Actions ──────────────────────────────────────────── */
+        .cipher-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+        .cipher-btn {
+            padding: 0.6rem 1.2rem;
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.72rem;
-            color: var(--text-dim);
-        }
-        .hack-buffer-slot.filled {
-            border-color: var(--gold-dim);
-            color: var(--gold);
-            background: rgba(184,168,0,0.06);
-        }
-        .hack-buffer-slot.latest {
-            border-color: var(--gold);
-            box-shadow: 0 0 6px rgba(184,168,0,0.2);
-        }
-
-        /* ── Action buttons ────────────────────────────────────────── */
-        .hack-actions {
-            display: flex;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-        }
-        .hack-btn {
-            padding: 0.65rem 1.3rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.75rem;
-            letter-spacing: 0.18em;
+            letter-spacing: 0.16em;
             border: 1px solid;
             background: transparent;
-            transition: all 0.18s;
             cursor: pointer;
+            transition: all 0.18s;
         }
-        .hack-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        .hack-btn-primary { border-color: var(--gold-dim); color: var(--gold); }
-        .hack-btn-primary:hover:not(:disabled) { background: rgba(184,168,0,0.1); border-color: var(--gold); }
-        .hack-btn-danger { border-color: rgba(192,57,43,0.4); color: var(--danger); }
-        .hack-btn-danger:hover:not(:disabled) { background: rgba(192,57,43,0.1); border-color: var(--danger); }
+        .cipher-btn:disabled  { opacity: 0.3; cursor: not-allowed; }
+        .cipher-btn-primary   { border-color: var(--gold-dim); color: var(--gold); }
+        .cipher-btn-primary:hover:not(:disabled) { background: rgba(184,168,0,0.1); border-color: var(--gold); }
+        .cipher-btn-danger    { border-color: rgba(192,57,43,0.4); color: var(--danger); }
+        .cipher-btn-danger:hover:not(:disabled)  { background: rgba(192,57,43,0.1); }
 
-        /* ── Idle screen ───────────────────────────────────────────── */
-        .hack-idle-screen {
+        /* ── Idle / result / locked screens ───────────────────── */
+        .cipher-splash {
             background: var(--bg-card);
             border: 1px solid var(--border);
             padding: 2.5rem 1.5rem;
@@ -278,266 +183,152 @@
             gap: 0.85rem;
             text-align: center;
         }
-        .hack-idle-icon {
-            font-size: 2.8rem;
-            color: var(--purple-bright);
-            opacity: 0.55;
-        }
-        .hack-idle-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 0.9rem;
-            color: var(--gold);
-            letter-spacing: 0.14em;
-        }
-        .hack-idle-meta {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--cyan);
-            letter-spacing: 0.1em;
-        }
-        .hack-idle-stats {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.68rem;
-            color: var(--text-dim);
-            letter-spacing: 0.08em;
-            line-height: 1.8;
-        }
-
-        /* ── Result screen ─────────────────────────────────────────── */
-        .hack-result {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 2.5rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.85rem;
-            text-align: center;
-        }
-        .hack-result.won { border-color: rgba(0,229,200,0.35); }
-        .hack-result.lost { border-color: rgba(192,57,43,0.35); }
-        .hack-result-icon { font-size: 2.5rem; }
-        .hack-result-title {
-            font-family: 'Orbitron', monospace;
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-        }
-        .hack-result.won .hack-result-title { color: var(--cyan); }
-        .hack-result.lost .hack-result-title { color: var(--danger); }
-        .hack-result-detail {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--text-dim);
-            letter-spacing: 0.08em;
-            line-height: 1.8;
-        }
-
-        /* ── Locked screen ─────────────────────────────────────────── */
-        .hack-locked {
+        .cipher-splash-icon  { font-size: 2.6rem; color: var(--purple-bright); opacity: 0.55; }
+        .cipher-splash-title { font-family: 'Orbitron', monospace; font-size: 0.88rem; color: var(--gold); letter-spacing: 0.14em; }
+        .cipher-splash-meta  { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: var(--cyan); letter-spacing: 0.1em; }
+        .cipher-splash-desc  { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.08em; line-height: 1.9; }
+        .cipher-splash.s-won  { border-color: rgba(0,229,200,0.35); }
+        .cipher-splash.s-lost { border-color: rgba(192,57,43,0.35); }
+        .s-won  .cipher-splash-title { color: var(--cyan); }
+        .s-lost .cipher-splash-title { color: var(--danger); }
+        .cipher-locked {
             background: var(--bg-card);
             border: 1px solid var(--border);
             padding: 2rem;
             text-align: center;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             color: var(--text-dim);
             letter-spacing: 0.14em;
         }
 
-        /* ── Activity log ──────────────────────────────────────────── */
-        .hack-log-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+        /* ── Activity log ─────────────────────────────────────── */
+        .hack-log-panel { background: var(--bg-card); border: 1px solid var(--border); }
+        .hack-panel-hdr {
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 0.42rem 0.75rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.58rem;
+            color: var(--gold-dim);
+            letter-spacing: 0.2em;
+            display: flex;
+            justify-content: space-between;
         }
         .hack-log-entries {
-            padding: 0.5rem 0.75rem;
-            max-height: 140px;
+            padding: 0.4rem 0.75rem;
+            max-height: 130px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 0.2rem;
+            gap: 0.15rem;
             scrollbar-width: thin;
             scrollbar-color: var(--border) transparent;
         }
-        .hack-log-entry {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.62rem;
-            color: var(--text-dim);
-            letter-spacing: 0.05em;
-            display: flex;
-            gap: 0.5rem;
-            align-items: baseline;
-        }
-        .hack-log-time  { color: var(--gold-dim); flex-shrink: 0; }
-        .hack-log-user  { color: var(--purple-bright); flex-shrink: 0; min-width: 70px; }
-        .hack-log-entry.success .hack-log-msg { color: var(--cyan); }
-        .hack-log-entry.danger  .hack-log-msg { color: var(--danger); }
-        .hack-log-entry.warn    .hack-log-msg { color: var(--warn); }
+        .hle { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.04em; display: flex; gap: 0.4rem; }
+        .hle-t { color: var(--gold-dim); flex-shrink: 0; }
+        .hle-u { color: var(--purple-bright); flex-shrink: 0; min-width: 68px; }
+        .hle.success .hle-m { color: var(--cyan); }
+        .hle.danger  .hle-m { color: var(--danger); }
+        .hle.warn    .hle-m { color: var(--warn); }
 
-        /* ══ OVERLORD Admin panel ═══════════════════════════════════ */
-        .hack-admin-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--gold-dim);
-            display: none;
-        }
-        .hack-admin-header {
+        /* ════ OVERLORD admin panel ══════════════════════════════ */
+        .hack-admin-panel { background: var(--bg-card); border: 1px solid var(--gold-dim); display: none; }
+        .hack-admin-hdr {
             background: rgba(184,168,0,0.05);
             border-bottom: 1px solid var(--gold-dim);
-            padding: 0.5rem 0.75rem;
+            padding: 0.42rem 0.75rem;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.62rem;
+            font-size: 0.58rem;
             color: var(--gold);
             letter-spacing: 0.2em;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .hack-admin-body {
-            padding: 0.9rem 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-        .hack-admin-status-row {
+        .hack-admin-body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+        .adm-status-row  {
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 0.5rem;
-            padding-bottom: 0.75rem;
+            padding-bottom: 0.65rem;
             border-bottom: 1px solid var(--border);
         }
-        .hack-admin-status-text {
+        .adm-status-txt { font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.07em; }
+        .adm-ctrl-row   { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+        .adm-btn {
+            padding: 0.33rem 0.72rem;
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.68rem;
-            color: var(--text-dim);
-            letter-spacing: 0.08em;
-        }
-        .hack-admin-ctrl-row {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-        .hack-admin-btn {
-            padding: 0.38rem 0.8rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.65rem;
-            letter-spacing: 0.12em;
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
             border: 1px solid;
             background: transparent;
             cursor: pointer;
             transition: all 0.15s;
         }
-        .adm-gold  { border-color: var(--gold-dim);           color: var(--gold);     }
-        .adm-gold:hover  { background: rgba(184,168,0,0.1); }
-        .adm-cyan  { border-color: rgba(0,229,200,0.4);       color: var(--cyan);     }
-        .adm-cyan:hover  { background: rgba(0,229,200,0.08); }
-        .adm-red   { border-color: rgba(192,57,43,0.4);       color: var(--danger);   }
-        .adm-red:hover   { background: rgba(192,57,43,0.1);  }
-        .adm-dim   { border-color: var(--border);             color: var(--text-dim); }
-        .adm-dim:hover   { background: rgba(255,255,255,0.04); }
+        .adm-gold { border-color: var(--gold-dim); color: var(--gold); }
+        .adm-gold:hover { background: rgba(184,168,0,0.1); }
+        .adm-cyan { border-color: rgba(0,229,200,0.4); color: var(--cyan); }
+        .adm-cyan:hover { background: rgba(0,229,200,0.08); }
+        .adm-red  { border-color: rgba(192,57,43,0.4); color: var(--danger); }
+        .adm-red:hover  { background: rgba(192,57,43,0.1); }
+        .adm-dim  { border-color: var(--border); color: var(--text-dim); }
+        .adm-dim:hover  { background: rgba(255,255,255,0.04); }
 
-        .hack-admin-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.65rem;
-        }
-        .hack-admin-field {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        .hack-admin-field.full { grid-column: 1 / -1; }
-        .hack-admin-label {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.58rem;
-            color: var(--gold-dim);
-            letter-spacing: 0.16em;
-        }
-        .hack-admin-input {
+        .adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+        .adm-field { display: flex; flex-direction: column; gap: 3px; }
+        .adm-field.full { grid-column: 1 / -1; }
+        .adm-label { font-family: 'Share Tech Mono', monospace; font-size: 0.54rem; color: var(--gold-dim); letter-spacing: 0.14em; }
+        .adm-input {
             background: #0d1018;
             border: 1px solid var(--border);
             color: var(--text);
             font-family: 'Share Tech Mono', monospace;
-            font-size: 0.78rem;
-            padding: 5px 8px;
+            font-size: 0.74rem;
+            padding: 5px 7px;
             outline: none;
             width: 100%;
-            transition: border-color 0.2s;
         }
-        .hack-admin-input:focus { border-color: var(--gold-dim); }
-
-        .hack-seq-admin-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.45rem;
-        }
-        .hack-seq-admin-row {
-            display: flex;
-            gap: 0.4rem;
-            align-items: center;
-        }
-        .adm-seq-lbl {
-            width: 110px;
-            flex-shrink: 0;
+        .adm-input:focus { border-color: var(--gold-dim); }
+        .adm-textarea {
             background: #0d1018;
             border: 1px solid var(--border);
             color: var(--text);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            padding: 4px 6px;
-            outline: none;
-        }
-        .adm-seq-codes {
-            flex: 1;
-            background: #0d1018;
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            padding: 4px 6px;
-            outline: none;
-        }
-        .adm-seq-rm {
-            width: 22px;
-            height: 22px;
-            background: transparent;
-            border: 1px solid rgba(192,57,43,0.35);
-            color: var(--danger);
-            font-family: inherit;
-            font-size: 0.7rem;
-            cursor: pointer;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s;
-        }
-        .adm-seq-rm:hover { background: rgba(192,57,43,0.1); }
-
-        .hack-admin-msg {
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.65rem;
-            padding: 5px 8px;
-            display: none;
-            letter-spacing: 0.08em;
+            padding: 5px 7px;
+            outline: none;
+            width: 100%;
+            resize: vertical;
+            min-height: 72px;
+            line-height: 1.6;
         }
-        .hack-admin-msg.ok  { display: block; background: rgba(0,229,200,0.06);  border: 1px solid rgba(0,229,200,0.2); color: var(--cyan); }
-        .hack-admin-msg.err { display: block; background: rgba(192,57,43,0.07);  border: 1px solid rgba(192,57,43,0.25); color: var(--danger); }
+        .adm-textarea:focus { border-color: var(--gold-dim); }
+        .adm-hint { font-family: 'Share Tech Mono', monospace; font-size: 0.54rem; color: var(--text-dim); letter-spacing: 0.06em; margin-top: 2px; }
+        .adm-msg  { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; padding: 4px 7px; display: none; letter-spacing: 0.06em; }
+        .adm-msg.ok  { display: block; background: rgba(0,229,200,0.05);  border: 1px solid rgba(0,229,200,0.2);  color: var(--cyan);   }
+        .adm-msg.err { display: block; background: rgba(192,57,43,0.06);  border: 1px solid rgba(192,57,43,0.22); color: var(--danger); }
 
-        /* ── Responsive ────────────────────────────────────────────── */
         @media (max-width: 700px) {
-            .hack-game { grid-template-columns: 1fr; }
-            .hack-admin-grid { grid-template-columns: 1fr; }
-            .hack-admin-field.full { grid-column: 1; }
-            .hack-timer { font-size: 1.2rem; }
+            .cipher-body { grid-template-columns: 1fr; }
+            .cipher-grid { grid-template-columns: 1fr; border-right: none; border-bottom: 1px solid #1c3a25; }
+            .cipher-sidebar { border-top: 1px solid #1c3a25; }
+            .adm-grid { grid-template-columns: 1fr; }
+            .adm-field.full { grid-column: 1; }
         }
     </style>
 </head>
 <body>
 
-<div id="boot-overlay" style="display:none"></div>
+<!-- ── Mini loading screen ────────────────────────────────────── -->
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">BREACH.EXE</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">INITIALIZING CIPHER TERMINAL...</div>
+</div>
 
 <div class="app">
     <nav class="navbar" id="navbar">
@@ -576,105 +367,97 @@
     <main class="main">
         <div class="page-header">
             <h1>Hacking Terminal</h1>
-            <div class="tagline">// BREACH PROTOCOL — ICE LAYER EXPLOITATION //</div>
+            <div class="tagline">// CIPHER TERMINAL — MAINFRAME PASSWORD BYPASS //</div>
             <div class="header-divider"></div>
         </div>
 
-        <div class="hack-wrap">
+        <div class="cipher-wrap">
 
             <!-- Status bar -->
-            <div class="hack-statusbar">
-                <div class="hack-target-block">
-                    <div class="hack-target-name" id="hack-target-name">NEXUS-7 DATACORE</div>
-                    <div class="hack-target-sub">▸ BREACH.EXE — ICE BREACH PROTOCOL</div>
+            <div class="cipher-statusbar">
+                <div class="cipher-target-block">
+                    <div class="cipher-target-name" id="cipher-target-name">MAINFRAME-ALPHA</div>
+                    <div class="cipher-target-sub">▸ CIPHER.EXE — PASSWORD BYPASS PROTOCOL</div>
                 </div>
-                <span class="hack-phase-badge idle" id="hack-phase-badge">STANDBY</span>
-                <div class="hack-timer inactive" id="hack-timer">00:45</div>
+                <span class="cipher-phase-badge" id="cipher-phase-badge">STANDBY</span>
             </div>
 
             <!-- Dynamic game area -->
-            <div id="hack-game-area"></div>
+            <div id="cipher-game-area"></div>
 
             <!-- Activity log -->
             <div class="hack-log-panel">
-                <div class="hack-panel-header">
+                <div class="hack-panel-hdr">
                     <span>▸ ACTIVITY LOG</span>
-                    <span id="hack-log-count" style="color:var(--text-dim)">0 ENTRIES</span>
+                    <span id="log-count" style="color:var(--text-dim)">0 ENTRIES</span>
                 </div>
                 <div class="hack-log-entries" id="hack-log-entries">
-                    <div class="hack-log-entry">
-                        <span class="hack-log-msg" style="opacity:0.35">— AWAITING BREACH INITIATION —</span>
-                    </div>
+                    <div class="hle"><span class="hle-m" style="opacity:0.3">— AWAITING TERMINAL ACTIVATION —</span></div>
                 </div>
             </div>
 
-            <!-- Overlord admin panel (injected by JS if isAdmin) -->
+            <!-- Overlord admin panel (injected by JS) -->
             <div class="hack-admin-panel" id="hack-admin-panel">
-                <div class="hack-admin-header">
-                    <span>◈ OVERLORD CONTROLS — HACKING TERMINAL</span>
-                    <button class="hack-admin-btn adm-dim" id="adm-toggle-btn" onclick="toggleGameEnabled()">DISABLE</button>
+                <div class="hack-admin-hdr">
+                    <span>◈ OVERLORD CONTROLS — CIPHER TERMINAL</span>
+                    <button class="adm-btn adm-dim" id="adm-toggle-btn" onclick="toggleEnabled()">DISABLE</button>
                 </div>
                 <div class="hack-admin-body">
 
-                    <!-- Current status + quick controls -->
-                    <div class="hack-admin-status-row">
-                        <div class="hack-admin-status-text" id="adm-status">Phase: IDLE</div>
-                        <div class="hack-admin-ctrl-row">
-                            <button class="hack-admin-btn adm-cyan" onclick="adminForceWin()">FORCE WIN</button>
-                            <button class="hack-admin-btn adm-red"  onclick="adminForceFail()">FORCE FAIL</button>
-                            <button class="hack-admin-btn adm-gold" onclick="adminReset()">RESET</button>
+                    <div class="adm-status-row">
+                        <div class="adm-status-txt" id="adm-status">Phase: IDLE</div>
+                        <div class="adm-ctrl-row">
+                            <button class="adm-btn adm-cyan" onclick="adminReveal()">REVEAL ANSWER</button>
+                            <button class="adm-btn adm-gold" onclick="adminForceWin()">FORCE WIN</button>
+                            <button class="adm-btn adm-red"  onclick="adminForceFail()">FORCE FAIL</button>
+                            <button class="adm-btn adm-gold" onclick="adminReset()">RESET</button>
                         </div>
                     </div>
 
-                    <!-- Config fields -->
-                    <div class="hack-admin-grid">
-                        <div class="hack-admin-field full">
-                            <label class="hack-admin-label">TARGET NAME</label>
-                            <input class="hack-admin-input" type="text" id="adm-target" placeholder="NEXUS-7 DATACORE">
+                    <div class="adm-grid">
+                        <div class="adm-field full">
+                            <label class="adm-label">TARGET / SYSTEM NAME</label>
+                            <input class="adm-input" type="text" id="adm-target" placeholder="MAINFRAME-ALPHA">
                         </div>
-                        <div class="hack-admin-field">
-                            <label class="hack-admin-label">MATRIX SIZE (4–8)</label>
-                            <input class="hack-admin-input" type="number" id="adm-size" min="4" max="8" value="5">
+                        <div class="adm-field">
+                            <label class="adm-label">WORD COUNT (8–20)</label>
+                            <input class="adm-input" type="number" id="adm-wordcount" min="8" max="20" value="12">
                         </div>
-                        <div class="hack-admin-field">
-                            <label class="hack-admin-label">BUFFER SIZE (3–10)</label>
-                            <input class="hack-admin-input" type="number" id="adm-buffer" min="3" max="10" value="6">
+                        <div class="adm-field">
+                            <label class="adm-label">ATTEMPTS (2–8)</label>
+                            <input class="adm-input" type="number" id="adm-attempts" min="2" max="8" value="4">
                         </div>
-                        <div class="hack-admin-field">
-                            <label class="hack-admin-label">TIME LIMIT (sec)</label>
-                            <input class="hack-admin-input" type="number" id="adm-timer" min="10" max="300" value="45">
+                        <div class="adm-field full">
+                            <label class="adm-label">FORCE ANSWER (leave blank = random from pool)</label>
+                            <input class="adm-input" type="text" id="adm-answer" placeholder="e.g. SHADOW  — must exist in word pool">
+                            <div class="adm-hint">If blank, a random word from the pool becomes the password each game.</div>
                         </div>
-                        <div class="hack-admin-field"></div><!-- spacer -->
-                        <div class="hack-admin-field full">
-                            <label class="hack-admin-label">SUCCESS MESSAGE</label>
-                            <input class="hack-admin-input" type="text" id="adm-success-msg" placeholder="BREACH SUCCESSFUL — DATA EXTRACTED">
+                        <div class="adm-field full">
+                            <label class="adm-label">WORD POOL (one per line, all same length recommended)</label>
+                            <textarea class="adm-textarea" id="adm-pool" rows="6"></textarea>
+                            <div class="adm-hint">All words must be uppercase. Mixed lengths allowed but same-length is recommended.</div>
                         </div>
-                        <div class="hack-admin-field full">
-                            <label class="hack-admin-label">FAILURE MESSAGE</label>
-                            <input class="hack-admin-input" type="text" id="adm-fail-msg" placeholder="TRACE DETECTED — BREACH TERMINATED">
+                        <div class="adm-field full">
+                            <label class="adm-label">SUCCESS MESSAGE</label>
+                            <input class="adm-input" type="text" id="adm-success-msg">
+                        </div>
+                        <div class="adm-field full">
+                            <label class="adm-label">FAILURE MESSAGE</label>
+                            <input class="adm-input" type="text" id="adm-fail-msg">
                         </div>
                     </div>
 
-                    <!-- ICE Sequences -->
-                    <div>
-                        <div style="font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--gold-dim);letter-spacing:0.18em;margin-bottom:0.5rem;">
-                            ICE SEQUENCES &mdash; <span style="color:var(--text-dim)">Label | Codes (comma-separated hex, e.g. 1C,BD,E9)</span>
-                        </div>
-                        <div class="hack-seq-admin-list" id="adm-seq-list"></div>
-                        <button class="hack-admin-btn adm-dim" style="margin-top:0.45rem;" onclick="addSeq()">+ ADD SEQUENCE</button>
+                    <div class="adm-ctrl-row" style="border-top:1px solid var(--border);padding-top:0.65rem;">
+                        <button class="adm-btn adm-gold" onclick="saveConfig()">SAVE CONFIGURATION</button>
                     </div>
+                    <div class="adm-msg" id="adm-msg"></div>
 
-                    <!-- Save + message -->
-                    <div class="hack-admin-ctrl-row" style="border-top:1px solid var(--border);padding-top:0.65rem;">
-                        <button class="hack-admin-btn adm-gold" onclick="saveAdminConfig()">SAVE CONFIGURATION</button>
-                    </div>
-                    <div class="hack-admin-msg" id="adm-msg"></div>
                 </div>
             </div>
 
-        </div><!-- /.hack-wrap -->
+        </div>
     </main>
-</div><!-- /.app -->
+</div>
 
 <div class="nav-overlay" id="nav-overlay"></div>
 <div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
@@ -690,248 +473,195 @@
             if (al) al.style.display = 'block';
         }
     })();
+    // Hide mini-loader after assets ready
+    setTimeout(function () {
+        const l = document.getElementById('page-loader');
+        if (l) { l.classList.add('ml-out'); setTimeout(() => l.remove(), 420); }
+    }, 680);
 </script>
 <script src="./nav.js"></script>
 <script>
 /* ================================================================
-   BREACH PROTOCOL — Hacking Minigame
-   Shared state via localStorage (cross-tab via storage events).
+   CIPHER TERMINAL — Password-cracking minigame
+   All state is saved in localStorage so every connected browser
+   stays in sync (cross-tab via the 'storage' event).
    ================================================================ */
 (function () {
     'use strict';
 
-    // ── Constants ─────────────────────────────────────────────────
-    const HACK_CONFIG_KEY = 'luxorHackConfig';
-    const HACK_STATE_KEY  = 'luxorHackState';
-    const HEX_POOL = ['1C', 'BD', 'E9', '7A', '55', 'FF', 'CC', '28', 'E4', '3F'];
+    // ── Keys ──────────────────────────────────────────────────────
+    const CFG_KEY   = 'luxorCipherConfig';
+    const STATE_KEY = 'luxorCipherState';
 
-    const DEFAULT_CONFIG = {
-        targetName:  'NEXUS-7 DATACORE',
-        matrixSize:  5,
-        bufferSize:  6,
-        timeLimit:   45,
-        enabled:     true,
-        successMsg:  'BREACH SUCCESSFUL — DATA EXTRACTED',
-        failMsg:     'TRACE DETECTED — BREACH TERMINATED',
-        sequences: [
-            { label: 'DATAMINE', codes: ['1C', 'BD'] },
-            { label: 'MALWARE',  codes: ['BD', 'E9', '7A'] },
-            { label: 'DAEMON',   codes: ['1C', '1C', 'E9'] }
-        ]
+    // ── Default word pool (all 6-letter military / tactical words) ─
+    const BUILT_IN_POOL = [
+        'SHADOW','VECTOR','BREACH','CIPHER','TARGET','PATROL',
+        'SIGNAL','KERNEL','SYSTEM','BUFFER','UPLINK','DAEMON',
+        'FALCON','HUNTER','ZEPHYR','REBOOT','COMBAT','ESCAPE',
+        'LAUNCH','SECTOR','DEPLOY','ARMORY','MATRIX','DRAGON',
+        'KNIGHT','RANGER','BANDIT','SPIDER','WRAITH','CASTLE'
+    ];
+
+    const JUNK = '!@#$%^&*()-+=|;:,./<>?~`';
+    function rjunk(n) {
+        return Array.from({length: n}, () => JUNK[Math.floor(Math.random() * JUNK.length)]).join('');
+    }
+
+    // ── Config ────────────────────────────────────────────────────
+    const DEF_CFG = {
+        enabled:    true,
+        targetName: 'MAINFRAME-ALPHA',
+        wordCount:  12,
+        attempts:   4,
+        wordPool:   [...BUILT_IN_POOL],
+        forcedAnswer: '',
+        successMsg: 'ACCESS GRANTED — WELCOME, OPERATOR',
+        failMsg:    'TERMINAL LOCKED — SECURITY ALERT TRIGGERED'
     };
 
-    const BLANK_STATE = () => ({
-        phase:          'idle',
-        startedBy:      null,
-        startedAt:      null,
-        endedAt:        null,
-        matrix:         null,
-        buffer:         [],
-        completedSeqs:  [],
-        constraint:     'start',
-        constraintIdx:  -1,
-        log:            []
-    });
-
-    // ── Runtime vars ──────────────────────────────────────────────
-    let hackConfig = { ...DEFAULT_CONFIG };
-    let hackState  = BLANK_STATE();
-    let timerInterval = null;
+    let cfg   = { ...DEF_CFG };
+    let state = blankState();
 
     const isAdmin  = window.LuxorAuth && LuxorAuth.isAdmin();
     const session  = window.LuxorAuth && LuxorAuth.getSession();
     const username = session ? session.username : 'UNKNOWN';
 
-    // ── Storage helpers ───────────────────────────────────────────
-    function loadConfig() {
+    // ── State factory ─────────────────────────────────────────────
+    function blankState() {
+        return {
+            phase:      'idle',   // idle | active | won | lost
+            answer:     null,
+            entries:    [],       // [{word, pre, post, addr}] — stable per-game
+            guesses:    [],       // [{word, likeness}]
+            attemptsMax: 4,
+            startedBy:  null,
+            startedAt:  null,
+            endedAt:    null,
+            log:        []
+        };
+    }
+
+    // ── Persistence ───────────────────────────────────────────────
+    function loadCfg() {
         try {
-            const s = JSON.parse(localStorage.getItem(HACK_CONFIG_KEY) || 'null');
-            if (s) hackConfig = { ...DEFAULT_CONFIG, ...s, sequences: s.sequences || DEFAULT_CONFIG.sequences };
+            const s = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
+            if (s) cfg = { ...DEF_CFG, ...s, wordPool: s.wordPool || DEF_CFG.wordPool };
         } catch (e) {}
     }
-
-    function saveConfig() {
-        localStorage.setItem(HACK_CONFIG_KEY, JSON.stringify(hackConfig));
-    }
-
+    function saveCfg()   { localStorage.setItem(CFG_KEY,   JSON.stringify(cfg));   }
     function loadState() {
-        try {
-            const s = JSON.parse(localStorage.getItem(HACK_STATE_KEY) || 'null');
-            hackState = s || BLANK_STATE();
-        } catch (e) {
-            hackState = BLANK_STATE();
+        try { state = JSON.parse(localStorage.getItem(STATE_KEY) || 'null') || blankState(); }
+        catch (e) { state = blankState(); }
+    }
+    function saveState() { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+
+    // ── Game logic ────────────────────────────────────────────────
+
+    // Likeness = number of characters identical at the same position
+    function likeness(guess, answer) {
+        let n = 0;
+        for (let i = 0; i < Math.min(guess.length, answer.length); i++) {
+            if (guess[i] === answer[i]) n++;
         }
+        return n;
     }
 
-    function saveState() {
-        localStorage.setItem(HACK_STATE_KEY, JSON.stringify(hackState));
-    }
-
-    // ── Matrix generation ─────────────────────────────────────────
-    // Generates a grid with each sequence planted along a valid breach path.
-    // Valid path rule: first pick from row 0, then alternates same-col / same-row.
-    function generateMatrix(size, sequences) {
-        // Build pool including all sequence codes for guaranteed playability
-        const seqCodeSet = new Set(HEX_POOL);
-        sequences.forEach(seq => seq.codes.forEach(c => seqCodeSet.add(c.toUpperCase())));
-        const pool = [...seqCodeSet];
-
-        const m = Array.from({ length: size }, () =>
-            Array.from({ length: size }, () => pool[Math.floor(Math.random() * pool.length)])
-        );
-
-        sequences.forEach((seq, si) => {
-            const codes = seq.codes;
-            // Start in row 0, spread columns across sequences
-            let row = 0;
-            let col = (si * Math.ceil(size / sequences.length)) % size;
-            let colIsFixed = false; // after placing in row 0, col becomes fixed
-
-            m[row][col] = codes[0];
-
-            for (let i = 1; i < codes.length; i++) {
-                if (colIsFixed) {
-                    // col fixed — move to different row
-                    let nr, tries = 0;
-                    do { nr = Math.floor(Math.random() * size); tries++; }
-                    while (nr === row && tries < 20);
-                    row = nr;
-                    colIsFixed = false;
-                } else {
-                    // row fixed — move to different col
-                    let nc, tries = 0;
-                    do { nc = Math.floor(Math.random() * size); tries++; }
-                    while (nc === col && tries < 20);
-                    col = nc;
-                    colIsFixed = true;
-                }
-                m[row][col] = codes[i];
-            }
-        });
-
-        return m;
-    }
-
-    // ── Sequence logic ────────────────────────────────────────────
-    function isSubsequence(seqCodes, buffer) {
-        let si = 0;
-        for (let i = 0; i < buffer.length && si < seqCodes.length; i++) {
-            if (buffer[i].val === seqCodes[si]) si++;
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
         }
-        return si === seqCodes.length;
+        return a;
     }
 
-    function matchedPrefixLen(seqCodes, buffer) {
-        let si = 0;
-        for (let i = 0; i < buffer.length && si < seqCodes.length; i++) {
-            if (buffer[i].val === seqCodes[si]) si++;
-        }
-        return si;
+    function buildEntries(pool, count) {
+        const words = shuffle(pool).slice(0, count);
+        return words.map((word, i) => ({
+            word,
+            pre:  rjunk(2 + Math.floor(Math.random() * 4)),
+            post: rjunk(2 + Math.floor(Math.random() * 5)),
+            addr: '0x' + (0xA000 + i * 8).toString(16).toUpperCase().padStart(4, '0')
+        }));
     }
 
-    // ── Timer ─────────────────────────────────────────────────────
-    function startTimer() {
-        clearInterval(timerInterval);
-        timerInterval = setInterval(() => {
-            if (hackState.phase !== 'active') { clearInterval(timerInterval); return; }
-            const elapsed    = Math.floor((Date.now() - hackState.startedAt) / 1000);
-            const remaining  = Math.max(0, hackConfig.timeLimit - elapsed);
-            hackState.timeRemaining = remaining;
-            updateTimerEl(remaining);
-            if (remaining <= 0) { clearInterval(timerInterval); endGame('lost'); }
-        }, 250);
-    }
+    // ── Actions ───────────────────────────────────────────────────
+    window.startGame = function () {
+        const pool = cfg.wordPool.filter(w => w.trim().length > 0);
+        if (pool.length < 2) { alert('Word pool too small — add more words in Overlord config.'); return; }
 
-    function updateTimerEl(remaining) {
-        const el = document.getElementById('hack-timer');
-        if (!el) return;
-        const m = Math.floor(remaining / 60), s = remaining % 60;
-        el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        el.className = 'hack-timer' + (remaining <= 10 ? ' danger' : '');
-    }
+        const count   = Math.min(cfg.wordCount, pool.length);
+        const entries = buildEntries(pool, count);
+        let answer    = cfg.forcedAnswer.trim().toUpperCase();
 
-    // ── Game actions ──────────────────────────────────────────────
-    window.initiateBreath = function () {
-        if (hackState.phase === 'active') return;
-        const matrix = generateMatrix(hackConfig.matrixSize, hackConfig.sequences);
-        hackState = {
-            ...BLANK_STATE(),
-            phase:      'active',
-            startedBy:  username,
-            startedAt:  Date.now(),
-            matrix:     matrix,
-            log: [...hackState.log, logEntry('warn', `BREACH INITIATED — TARGET: ${hackConfig.targetName}`)]
-        };
-        saveState();
-        render();
-        startTimer();
-    };
-
-    window.selectCell = function (r, c) {
-        if (hackState.phase !== 'active') return;
-        if (!isValidMove(r, c)) {
-            flashInvalid(r, c); return;
-        }
-        if (hackState.buffer.some(b => b.r === r && b.c === c)) return;
-        if (hackState.buffer.length >= hackConfig.bufferSize) return;
-
-        const val = hackState.matrix[r][c];
-        hackState.buffer.push({ r, c, val });
-
-        // Update movement constraint
-        if (hackState.constraint === 'start' || hackState.constraint === 'row') {
-            hackState.constraint    = 'col';
-            hackState.constraintIdx = c;
+        // Forced answer must appear in the displayed words
+        if (answer && entries.find(e => e.word === answer)) {
+            // ok — force it in
+        } else if (answer) {
+            // Forced word not in pool/entries — replace first entry
+            entries[0] = {
+                word: answer,
+                pre:  rjunk(2 + Math.floor(Math.random() * 4)),
+                post: rjunk(2 + Math.floor(Math.random() * 5)),
+                addr: entries[0].addr
+            };
         } else {
-            hackState.constraint    = 'row';
-            hackState.constraintIdx = r;
+            // Random: pick any displayed word
+            answer = entries[Math.floor(Math.random() * entries.length)].word;
         }
 
-        hackState.log.push(logEntry('', `Code [${val}] acquired at (${r},${c})`));
-
-        // Check sequences
-        hackConfig.sequences.forEach((seq, i) => {
-            if (!hackState.completedSeqs.includes(i) && isSubsequence(seq.codes, hackState.buffer)) {
-                hackState.completedSeqs.push(i);
-                hackState.log.push(logEntry('success', `ICE LAYER ${i + 1} BREACHED — ${seq.label}`));
-            }
-        });
-
+        state = {
+            ...blankState(),
+            phase:       'active',
+            answer,
+            entries,
+            attemptsMax: cfg.attempts,
+            startedBy:   username,
+            startedAt:   Date.now(),
+            log: [...state.log, logEntry('warn', `TERMINAL ACTIVATED — TARGET: ${cfg.targetName}`)]
+        };
         trimLog();
         saveState();
+        render();
+    };
 
-        // Win / buffer-full checks
-        if (hackState.completedSeqs.length === hackConfig.sequences.length) {
-            setTimeout(() => endGame('won'), 150);
-        } else if (hackState.buffer.length >= hackConfig.bufferSize) {
-            setTimeout(() => endGame('lost'), 400);
+    window.tryWord = function (word) {
+        if (state.phase !== 'active') return;
+
+        const alreadyGuessed = state.guesses.some(g => g.word === word);
+        if (alreadyGuessed) return;
+
+        const remaining = state.attemptsMax - state.guesses.length;
+        if (remaining <= 0) return;
+
+        const score = likeness(word, state.answer);
+        const perfect = word === state.answer;
+
+        state.guesses.push({ word, likeness: score });
+
+        if (perfect) {
+            state.log.push(logEntry('success', `PASSWORD ACCEPTED — "${word}" is correct`));
+            trimLog();
+            endGame('won');
         } else {
-            render();
+            const left = state.attemptsMax - state.guesses.length;
+            state.log.push(logEntry('', `Attempt: "${word}" — ${score}/${state.answer.length} match — ${left} attempt${left !== 1 ? 's' : ''} left`));
+            trimLog();
+            saveState();
+            if (left <= 0) {
+                setTimeout(() => endGame('lost'), 300);
+            } else {
+                render();
+            }
         }
     };
 
-    function isValidMove(r, c) {
-        const { constraint, constraintIdx } = hackState;
-        if (constraint === 'start') return r === 0;
-        if (constraint === 'row')   return r === constraintIdx;
-        return c === constraintIdx; // col
-    }
-
-    function flashInvalid(r, c) {
-        const cell = document.querySelector(`.hack-cell[data-r="${r}"][data-c="${c}"]`);
-        if (!cell) return;
-        cell.style.background   = 'rgba(192,57,43,0.2)';
-        cell.style.borderColor  = 'var(--danger)';
-        setTimeout(() => { cell.style.background = ''; cell.style.borderColor = ''; updateCellHighlights(); }, 300);
-    }
-
     function endGame(result) {
-        clearInterval(timerInterval);
-        hackState.phase   = result;
-        hackState.endedAt = Date.now();
-        hackState.log.push(logEntry(
+        state.phase   = result;
+        state.endedAt = Date.now();
+        state.log.push(logEntry(
             result === 'won' ? 'success' : 'danger',
-            result === 'won' ? hackConfig.successMsg : hackConfig.failMsg
+            result === 'won' ? cfg.successMsg : cfg.failMsg + ` — Answer was: ${state.answer}`
         ));
         trimLog();
         saveState();
@@ -939,80 +669,100 @@
     }
 
     window.resetGame = function () {
-        clearInterval(timerInterval);
-        const prevLog = hackState.log || [];
-        hackState = {
-            ...BLANK_STATE(),
-            log: [...prevLog, logEntry('warn', 'SYSTEM RESET — BREACH TERMINATED')]
+        const prevLog = state.log || [];
+        state = {
+            ...blankState(),
+            log: [...prevLog, logEntry('warn', 'TERMINAL RESET — SESSION CLEARED')]
         };
         trimLog();
         saveState();
         render();
     };
 
-    // ── Overlord game controls ────────────────────────────────────
-    window.adminForceWin  = () => { if (!hackState.matrix) { hackState.matrix = []; hackState.startedBy = username; hackState.startedAt = Date.now(); } endGame('won'); };
-    window.adminForceFail = () => { if (!hackState.matrix) { hackState.matrix = []; hackState.startedBy = username; hackState.startedAt = Date.now(); } endGame('lost'); };
+    // ── Overlord controls ─────────────────────────────────────────
+    window.adminForceWin  = () => {
+        if (state.phase !== 'active') { state.answer = state.answer || 'UNKNOWN'; state.startedBy = username; state.startedAt = Date.now(); }
+        endGame('won');
+    };
+    window.adminForceFail = () => {
+        if (state.phase !== 'active') { state.answer = state.answer || 'UNKNOWN'; state.startedBy = username; state.startedAt = Date.now(); }
+        endGame('lost');
+    };
     window.adminReset     = () => window.resetGame();
-
-    window.toggleGameEnabled = function () {
-        hackConfig.enabled = !hackConfig.enabled;
-        saveConfig();
-        document.getElementById('adm-toggle-btn').textContent = hackConfig.enabled ? 'DISABLE' : 'ENABLE';
+    window.adminReveal    = () => {
+        if (!state.answer) { showAdmMsg('No active game to reveal.', true); return; }
+        showAdmMsg(`Current answer: ${state.answer}`, false);
+    };
+    window.toggleEnabled  = () => {
+        cfg.enabled = !cfg.enabled;
+        saveCfg();
+        document.getElementById('adm-toggle-btn').textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
         render();
     };
 
-    // ── Log helpers ───────────────────────────────────────────────
-    function logEntry(type, msg) {
-        return { t: Date.now(), user: username, type, msg };
+    window.saveConfig = function () {
+        const g = id => document.getElementById(id);
+        cfg.targetName  = (g('adm-target').value.trim() || cfg.targetName).toUpperCase();
+        cfg.wordCount   = Math.max(8, Math.min(20, parseInt(g('adm-wordcount').value) || 12));
+        cfg.attempts    = Math.max(2, Math.min(8,  parseInt(g('adm-attempts').value)  || 4));
+        cfg.forcedAnswer = g('adm-answer').value.trim().toUpperCase();
+        cfg.successMsg  = g('adm-success-msg').value.trim() || cfg.successMsg;
+        cfg.failMsg     = g('adm-fail-msg').value.trim()    || cfg.failMsg;
+
+        const rawPool = g('adm-pool').value.split('\n')
+            .map(w => w.trim().toUpperCase())
+            .filter(w => w.length > 0);
+        if (rawPool.length >= 2) cfg.wordPool = rawPool;
+
+        saveCfg();
+        showAdmMsg('✓ CONFIGURATION SAVED', false);
+
+        if (state.phase === 'idle') saveState();
+        render();
+    };
+
+    function showAdmMsg(txt, isErr) {
+        const el = document.getElementById('adm-msg');
+        if (!el) return;
+        el.className  = 'adm-msg ' + (isErr ? 'err' : 'ok');
+        el.textContent = txt;
+        setTimeout(() => { el.className = 'adm-msg'; }, 3500);
     }
 
-    function trimLog() {
-        if (hackState.log && hackState.log.length > 60) {
-            hackState.log = hackState.log.slice(-60);
-        }
+    // ── Log helpers ───────────────────────────────────────────────
+    function logEntry(type, msg) { return { t: Date.now(), user: username, type, msg }; }
+    function trimLog() { if (state.log && state.log.length > 60) state.log = state.log.slice(-60); }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     // ── Rendering ─────────────────────────────────────────────────
     function render() {
-        renderStatusBar();
-        renderGameArea();
+        renderStatus();
+        renderGame();
         renderLog();
         if (isAdmin) renderAdminStatus();
     }
 
-    function renderStatusBar() {
-        const nameEl  = document.getElementById('hack-target-name');
-        const phaseEl = document.getElementById('hack-phase-badge');
-        const timerEl = document.getElementById('hack-timer');
-        if (nameEl)  nameEl.textContent = hackConfig.targetName;
+    function renderStatus() {
+        const nameEl  = document.getElementById('cipher-target-name');
+        const phaseEl = document.getElementById('cipher-phase-badge');
+        if (nameEl) nameEl.textContent = cfg.targetName;
         if (phaseEl) {
-            const labels = { idle: 'STANDBY', active: 'BREACH ACTIVE', won: 'ACCESS GRANTED', lost: 'TRACE DETECTED' };
-            phaseEl.textContent = labels[hackState.phase] || 'STANDBY';
-            phaseEl.className   = 'hack-phase-badge ' + hackState.phase;
-        }
-        if (timerEl) {
-            if (hackState.phase === 'active') {
-                const elapsed   = Math.floor((Date.now() - hackState.startedAt) / 1000);
-                const remaining = Math.max(0, hackConfig.timeLimit - elapsed);
-                updateTimerEl(remaining);
-            } else if (hackState.phase === 'idle') {
-                const m = Math.floor(hackConfig.timeLimit / 60), s = hackConfig.timeLimit % 60;
-                timerEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-                timerEl.className = 'hack-timer inactive';
-            } else {
-                timerEl.className = 'hack-timer inactive';
-            }
+            const lbl = { idle: 'STANDBY', active: 'TERMINAL ACTIVE', won: 'ACCESS GRANTED', lost: 'TERMINAL LOCKED' };
+            phaseEl.textContent = lbl[state.phase] || 'STANDBY';
+            phaseEl.className   = 'cipher-phase-badge ' + state.phase;
         }
     }
 
-    function renderGameArea() {
-        const area = document.getElementById('hack-game-area');
-        if (!hackConfig.enabled) {
-            area.innerHTML = '<div class="hack-locked">▦ HACKING TERMINAL OFFLINE — CONTACT OVERLORD</div>';
+    function renderGame() {
+        const area = document.getElementById('cipher-game-area');
+        if (!cfg.enabled) {
+            area.innerHTML = '<div class="cipher-locked">▦ CIPHER TERMINAL OFFLINE — CONTACT OVERLORD</div>';
             return;
         }
-        switch (hackState.phase) {
+        switch (state.phase) {
             case 'idle':   renderIdle(area);   break;
             case 'active': renderActive(area); break;
             default:       renderResult(area); break;
@@ -1021,302 +771,186 @@
 
     function renderIdle(area) {
         area.innerHTML = `
-            <div class="hack-idle-screen">
-                <div class="hack-idle-icon">▦</div>
-                <div class="hack-idle-title">BREACH PROTOCOL</div>
-                <div class="hack-idle-meta">TARGET: ${esc(hackConfig.targetName)}</div>
-                <div class="hack-idle-stats">
-                    Breach window: ${hackConfig.timeLimit}s &nbsp;|&nbsp;
-                    Buffer: ${hackConfig.bufferSize} nodes &nbsp;|&nbsp;
-                    ICE layers: ${hackConfig.sequences.length}
+            <div class="cipher-splash">
+                <div class="cipher-splash-icon">▣</div>
+                <div class="cipher-splash-title">CIPHER TERMINAL</div>
+                <div class="cipher-splash-meta">TARGET: ${esc(cfg.targetName)}</div>
+                <div class="cipher-splash-desc">
+                    Password bypass required for mainframe access.<br>
+                    ${cfg.wordCount} candidate passwords detected — ${cfg.attempts} attempt${cfg.attempts !== 1 ? 's' : ''} available.<br>
+                    Match characters in the correct position to narrow the answer.
                 </div>
-                <div class="hack-actions" style="margin-top:0.3rem;">
-                    <button class="hack-btn hack-btn-primary" onclick="initiateBreath()">⬡ INITIATE BREACH</button>
+                <div class="cipher-actions" style="margin-top:0.3rem;">
+                    <button class="cipher-btn cipher-btn-primary" onclick="startGame()">⬡ ACTIVATE TERMINAL</button>
                 </div>
             </div>`;
     }
 
     function renderResult(area) {
-        const won = hackState.phase === 'won';
+        const won = state.phase === 'won';
         area.innerHTML = `
-            <div class="hack-result ${hackState.phase}">
-                <div class="hack-result-icon">${won ? '◈' : '⊠'}</div>
-                <div class="hack-result-title">${esc(won ? hackConfig.successMsg : hackConfig.failMsg)}</div>
-                <div class="hack-result-detail">
-                    ${hackState.completedSeqs.length}/${hackConfig.sequences.length} ICE layers cracked
-                    &nbsp;|&nbsp; Operator: ${esc(hackState.startedBy || '???')}
+            <div class="cipher-splash ${won ? 's-won' : 's-lost'}">
+                <div class="cipher-splash-icon">${won ? '◈' : '⊠'}</div>
+                <div class="cipher-splash-title">${esc(won ? cfg.successMsg : cfg.failMsg)}</div>
+                <div class="cipher-splash-desc">
+                    ${state.guesses.length} guess${state.guesses.length !== 1 ? 'es' : ''} made
+                    &nbsp;·&nbsp; ${won ? 'Password cracked' : `Answer was: ${esc(state.answer || '???')}`}
+                    &nbsp;·&nbsp; Operator: ${esc(state.startedBy || '???')}
                 </div>
-                <div class="hack-actions" style="margin-top:0.5rem;">
-                    <button class="hack-btn hack-btn-primary" onclick="resetGame()">↺ RESET TERMINAL</button>
+                <div class="cipher-actions" style="margin-top:0.5rem;">
+                    <button class="cipher-btn cipher-btn-primary" onclick="resetGame()">↺ RESET TERMINAL</button>
                 </div>
             </div>`;
     }
 
     function renderActive(area) {
-        const cfg   = hackConfig;
-        const state = hackState;
-        const size  = cfg.matrixSize;
-        const m     = state.matrix;
+        const entries = state.entries || [];
+        const guesses = state.guesses || [];
+        const used    = guesses.length;
+        const maxA    = state.attemptsMax;
+        const left    = maxA - used;
 
-        // Build matrix cells
-        let matHtml = '';
-        for (let r = 0; r < size; r++) {
-            for (let c = 0; c < size; c++) {
-                const val        = m[r][c];
-                const isSelected = state.buffer.some(b => b.r === r && b.c === c);
-                const isValid    = !isSelected && state.phase === 'active' && isValidMove(r, c);
-                const cls        = 'hack-cell' + (isSelected ? ' selected' : isValid ? ' valid' : ' inactive');
-                const click      = isValid ? `onclick="selectCell(${r},${c})"` : '';
-                matHtml += `<div class="${cls}" data-r="${r}" data-c="${c}" ${click}>${esc(val)}</div>`;
-            }
+        // Split entries into two columns
+        const half   = Math.ceil(entries.length / 2);
+        const col1   = entries.slice(0, half);
+        const col2   = entries.slice(half);
+
+        function entryHtml(e) {
+            const guessedWrong = guesses.some(g => g.word === e.word && e.word !== state.answer);
+            const isAnswer     = state.phase === 'won' && e.word === state.answer;
+            let cls = 'c-word';
+            let click = '';
+            if (guessedWrong)     { cls += ' w-guessed'; }
+            else if (isAnswer)    { cls += ' w-correct'; }
+            else if (state.phase === 'active') { click = `onclick="tryWord('${e.word}')" title="Try: ${e.word}"`; }
+            else { cls += ' w-locked'; }
+
+            return `<div class="cipher-line">
+                <span class="c-addr">${e.addr}</span>
+                <span class="c-junk">${esc(e.pre)}</span><span class="${cls}" ${click}>${esc(e.word)}</span><span class="c-junk">${esc(e.post)}</span>
+            </div>`;
         }
 
-        // Build sequences panel
-        let seqHtml = '';
-        cfg.sequences.forEach((seq, i) => {
-            const done     = state.completedSeqs.includes(i);
-            const matchLen = done ? seq.codes.length : matchedPrefixLen(seq.codes, state.buffer);
-            const seqCls   = 'hack-seq' + (done ? ' completed' : '');
-            const codeHtml = seq.codes.map((code, ci) =>
-                `<span class="hack-seq-code ${(done || ci < matchLen) ? 'matched' : ''}">${esc(code)}</span>`
-            ).join('');
-            seqHtml += `
-                <div class="${seqCls}">
-                    <div class="hack-seq-label">
-                        <span>${esc(seq.label)}</span>
-                        <span class="seq-check">${done ? '✓' : ''}</span>
-                    </div>
-                    <div class="hack-seq-codes">${codeHtml}</div>
+        // Pips
+        const pips = Array.from({length: maxA}, (_, i) =>
+            `<div class="cs-pip ${i >= left ? 'used' : ''}"></div>`
+        ).join('');
+
+        // Guess history
+        const histHtml = guesses.length === 0
+            ? '<div class="cs-guess" style="opacity:0.4">— no guesses yet —</div>'
+            : guesses.map(g => {
+                const perfect = g.word === state.answer;
+                return `<div class="cs-guess ${perfect ? 'perfect' : ''}">
+                    <span class="gw">&gt; ${esc(g.word)}</span>
+                    <span class="gr"> ${g.likeness}/${g.word.length}</span>
                 </div>`;
-        });
-
-        // Build buffer slots
-        let bufHtml = '';
-        for (let i = 0; i < cfg.bufferSize; i++) {
-            const filled = i < state.buffer.length;
-            const latest = i === state.buffer.length - 1;
-            const val    = filled ? esc(state.buffer[i].val) : '—';
-            bufHtml += `<div class="hack-buffer-slot ${filled ? 'filled' : ''} ${latest && filled ? 'latest' : ''}">${val}</div>`;
-        }
+            }).join('');
 
         area.innerHTML = `
-            <div class="hack-game">
-                <div class="hack-matrix-panel">
-                    <div class="hack-panel-header">
-                        <span>▸ CODE MATRIX / ${size}×${size}</span>
-                        <span style="color:var(--text-dim)">${state.buffer.length}/${cfg.bufferSize} NODES</span>
-                    </div>
-                    <div class="hack-matrix" style="grid-template-columns:repeat(${size},1fr);">
-                        ${matHtml}
-                    </div>
+            <div class="cipher-terminal">
+                <div class="cipher-term-header">
+                    <div class="cth-title">LUXOR // MAINFRAME ACCESS TERMINAL v3.1.4</div>
+                    <div class="cth-target">PASSWORD REQUIRED FOR: ${esc(cfg.targetName)}</div>
+                    <div class="cth-warn">! UNAUTHORIZED ACCESS DETECTED — COUNTERMEASURES ACTIVE !</div>
                 </div>
-                <div class="hack-right">
-                    <div class="hack-sequences-panel">
-                        <div class="hack-panel-header">▸ ICE SEQUENCES</div>
-                        <div class="hack-seq-list">${seqHtml}</div>
+                <div class="cipher-body">
+                    <div class="cipher-grid">
+                        ${col1.map(entryHtml).join('')}
+                        ${col2.map(entryHtml).join('')}
                     </div>
-                    <div class="hack-buffer-panel">
-                        <div class="hack-panel-header">
-                            <span>▸ BUFFER</span>
-                            <span style="color:var(--text-dim)">${state.buffer.length}/${cfg.bufferSize}</span>
+                    <div class="cipher-sidebar">
+                        <div class="cs-label">ATTEMPTS REMAINING</div>
+                        <div>
+                            <div class="cs-pips">${pips}</div>
+                            <div class="cs-pip-label">${left} / ${maxA} REMAINING</div>
                         </div>
-                        <div class="hack-buffer-slots">${bufHtml}</div>
-                    </div>
-                    <div class="hack-actions">
-                        <button class="hack-btn hack-btn-danger" onclick="endGame('lost')">⊠ ABORT</button>
+                        <div class="cs-label">GUESS HISTORY</div>
+                        <div class="cs-history">
+                            ${histHtml}
+                            ${state.phase === 'active' ? '<div class="cs-cursor">█</div>' : ''}
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div class="cipher-actions">
+                <button class="cipher-btn cipher-btn-danger" onclick="endGame('lost')">⊠ ABORT SESSION</button>
             </div>`;
     }
 
-    function updateCellHighlights() {
-        if (!hackState.matrix) return;
-        const size = hackConfig.matrixSize;
-        for (let r = 0; r < size; r++) {
-            for (let c = 0; c < size; c++) {
-                const cell = document.querySelector(`.hack-cell[data-r="${r}"][data-c="${c}"]`);
-                if (!cell) continue;
-                const isSelected = hackState.buffer.some(b => b.r === r && b.c === c);
-                const isValid    = !isSelected && hackState.phase === 'active' && isValidMove(r, c);
-                cell.className   = 'hack-cell' + (isSelected ? ' selected' : isValid ? ' valid' : ' inactive');
-                cell.onclick     = isValid ? () => window.selectCell(r, c) : null;
-            }
-        }
-    }
-
     function renderLog() {
-        const el       = document.getElementById('hack-log-entries');
-        const countEl  = document.getElementById('hack-log-count');
+        const el      = document.getElementById('hack-log-entries');
+        const countEl = document.getElementById('log-count');
         if (!el) return;
-        const log = hackState.log || [];
+        const log = state.log || [];
         if (countEl) countEl.textContent = `${log.length} ENTR${log.length === 1 ? 'Y' : 'IES'}`;
         if (log.length === 0) {
-            el.innerHTML = '<div class="hack-log-entry"><span class="hack-log-msg" style="opacity:0.35">— AWAITING BREACH INITIATION —</span></div>';
+            el.innerHTML = '<div class="hle"><span class="hle-m" style="opacity:0.3">— AWAITING TERMINAL ACTIVATION —</span></div>';
             return;
         }
-        el.innerHTML = log.slice(-30).map(entry => {
-            const d = new Date(entry.t);
+        el.innerHTML = log.slice(-25).map(e => {
+            const d = new Date(e.t);
             const ts = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-            return `<div class="hack-log-entry ${entry.type || ''}">
-                <span class="hack-log-time">${ts}</span>
-                <span class="hack-log-user">${esc(entry.user || 'SYSTEM')}</span>
-                <span class="hack-log-msg">${esc(entry.msg || '')}</span>
+            return `<div class="hle ${e.type || ''}">
+                <span class="hle-t">${ts}</span>
+                <span class="hle-u">${esc(e.user || 'SYSTEM')}</span>
+                <span class="hle-m">${esc(e.msg || '')}</span>
             </div>`;
         }).join('');
         el.scrollTop = el.scrollHeight;
     }
 
-    function pad(n) { return String(n).padStart(2, '0'); }
-    function esc(s) {
-        return String(s)
-            .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    // ── Overlord Admin panel ──────────────────────────────────────
-    function initAdminPanel() {
+    // ── Admin panel ───────────────────────────────────────────────
+    function initAdmin() {
         if (!isAdmin) return;
         const panel = document.getElementById('hack-admin-panel');
         if (panel) panel.style.display = 'block';
-        populateAdminFields();
+        populateAdmin();
     }
 
-    function populateAdminFields() {
-        setVal('adm-target',      hackConfig.targetName);
-        setVal('adm-size',        hackConfig.matrixSize);
-        setVal('adm-buffer',      hackConfig.bufferSize);
-        setVal('adm-timer',       hackConfig.timeLimit);
-        setVal('adm-success-msg', hackConfig.successMsg);
-        setVal('adm-fail-msg',    hackConfig.failMsg);
-        renderAdminSeqList();
+    function populateAdmin() {
+        const sv = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+        sv('adm-target',      cfg.targetName);
+        sv('adm-wordcount',   cfg.wordCount);
+        sv('adm-attempts',    cfg.attempts);
+        sv('adm-answer',      cfg.forcedAnswer);
+        sv('adm-pool',        cfg.wordPool.join('\n'));
+        sv('adm-success-msg', cfg.successMsg);
+        sv('adm-fail-msg',    cfg.failMsg);
         renderAdminStatus();
-        document.getElementById('adm-toggle-btn').textContent =
-            hackConfig.enabled ? 'DISABLE' : 'ENABLE';
+        const btn = document.getElementById('adm-toggle-btn');
+        if (btn) btn.textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
     }
-
-    function setVal(id, val) {
-        const el = document.getElementById(id);
-        if (el) el.value = val;
-    }
-
-    function renderAdminSeqList() {
-        const list = document.getElementById('adm-seq-list');
-        if (!list) return;
-        list.innerHTML = '';
-        hackConfig.sequences.forEach((seq, i) => {
-            const row = document.createElement('div');
-            row.className = 'hack-seq-admin-row';
-            row.innerHTML = `
-                <input class="adm-seq-lbl" type="text" id="adm-seq-lbl-${i}"
-                    value="${esc(seq.label)}" placeholder="LAYER ${i+1}">
-                <input class="adm-seq-codes" type="text" id="adm-seq-codes-${i}"
-                    value="${seq.codes.join(',')}" placeholder="1C,BD,E9">
-                <button class="adm-seq-rm" onclick="removeSeq(${i})" title="Remove">✕</button>`;
-            list.appendChild(row);
-        });
-    }
-
-    window.removeSeq = function (i) {
-        hackConfig.sequences.splice(i, 1);
-        renderAdminSeqList();
-    };
-
-    window.addSeq = function () {
-        hackConfig.sequences.push({ label: `LAYER ${hackConfig.sequences.length + 1}`, codes: ['1C', 'BD'] });
-        renderAdminSeqList();
-    };
-
-    window.saveAdminConfig = function () {
-        const get = id => document.getElementById(id);
-        hackConfig.targetName  = (get('adm-target').value.trim()      || hackConfig.targetName).toUpperCase();
-        hackConfig.matrixSize  = Math.max(4, Math.min(8,  parseInt(get('adm-size').value)   || 5));
-        hackConfig.bufferSize  = Math.max(3, Math.min(10, parseInt(get('adm-buffer').value)  || 6));
-        hackConfig.timeLimit   = Math.max(10,Math.min(300,parseInt(get('adm-timer').value)   || 45));
-        hackConfig.successMsg  = get('adm-success-msg').value.trim() || hackConfig.successMsg;
-        hackConfig.failMsg     = get('adm-fail-msg').value.trim()    || hackConfig.failMsg;
-
-        // Read sequences
-        const seqs = [];
-        hackConfig.sequences.forEach((_, i) => {
-            const lblEl = get(`adm-seq-lbl-${i}`);
-            const cdsEl = get(`adm-seq-codes-${i}`);
-            if (!lblEl || !cdsEl) return;
-            const codes = cdsEl.value.toUpperCase().split(',')
-                .map(s => s.trim()).filter(s => s.length > 0);
-            if (codes.length > 0) seqs.push({ label: lblEl.value.trim() || `LAYER ${i+1}`, codes });
-        });
-        if (seqs.length > 0) hackConfig.sequences = seqs;
-
-        saveConfig();
-
-        const msg = document.getElementById('adm-msg');
-        msg.className = 'hack-admin-msg ok';
-        msg.textContent = '✓ CONFIGURATION SAVED';
-        setTimeout(() => { msg.className = 'hack-admin-msg'; }, 3000);
-
-        // If idle, update timer display
-        if (hackState.phase === 'idle') {
-            hackState.timeRemaining = hackConfig.timeLimit;
-            saveState();
-        }
-        render();
-    };
 
     function renderAdminStatus() {
         const el = document.getElementById('adm-status');
         if (!el) return;
-        const colorMap = {
-            idle: 'var(--text-dim)', active: 'var(--cyan)', won: 'var(--cyan)', lost: 'var(--danger)'
-        };
-        const color = colorMap[hackState.phase] || 'var(--text-dim)';
-        let txt = `Phase: <span style="color:${color}">${hackState.phase.toUpperCase()}</span>`;
-        if (hackState.startedBy) txt += ` &nbsp;|&nbsp; Operator: ${esc(hackState.startedBy)}`;
-        if (hackState.completedSeqs)
-            txt += ` &nbsp;|&nbsp; Seqs: ${hackState.completedSeqs.length}/${hackConfig.sequences.length}`;
+        const colors = { idle:'var(--text-dim)', active:'var(--cyan)', won:'var(--cyan)', lost:'var(--danger)' };
+        const color  = colors[state.phase] || 'var(--text-dim)';
+        let txt = `Phase: <span style="color:${color}">${state.phase.toUpperCase()}</span>`;
+        if (state.startedBy) txt += ` &nbsp;|&nbsp; Operator: ${esc(state.startedBy)}`;
+        if (state.answer && isAdmin) txt += ` &nbsp;|&nbsp; Answer: <span style="color:var(--warn)">${esc(state.answer)}</span>`;
         el.innerHTML = txt;
-        const btn = document.getElementById('adm-toggle-btn');
-        if (btn) btn.textContent = hackConfig.enabled ? 'DISABLE' : 'ENABLE';
     }
 
-    // expose so admin controls can call
-    window.endGame = endGame;
-
-    // ── Cross-tab sync (storage events fire in OTHER tabs) ────────
+    // ── Cross-tab sync ────────────────────────────────────────────
     window.addEventListener('storage', function (e) {
-        if (e.key === HACK_STATE_KEY) {
-            try { hackState = JSON.parse(e.newValue) || BLANK_STATE(); } catch (ex) {}
+        if (e.key === STATE_KEY) {
+            try { state = JSON.parse(e.newValue) || blankState(); } catch (ex) {}
             render();
-            if (hackState.phase === 'active') startTimer();
-            else clearInterval(timerInterval);
         }
-        if (e.key === HACK_CONFIG_KEY) {
-            try { hackConfig = JSON.parse(e.newValue) || { ...DEFAULT_CONFIG }; } catch (ex) {}
-            if (isAdmin) populateAdminFields();
+        if (e.key === CFG_KEY) {
+            try { cfg = JSON.parse(e.newValue) || { ...DEF_CFG }; } catch (ex) {}
+            if (isAdmin) populateAdmin();
             render();
         }
     });
 
     // ── Init ──────────────────────────────────────────────────────
-    loadConfig();
+    loadCfg();
     loadState();
-
-    // Resume timer if game was interrupted mid-breach
-    if (hackState.phase === 'active' && hackState.startedAt) {
-        const elapsed = Math.floor((Date.now() - hackState.startedAt) / 1000);
-        if (elapsed >= hackConfig.timeLimit) {
-            // Time already expired — resolve as lost
-            hackState.phase   = 'lost';
-            hackState.endedAt = Date.now();
-            hackState.log.push(logEntry('danger', 'BREACH TIMED OUT — TRACE LOCKED'));
-            trimLog();
-            saveState();
-        } else {
-            startTimer();
-        }
-    }
-
     render();
-    initAdminPanel();
+    initAdmin();
 
 })();
 </script>

@@ -218,8 +218,60 @@ body::after {
 .app {
     display: flex;
     min-height: 100vh;
-    opacity: 0;
-    animation: fadeIn 0.5s 3.6s forwards;
+    /* opacity controlled per-page; boot-page class restores the delay */
+}
+
+/* boot-page: only on index.html — restores the full boot-sequence delay */
+body.boot-page .app         { opacity: 0; animation: fadeIn 0.5s 3.6s forwards; }
+body.boot-page .page-header { animation: slideUp 0.5s 3.8s both; }
+body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
+
+/* ── Mini page loader (all non-boot pages) ───────────────────── */
+.mini-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: var(--bg-deep);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    pointer-events: none;
+}
+.mini-loader.ml-out { animation: overlayOut 0.4s forwards; }
+.ml-logo {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: 0.3em;
+    opacity: 0.75;
+}
+.ml-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--purple-bright);
+    letter-spacing: 0.22em;
+    margin-top: -0.3rem;
+}
+.ml-bar-wrap {
+    width: 140px;
+    height: 2px;
+    background: var(--border);
+    overflow: hidden;
+    border-radius: 1px;
+}
+.ml-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--gold));
+    animation: bootBar 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.ml-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.56rem;
+    color: var(--text-dim);
+    letter-spacing: 0.18em;
 }
 
 /* ── Navbar ─────────────────────────────────────────────────── */
@@ -391,7 +443,7 @@ body::after {
 }
 
 /* ── Page Header ────────────────────────────────────────────── */
-.page-header { animation: slideUp 0.5s 3.8s both; }
+.page-header { animation: slideUp 0.3s 0.05s both; }
 .page-header h1 {
     font-family: 'Orbitron', monospace;
     font-size: clamp(1.1rem, 4vw, 1.8rem);
@@ -427,7 +479,7 @@ body::after {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 1rem;
-    animation: slideUp 0.5s 4s both;
+    animation: slideUp 0.3s 0.1s both;
 }
 
 .tool-card {
