@@ -807,7 +807,7 @@
         saveState();
         render();
         if (result === 'won') {
-            // Start typewriter after DOM settles
+            freshWin = true;
             setTimeout(startExfilReadout, 400);
         }
     }
@@ -881,8 +881,9 @@
     }
 
     /* ── Typewriter / exfil readout ───────────────────────────── */
-    let typeTimer  = null;
-    let typeActive = false;
+    let typeTimer    = null;
+    let typeActive   = false;
+    let freshWin     = false;   // true only when the win happens in this session
 
     function typewriterStop() {
         clearTimeout(typeTimer);
@@ -1063,8 +1064,38 @@
                 </div>
             </div>`;
 
-        // Kick off typewriter after DOM is ready
-        setTimeout(startExfilReadout, 80);
+        // Only animate on a fresh win; on page revisit show data instantly
+        if (freshWin) {
+            setTimeout(startExfilReadout, 80);
+        } else {
+            setTimeout(renderExfilImmediate, 80);
+        }
+    }
+
+    function renderExfilImmediate() {
+        const container = document.getElementById('cipher-exfil-output');
+        if (!container) return;
+        const rawLines = (state.extractedData && state.extractedData.length ? state.extractedData : DEF_EXFIL);
+        container.innerHTML = '';
+        rawLines.forEach(raw => {
+            if (raw.trim() === '') { container.appendChild(document.createElement('div')); return; }
+            const hasBorder = /[═║╔╗╚╝╠╣]/.test(raw);
+            let cls = 'exl';
+            if      (raw.startsWith('>'))  cls += ' exl-sys';
+            else if (raw.startsWith('!'))  cls += ' exl-warn';
+            else if (hasBorder)            cls += ' exl-border';
+            else                           cls += ' exl-data';
+            const div = document.createElement('div');
+            div.className   = cls;
+            div.textContent = raw;
+            container.appendChild(div);
+        });
+        // Add a static done cursor at the end
+        const cur = document.createElement('span');
+        cur.className = 'exfil-cursor';
+        cur.style.cssText = 'animation:none;opacity:1;';
+        cur.textContent = '█';
+        container.appendChild(cur);
     }
 
     function renderActive(area) {
@@ -1248,7 +1279,10 @@
             const prev = state.phase;
             try { state = JSON.parse(e.newValue) || blankState(); } catch (ex) {}
             render();
-            if (state.phase === 'won' && prev !== 'won') setTimeout(startExfilReadout, 400);
+            if (state.phase === 'won' && prev !== 'won') {
+                freshWin = true;
+                setTimeout(startExfilReadout, 400);
+            }
         }
         if (e.key === CFG_KEY) {
             try { cfg = JSON.parse(e.newValue) || { ...DEF_CFG }; } catch (ex) {}
