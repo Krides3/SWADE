@@ -330,3 +330,25 @@ body {
 @keyframes dash-move {
     to { stroke-dashoffset: -24; }
 }
+
+/* ─── MOBILE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+    #topbar { padding: 0 0.75em; gap: 0.5em; }
+    .bar-sub   { display: none; }
+    .bar-title { font-size: 1em; letter-spacing: 0.1em; }
+    .nav-back  { padding: 0.3em 0.6em; font-size: 0.72em; }
+
+    #clock-panel { display: none; }
+
+    #clearance-panel { bottom: 1em; left: 0.5em; padding: 0.55em 0.75em; }
+    #clearance-btns  { gap: 0.25em; }
+    .cl-btn { width: 38px; height: 38px; font-size: 0.9em; }
+
+    #legend { bottom: 1em; right: 0.5em; min-width: 110px; padding: 0.55em 0.75em; }
+    .legend-item { font-size: 0.7em; }
+}
+
+@media (max-width: 420px) {
+    #legend { display: none; }
+    #map-user-badge { display: none; }
+}

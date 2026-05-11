@@ -330,12 +330,24 @@
         .adm-msg.ok  { display: block; background: rgba(0,229,200,0.05); border: 1px solid rgba(0,229,200,0.2);  color: var(--cyan); }
         .adm-msg.err { display: block; background: rgba(192,57,43,0.06); border: 1px solid rgba(192,57,43,0.22); color: var(--danger); }
 
-        @media (max-width: 700px) {
+        /* Tablet: narrower sidebar */
+        @media (min-width: 769px) and (max-width: 960px) {
+            .cipher-body { grid-template-columns: 1fr 180px; }
+        }
+
+        @media (max-width: 768px) {
             .cipher-body { grid-template-columns: 1fr; }
             .cipher-grid { grid-template-columns: 1fr; border-right: none; border-bottom: 1px solid #1c3a25; }
-            .cipher-sidebar { border-top: 1px solid #1c3a25; }
+            .cipher-sidebar { border-top: 1px solid #1c3a25; padding-bottom: 1rem; }
             .adm-grid { grid-template-columns: 1fr; }
             .adm-field.full { grid-column: 1; }
+            /* Touch-friendly tap targets */
+            .c-word   { font-size: 0.82rem; line-height: 2; }
+            .c-junk   { font-size: 0.72rem; line-height: 2; }
+            .cipher-btn { padding: 0.75rem 1.2rem; min-height: 44px; font-size: 0.75rem; }
+            .adm-btn    { padding: 0.5rem 0.85rem; min-height: 40px; }
+            .adm-input, .adm-textarea { font-size: 0.82rem; padding: 7px 9px; }
+            .cs-pip { width: 16px; height: 16px; }
         }
     </style>
 </head>

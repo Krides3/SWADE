@@ -1064,13 +1064,24 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
 ::-webkit-scrollbar-thumb:hover { background: var(--purple-dim); }
 
 /* ════════════════════════════════════════════════════════════
-   MOBILE — breakpoint 700px
+   TABLET — breakpoint 900px
+   Minor layout adjustments for mid-range screens
    ════════════════════════════════════════════════════════════ */
-@media (max-width: 700px) {
+@media (max-width: 900px) {
+    .tool-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+    .comms-wrap { max-width: 100%; }
+}
+
+/* ════════════════════════════════════════════════════════════
+   MOBILE — breakpoint 768px (phones + portrait tablets)
+   ════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
     :root { --navbar-w: 0px; }
 
     .navbar {
-        width: 200px;
+        width: min(260px, 80vw);
         transform: translateX(-100%);
     }
     .navbar.open {
@@ -1080,12 +1091,14 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
 
     .hamburger {
         display: flex;
+        width: 44px;
+        height: 44px;
     }
 
     .main {
         margin-left: 0;
-        padding: 1rem 0.9rem;
-        padding-top: 3.5rem;
+        padding: 1rem 0.85rem;
+        padding-top: 3.75rem;
     }
 
     .tool-grid {
@@ -1093,38 +1106,45 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
         gap: 0.75rem;
     }
 
-    .tool-card {
-        padding: 0.85rem 0.75rem;
-    }
-
+    .tool-card { padding: 0.85rem 0.75rem; }
     .tool-card-desc { display: none; }
 
-    .dice-grid {
-        grid-template-columns: repeat(3, 1fr);
+    /* ── Touch targets ──────────────────────────────────── */
+    .nav-links li a {
+        padding: 0.9rem 1.1rem;
+        min-height: 48px;
+    }
+    .nav-logout-btn {
+        padding: 8px 0;
+        min-height: 40px;
     }
 
-    .timer-controls { gap: 0.4rem; }
-    .timer-btn { padding: 0.5rem 0.8rem; font-size: 0.65rem; }
+    .dice-grid { grid-template-columns: repeat(3, 1fr); }
+    .dice-btn  { padding: 1rem 0.5rem; min-height: 52px; font-size: 1rem; }
+    .mod-btn   { width: 42px; height: 42px; }
 
-    .comms-log { min-height: 200px; }
+    .timer-controls { gap: 0.4rem; }
+    .timer-btn { padding: 0.65rem 0.9rem; font-size: 0.68rem; min-height: 44px; }
+
+    .comms-log    { min-height: 200px; }
+    .comms-input  { font-size: 0.85rem; padding: 0.85rem 0.5rem; }
+    .comms-send   { padding: 0.85rem 1.2rem; min-height: 48px; }
 
     .subtab-bar { gap: 0.3rem; }
-    .subtab { padding: 0.35rem 0.65rem; font-size: 0.65rem; }
+    .subtab { padding: 0.5rem 0.75rem; font-size: 0.68rem; min-height: 44px; }
 
     .radio-controls { gap: 0.4rem; }
 
     .corner-decoration { display: none; }
 }
 
+/* ════════════════════════════════════════════════════════════
+   SMALL PHONE — breakpoint 400px
+   ════════════════════════════════════════════════════════════ */
 @media (max-width: 400px) {
-    .tool-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 0.6rem;
-    }
-    .tool-card-title {
-        font-size: 0.7rem;
-    }
-    .tool-card-icon {
-        font-size: 1.1rem;
-    }
+    .tool-grid   { grid-template-columns: 1fr 1fr; gap: 0.6rem; }
+    .tool-card-title { font-size: 0.7rem; }
+    .tool-card-icon  { font-size: 1.1rem; }
+    .main { padding: 0.75rem 0.65rem; padding-top: 3.75rem; }
+    .dice-grid { grid-template-columns: repeat(2, 1fr); }
 }

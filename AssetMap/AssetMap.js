@@ -1238,7 +1238,7 @@ function injectAddUI() {
         #lx-add-btn:hover { background:rgba(0,255,231,0.12); }
         #lx-add-panel {
             position:fixed; bottom:9em; left:1em; z-index:950;
-            width:340px; max-height:78vh; display:flex; flex-direction:column;
+            width:min(340px, calc(100vw - 1.5em)); max-height:78vh; display:flex; flex-direction:column;
             background:rgba(6,8,18,0.98); border:1px solid #00ffe7;
             font-family:'Consolas','Courier New',monospace; font-size:12px;
             color:#00ffe7; box-shadow:0 0 30px rgba(0,255,231,0.15);
