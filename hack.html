@@ -12,261 +12,280 @@
 
         .cipher-wrap { display: flex; flex-direction: column; gap: 1rem; }
 
-        /* ── Status bar ───────────────────────────────────────── */
+        /* ── Status bar ─────────────────────────────────────────── */
         .cipher-statusbar {
             background: var(--bg-panel);
             border: 1px solid var(--border);
             padding: 0.65rem 1rem;
-            display: flex;
-            align-items: center;
+            display: flex; align-items: center;
             justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            flex-wrap: wrap; gap: 0.5rem;
         }
         .cipher-target-block { display: flex; flex-direction: column; gap: 2px; }
-        .cipher-target-name  { font-family: 'Orbitron', monospace; font-size: 0.85rem; color: var(--gold); letter-spacing: 0.12em; }
-        .cipher-target-sub   { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.14em; }
-        .cipher-phase-badge  {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.65rem;
-            letter-spacing: 0.14em;
-            padding: 3px 9px;
-            border: 1px solid var(--border);
-            color: var(--text-dim);
+        .cipher-target-name { font-family: 'Orbitron', monospace; font-size: 0.85rem; color: var(--gold); letter-spacing: 0.12em; }
+        .cipher-target-sub  { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.14em; }
+        .cipher-phase-badge {
+            font-family: 'Share Tech Mono', monospace; font-size: 0.65rem;
+            letter-spacing: 0.14em; padding: 3px 9px;
+            border: 1px solid var(--border); color: var(--text-dim);
         }
         .cipher-phase-badge.active { color: var(--cyan);   border-color: var(--cyan);   background: rgba(0,229,200,0.04); animation: blink 2s ease-in-out infinite; }
         .cipher-phase-badge.won    { color: var(--cyan);   border-color: var(--cyan);   background: rgba(0,229,200,0.07); }
         .cipher-phase-badge.lost   { color: var(--danger); border-color: var(--danger); background: rgba(192,57,43,0.07); }
 
-        /* ── The "green screen" terminal ──────────────────────── */
+        /* ── Green-screen terminal ────────────────────────────────── */
         .cipher-terminal {
-            background: #05100a;
-            border: 1px solid #1c3a25;
+            background: #05100a; border: 1px solid #1c3a25;
             font-family: 'Share Tech Mono', monospace;
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
         .cipher-terminal::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
-            pointer-events: none;
-            z-index: 5;
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 4px);
+            pointer-events: none; z-index: 5;
         }
-
         .cipher-term-header {
-            background: #08180d;
-            border-bottom: 1px solid #1c3a25;
-            padding: 0.5rem 0.75rem;
+            background: #08180d; border-bottom: 1px solid #1c3a25; padding: 0.48rem 0.75rem;
         }
-        .cth-title  { font-size: 0.6rem;  color: #3d7a50; letter-spacing: 0.12em; }
-        .cth-target { font-size: 0.72rem; color: #6dcc82; letter-spacing: 0.1em;  margin: 2px 0; }
-        .cth-warn   { font-size: 0.56rem; color: #a03020; letter-spacing: 0.1em;  }
+        .cth-title  { font-size: 0.58rem; color: #3d7a50; letter-spacing: 0.12em; }
+        .cth-target { font-size: 0.7rem;  color: #6dcc82; letter-spacing: 0.1em; margin: 2px 0; }
+        .cth-warn   { font-size: 0.54rem; color: #a03020; letter-spacing: 0.1em; }
 
-        /* ── Body: grid columns + sidebar ─────────────────────── */
-        .cipher-body {
-            display: grid;
-            grid-template-columns: 1fr 230px;
-        }
+        /* ── Body: grid + sidebar ─────────────────────────────────── */
+        .cipher-body { display: grid; grid-template-columns: 1fr 230px; }
 
         /* Word grid */
         .cipher-grid {
-            padding: 0.65rem 0.85rem;
+            padding: 0.6rem 0.85rem;
             border-right: 1px solid #1c3a25;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            column-gap: 0.6rem;
-            row-gap: 1px;
+            column-gap: 0.6rem; row-gap: 1px;
         }
         .cipher-line {
-            display: flex;
-            align-items: baseline;
-            gap: 0.35rem;
-            white-space: nowrap;
+            display: flex; align-items: baseline;
+            gap: 0.25rem; white-space: nowrap;
         }
-        .c-addr { font-size: 0.56rem; color: #254a30; flex-shrink: 0; letter-spacing: 0.04em; }
+        .c-addr { font-size: 0.54rem; color: #1e4028; flex-shrink: 0; letter-spacing: 0.04em; }
         .c-junk { font-size: 0.68rem; color: #254a30; }
+
+        /* Words */
         .c-word {
-            font-size: 0.72rem;
-            color: #6dcc82;
-            cursor: pointer;
-            transition: color 0.1s, text-shadow 0.1s;
-            position: relative;
+            font-size: 0.72rem; color: #6dcc82;
+            cursor: pointer; transition: color 0.1s, text-shadow 0.1s;
         }
-        .c-word:hover        { color: #c0ffcc; text-shadow: 0 0 7px rgba(109,204,130,0.7); }
-        .c-word.w-guessed    { color: #853a28; cursor: not-allowed; text-decoration: line-through; opacity: 0.7; }
-        .c-word.w-correct    { color: var(--gold); text-shadow: 0 0 8px rgba(184,168,0,0.6); cursor: default; }
-        .c-word.w-locked     { color: #1c3a25; cursor: not-allowed; }
+        .c-word:hover         { color: #c0ffcc; text-shadow: 0 0 7px rgba(109,204,130,0.7); }
+        .c-word.w-guessed     { color: #7a3020; cursor: not-allowed; text-decoration: line-through; opacity: 0.6; }
+        .c-word.w-eliminated  { color: #3a1a10; cursor: not-allowed; text-decoration: line-through; opacity: 0.45; }
+        .c-word.w-correct     { color: var(--gold); text-shadow: 0 0 8px rgba(184,168,0,0.6); cursor: default; }
+        .c-word.w-locked      { color: #1c3a25; cursor: not-allowed; }
+
+        /* Brackets ── clickable special pairs */
+        .c-bracket {
+            font-size: 0.7rem; cursor: pointer;
+            transition: all 0.12s; letter-spacing: 0.02em;
+        }
+        .c-bracket:hover { filter: brightness(1.6); }
+        .c-bracket.b-dud     { color: #55bb66; }
+        .c-bracket.b-dud:hover    { text-shadow: 0 0 6px #55bb66; }
+        .c-bracket.b-attempt { color: #b8a800; }
+        .c-bracket.b-attempt:hover { text-shadow: 0 0 6px #b8a800; }
+        .c-bracket.b-hint    { color: #00bba0; }
+        .c-bracket.b-hint:hover    { text-shadow: 0 0 6px #00bba0; }
+        .c-bracket.b-used    { color: #1c3a25; cursor: default; pointer-events: none; }
 
         /* Sidebar */
         .cipher-sidebar {
             padding: 0.65rem 0.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
+            display: flex; flex-direction: column; gap: 0.7rem;
         }
         .cs-label {
-            font-size: 0.55rem;
-            color: #254a30;
-            letter-spacing: 0.2em;
-            padding-bottom: 4px;
+            font-size: 0.54rem; color: #1e4028;
+            letter-spacing: 0.2em; padding-bottom: 3px;
             border-bottom: 1px solid #1c3a25;
         }
-        /* Attempts pips */
-        .cs-pips {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-        .cs-pip {
-            width: 13px; height: 13px;
-            background: #3d7a50;
-            border: 1px solid #3d7a50;
-            transition: all 0.25s;
-        }
+        .cs-pips   { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 2px; }
+        .cs-pip    { width: 13px; height: 13px; background: #3d7a50; border: 1px solid #3d7a50; transition: all 0.25s; }
         .cs-pip.used { background: transparent; border-color: #1c3a25; }
-        .cs-pip-label {
-            font-size: 0.56rem;
-            color: #3d7a50;
-            letter-spacing: 0.1em;
-            margin-top: 2px;
-        }
-        /* Guess history */
+        .cs-pip-label { font-size: 0.54rem; color: #3d7a50; letter-spacing: 0.1em; }
+
         .cs-history {
-            display: flex;
-            flex-direction: column;
-            gap: 0.22rem;
-            max-height: 220px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #1c3a25 transparent;
+            display: flex; flex-direction: column; gap: 0.18rem;
+            max-height: 130px; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: #1c3a25 transparent;
         }
-        .cs-guess {
-            font-size: 0.62rem;
-            color: #3d7a50;
-            letter-spacing: 0.08em;
-            line-height: 1.5;
-        }
+        .cs-guess { font-size: 0.6rem; color: #3d7a50; letter-spacing: 0.07em; line-height: 1.5; }
         .cs-guess .gw { color: #6dcc82; }
         .cs-guess .gr { color: var(--gold); font-weight: bold; }
         .cs-guess.perfect .gw { color: var(--gold); }
         .cs-guess.perfect .gr { color: var(--cyan); }
-        .cs-cursor { font-size: 0.62rem; color: #6dcc82; animation: blink 0.8s step-end infinite; }
 
-        /* ── Actions ──────────────────────────────────────────── */
+        /* Hints */
+        .cs-hint-list { display: flex; flex-direction: column; gap: 0.15rem; }
+        .cs-hint { font-size: 0.6rem; color: #00a898; letter-spacing: 0.07em; }
+
+        /* Bracket legend */
+        .cs-legend { display: flex; flex-direction: column; gap: 0.12rem; }
+        .cs-leg-row { font-size: 0.54rem; letter-spacing: 0.06em; display: flex; gap: 0.3rem; align-items: center; }
+        .leg-b-dud { color: #55bb66; } .leg-b-attempt { color: #b8a800; } .leg-b-hint { color: #00bba0; }
+
+        .cs-cursor { font-size: 0.65rem; color: #6dcc82; animation: blink 0.8s step-end infinite; }
+
+        /* ── Actions ─────────────────────────────────────────────── */
         .cipher-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; }
         .cipher-btn {
             padding: 0.6rem 1.2rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            letter-spacing: 0.16em;
-            border: 1px solid;
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.18s;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.72rem;
+            letter-spacing: 0.16em; border: 1px solid;
+            background: transparent; cursor: pointer; transition: all 0.18s;
         }
-        .cipher-btn:disabled  { opacity: 0.3; cursor: not-allowed; }
-        .cipher-btn-primary   { border-color: var(--gold-dim); color: var(--gold); }
+        .cipher-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .cipher-btn-primary { border-color: var(--gold-dim); color: var(--gold); }
         .cipher-btn-primary:hover:not(:disabled) { background: rgba(184,168,0,0.1); border-color: var(--gold); }
-        .cipher-btn-danger    { border-color: rgba(192,57,43,0.4); color: var(--danger); }
-        .cipher-btn-danger:hover:not(:disabled)  { background: rgba(192,57,43,0.1); }
+        .cipher-btn-danger  { border-color: rgba(192,57,43,0.4); color: var(--danger); }
+        .cipher-btn-danger:hover:not(:disabled) { background: rgba(192,57,43,0.1); }
 
-        /* ── Idle / result / locked screens ───────────────────── */
+        /* ── Idle / fail screens ─────────────────────────────────── */
         .cipher-splash {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
+            background: var(--bg-card); border: 1px solid var(--border);
             padding: 2.5rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.85rem;
-            text-align: center;
+            display: flex; flex-direction: column; align-items: center;
+            gap: 0.85rem; text-align: center;
         }
         .cipher-splash-icon  { font-size: 2.6rem; color: var(--purple-bright); opacity: 0.55; }
         .cipher-splash-title { font-family: 'Orbitron', monospace; font-size: 0.88rem; color: var(--gold); letter-spacing: 0.14em; }
         .cipher-splash-meta  { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: var(--cyan); letter-spacing: 0.1em; }
         .cipher-splash-desc  { font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: var(--text-dim); letter-spacing: 0.08em; line-height: 1.9; }
-        .cipher-splash.s-won  { border-color: rgba(0,229,200,0.35); }
         .cipher-splash.s-lost { border-color: rgba(192,57,43,0.35); }
-        .s-won  .cipher-splash-title { color: var(--cyan); }
         .s-lost .cipher-splash-title { color: var(--danger); }
-        .cipher-locked {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 2rem;
+
+        /* ── WIN SCREEN ──────────────────────────────────────────── */
+        .cipher-win-screen { display: flex; flex-direction: column; gap: 1rem; }
+
+        .cipher-win-header {
+            background: #030e06;
+            border: 1px solid rgba(0,229,200,0.35);
+            padding: 1.5rem;
             text-align: center;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.72rem;
-            color: var(--text-dim);
-            letter-spacing: 0.14em;
+            display: flex; flex-direction: column; align-items: center; gap: 0.45rem;
+            position: relative; overflow: hidden;
+        }
+        .cipher-win-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.15) 2px, rgba(0,0,0,0.15) 4px);
+            pointer-events: none;
+        }
+        .win-badge {
+            font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+            color: #3daa50; letter-spacing: 0.25em;
+            border: 1px solid #1c5030; padding: 2px 10px; margin-bottom: 0.3rem;
+        }
+        .win-icon {
+            font-size: 2.4rem; color: var(--cyan);
+            text-shadow: 0 0 20px rgba(0,229,200,0.6), 0 0 40px rgba(0,229,200,0.2);
+            animation: pulseGold 2s ease-in-out infinite;
+            filter: hue-rotate(150deg);
+        }
+        .win-title {
+            font-family: 'Orbitron', monospace; font-weight: 900;
+            font-size: clamp(1.4rem, 5vw, 2rem);
+            color: var(--cyan); letter-spacing: 0.2em;
+            text-shadow: 0 0 25px rgba(0,229,200,0.5), 0 0 60px rgba(0,229,200,0.15);
+        }
+        .win-sub {
+            font-family: 'Share Tech Mono', monospace; font-size: 0.65rem;
+            color: #4aac60; letter-spacing: 0.14em;
+        }
+        .win-detail {
+            font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+            color: #254a30; letter-spacing: 0.1em; margin-top: 0.1rem;
         }
 
-        /* ── Activity log ─────────────────────────────────────── */
+        /* Exfil readout terminal */
+        .cipher-exfil-wrap {
+            background: #030e06; border: 1px solid #1c3a25;
+            font-family: 'Share Tech Mono', monospace;
+            position: relative; overflow: hidden;
+        }
+        .cipher-exfil-wrap::before {
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.13) 2px, rgba(0,0,0,0.13) 4px);
+            pointer-events: none; z-index: 2;
+        }
+        .cipher-exfil-hdr {
+            background: #071408; border-bottom: 1px solid #1c3a25;
+            padding: 0.4rem 0.75rem; display: flex; justify-content: space-between; align-items: center;
+        }
+        .exfil-hdr-title { font-size: 0.58rem; color: #3d7a50; letter-spacing: 0.14em; }
+        .exfil-hdr-blink { font-size: 0.58rem; color: #55bb66; letter-spacing: 0.14em; animation: blink 1.2s step-end infinite; }
+        .cipher-exfil-output {
+            padding: 0.75rem 1rem;
+            min-height: 160px;
+            max-height: 340px;
+            overflow-y: auto;
+            position: relative; z-index: 3;
+            scrollbar-width: thin; scrollbar-color: #1c3a25 transparent;
+        }
+        .exl { font-size: 0.7rem; line-height: 1.7; letter-spacing: 0.04em; white-space: pre; }
+        .exl-sys    { color: #3daa50; }
+        .exl-data   { color: var(--gold); }
+        .exl-border { color: #2a5a35; }
+        .exl-warn   { color: #c05030; }
+        .exl-blank  { color: transparent; }
+        .exl-cursor { color: #6dcc82; animation: blink 0.8s step-end infinite; }
+
+        /* ── Locked ──────────────────────────────────────────────── */
+        .cipher-locked {
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 2rem; text-align: center;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.72rem;
+            color: var(--text-dim); letter-spacing: 0.14em;
+        }
+
+        /* ── Activity log ────────────────────────────────────────── */
         .hack-log-panel { background: var(--bg-card); border: 1px solid var(--border); }
         .hack-panel-hdr {
-            background: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
+            background: var(--bg-panel); border-bottom: 1px solid var(--border);
             padding: 0.42rem 0.75rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.58rem;
-            color: var(--gold-dim);
-            letter-spacing: 0.2em;
-            display: flex;
-            justify-content: space-between;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+            color: var(--gold-dim); letter-spacing: 0.2em;
+            display: flex; justify-content: space-between;
         }
         .hack-log-entries {
-            padding: 0.4rem 0.75rem;
-            max-height: 130px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.15rem;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+            padding: 0.4rem 0.75rem; max-height: 130px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 0.14rem;
+            scrollbar-width: thin; scrollbar-color: var(--border) transparent;
         }
-        .hle { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: var(--text-dim); letter-spacing: 0.04em; display: flex; gap: 0.4rem; }
+        .hle { font-family: 'Share Tech Mono', monospace; font-size: 0.57rem; color: var(--text-dim); letter-spacing: 0.03em; display: flex; gap: 0.4rem; }
         .hle-t { color: var(--gold-dim); flex-shrink: 0; }
-        .hle-u { color: var(--purple-bright); flex-shrink: 0; min-width: 68px; }
+        .hle-u { color: var(--purple-bright); flex-shrink: 0; min-width: 66px; }
         .hle.success .hle-m { color: var(--cyan); }
         .hle.danger  .hle-m { color: var(--danger); }
         .hle.warn    .hle-m { color: var(--warn); }
 
-        /* ════ OVERLORD admin panel ══════════════════════════════ */
+        /* ════ OVERLORD ADMIN ════════════════════════════════════════ */
         .hack-admin-panel { background: var(--bg-card); border: 1px solid var(--gold-dim); display: none; }
         .hack-admin-hdr {
-            background: rgba(184,168,0,0.05);
-            border-bottom: 1px solid var(--gold-dim);
+            background: rgba(184,168,0,0.05); border-bottom: 1px solid var(--gold-dim);
             padding: 0.42rem 0.75rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.58rem;
-            color: var(--gold);
-            letter-spacing: 0.2em;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+            color: var(--gold); letter-spacing: 0.2em;
+            display: flex; justify-content: space-between; align-items: center;
         }
         .hack-admin-body { padding: 0.85rem 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
-        .adm-status-row  {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding-bottom: 0.65rem;
-            border-bottom: 1px solid var(--border);
+        .adm-status-row {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 0.5rem;
+            padding-bottom: 0.65rem; border-bottom: 1px solid var(--border);
         }
         .adm-status-txt { font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; color: var(--text-dim); letter-spacing: 0.07em; }
         .adm-ctrl-row   { display: flex; gap: 0.4rem; flex-wrap: wrap; }
         .adm-btn {
             padding: 0.33rem 0.72rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.6rem;
-            letter-spacing: 0.1em;
-            border: 1px solid;
-            background: transparent;
-            cursor: pointer;
-            transition: all 0.15s;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+            letter-spacing: 0.1em; border: 1px solid;
+            background: transparent; cursor: pointer; transition: all 0.15s;
         }
         .adm-gold { border-color: var(--gold-dim); color: var(--gold); }
         .adm-gold:hover { background: rgba(184,168,0,0.1); }
@@ -282,34 +301,22 @@
         .adm-field.full { grid-column: 1 / -1; }
         .adm-label { font-family: 'Share Tech Mono', monospace; font-size: 0.54rem; color: var(--gold-dim); letter-spacing: 0.14em; }
         .adm-input {
-            background: #0d1018;
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.74rem;
-            padding: 5px 7px;
-            outline: none;
-            width: 100%;
+            background: #0d1018; border: 1px solid var(--border);
+            color: var(--text); font-family: 'Share Tech Mono', monospace;
+            font-size: 0.74rem; padding: 5px 7px; outline: none; width: 100%;
         }
         .adm-input:focus { border-color: var(--gold-dim); }
         .adm-textarea {
-            background: #0d1018;
-            border: 1px solid var(--border);
-            color: var(--text);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.65rem;
-            padding: 5px 7px;
-            outline: none;
-            width: 100%;
-            resize: vertical;
-            min-height: 72px;
-            line-height: 1.6;
+            background: #0d1018; border: 1px solid var(--border);
+            color: var(--text); font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem; padding: 5px 7px; outline: none;
+            width: 100%; resize: vertical; min-height: 68px; line-height: 1.6;
         }
         .adm-textarea:focus { border-color: var(--gold-dim); }
-        .adm-hint { font-family: 'Share Tech Mono', monospace; font-size: 0.54rem; color: var(--text-dim); letter-spacing: 0.06em; margin-top: 2px; }
-        .adm-msg  { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; padding: 4px 7px; display: none; letter-spacing: 0.06em; }
-        .adm-msg.ok  { display: block; background: rgba(0,229,200,0.05);  border: 1px solid rgba(0,229,200,0.2);  color: var(--cyan);   }
-        .adm-msg.err { display: block; background: rgba(192,57,43,0.06);  border: 1px solid rgba(192,57,43,0.22); color: var(--danger); }
+        .adm-hint { font-family: 'Share Tech Mono', monospace; font-size: 0.52rem; color: var(--text-dim); letter-spacing: 0.05em; margin-top: 2px; }
+        .adm-msg  { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; padding: 4px 7px; display: none; letter-spacing: 0.05em; }
+        .adm-msg.ok  { display: block; background: rgba(0,229,200,0.05); border: 1px solid rgba(0,229,200,0.2);  color: var(--cyan); }
+        .adm-msg.err { display: block; background: rgba(192,57,43,0.06); border: 1px solid rgba(192,57,43,0.22); color: var(--danger); }
 
         @media (max-width: 700px) {
             .cipher-body { grid-template-columns: 1fr; }
@@ -322,7 +329,7 @@
 </head>
 <body>
 
-<!-- ── Mini loading screen ────────────────────────────────────── -->
+<!-- ── Mini loading screen ─────────────────────────────────────── -->
 <div id="page-loader" class="mini-loader">
     <div class="ml-logo">LUXOR</div>
     <div class="ml-sub">BREACH.EXE</div>
@@ -349,9 +356,7 @@
             <li><a href="hack.html"                 data-icon="10">Hacking</a></li>
         </ul>
         <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
-            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">
-                ◈ OVERLORD PANEL
-            </a>
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">◈ OVERLORD PANEL</a>
         </div>
         <div class="nav-footer">
             <span class="status-dot"></span>
@@ -396,7 +401,7 @@
                 </div>
             </div>
 
-            <!-- Overlord admin panel (injected by JS) -->
+            <!-- Overlord admin panel -->
             <div class="hack-admin-panel" id="hack-admin-panel">
                 <div class="hack-admin-hdr">
                     <span>◈ OVERLORD CONTROLS — CIPHER TERMINAL</span>
@@ -428,14 +433,13 @@
                             <input class="adm-input" type="number" id="adm-attempts" min="2" max="8" value="4">
                         </div>
                         <div class="adm-field full">
-                            <label class="adm-label">FORCE ANSWER (leave blank = random from pool)</label>
-                            <input class="adm-input" type="text" id="adm-answer" placeholder="e.g. SHADOW  — must exist in word pool">
-                            <div class="adm-hint">If blank, a random word from the pool becomes the password each game.</div>
+                            <label class="adm-label">FORCE ANSWER (blank = random each game)</label>
+                            <input class="adm-input" type="text" id="adm-answer" placeholder="e.g. SHADOW — must be in word pool">
+                            <div class="adm-hint">Leave blank for a random password each game.</div>
                         </div>
                         <div class="adm-field full">
                             <label class="adm-label">WORD POOL (one per line, all same length recommended)</label>
                             <textarea class="adm-textarea" id="adm-pool" rows="6"></textarea>
-                            <div class="adm-hint">All words must be uppercase. Mixed lengths allowed but same-length is recommended.</div>
                         </div>
                         <div class="adm-field full">
                             <label class="adm-label">SUCCESS MESSAGE</label>
@@ -445,13 +449,17 @@
                             <label class="adm-label">FAILURE MESSAGE</label>
                             <input class="adm-input" type="text" id="adm-fail-msg">
                         </div>
+                        <div class="adm-field full">
+                            <label class="adm-label">DATA EXFIL READOUT (one line per row — shown after success)</label>
+                            <textarea class="adm-textarea" id="adm-exfil" rows="10" style="min-height:120px;"></textarea>
+                            <div class="adm-hint">Lines starting with &gt; = system msg (green) | lines with ║╔╚ = border (dim) | others = data (gold). Blank lines = pause.</div>
+                        </div>
                     </div>
 
                     <div class="adm-ctrl-row" style="border-top:1px solid var(--border);padding-top:0.65rem;">
                         <button class="adm-btn adm-gold" onclick="saveConfig()">SAVE CONFIGURATION</button>
                     </div>
                     <div class="adm-msg" id="adm-msg"></div>
-
                 </div>
             </div>
 
@@ -473,7 +481,6 @@
             if (al) al.style.display = 'block';
         }
     })();
-    // Hide mini-loader after assets ready
     setTimeout(function () {
         const l = document.getElementById('page-loader');
         if (l) { l.classList.add('ml-out'); setTimeout(() => l.remove(), 420); }
@@ -482,18 +489,16 @@
 <script src="./nav.js"></script>
 <script>
 /* ================================================================
-   CIPHER TERMINAL — Password-cracking minigame
-   All state is saved in localStorage so every connected browser
-   stays in sync (cross-tab via the 'storage' event).
+   CIPHER TERMINAL — Hacking minigame
+   State shared via localStorage / cross-tab storage events.
    ================================================================ */
 (function () {
     'use strict';
 
-    // ── Keys ──────────────────────────────────────────────────────
     const CFG_KEY   = 'luxorCipherConfig';
     const STATE_KEY = 'luxorCipherState';
 
-    // ── Default word pool (all 6-letter military / tactical words) ─
+    /* ── Default word pool ─────────────────────────────────────── */
     const BUILT_IN_POOL = [
         'SHADOW','VECTOR','BREACH','CIPHER','TARGET','PATROL',
         'SIGNAL','KERNEL','SYSTEM','BUFFER','UPLINK','DAEMON',
@@ -502,23 +507,52 @@
         'KNIGHT','RANGER','BANDIT','SPIDER','WRAITH','CASTLE'
     ];
 
+    const DEF_EXFIL = [
+        '> AUTHENTICATING BYPASS CREDENTIALS...',
+        '> SECONDARY FIREWALL DISSOLVED',
+        '> ACCESSING RESTRICTED PARTITION',
+        '> LOADING: /data/ops/classified/',
+        '> DECRYPTION KEY ACCEPTED',
+        '',
+        '╔════════════════════════════════════════╗',
+        '║  CLASSIFIED — LEVEL 5 ACCESS             ║',
+        '╠════════════════════════════════════════╣',
+        '║  OPERATION: NIGHTFALL                    ║',
+        '║  STATUS: ACTIVE                          ║',
+        '║  GRID REF: 47.23N / 122.81W             ║',
+        '║  TARGET: NEXUS-7 INSTALLATION            ║',
+        '╠════════════════════════════════════════╣',
+        '║  PERSONNEL: 12 ARMED GUARDS              ║',
+        '║              2 OVERWATCH SNIPERS          ║',
+        '║              1 HVT — CALLSIGN: REAPER     ║',
+        '╠════════════════════════════════════════╣',
+        '║  ACCESS CODE: ALPHA-7-7-NINER            ║',
+        '║  EXFIL WINDOW: 0340Z — 0420Z            ║',
+        '╚════════════════════════════════════════╝',
+        '',
+        '> DATA EXTRACTION COMPLETE [100%]',
+        '! WARNING: TRACE ROUTINE INITIATED',
+        '! DISCONNECT IMMEDIATELY'
+    ];
+
+    const DEF_CFG = {
+        enabled:      true,
+        targetName:   'MAINFRAME-ALPHA',
+        wordCount:    12,
+        attempts:     4,
+        wordPool:     [...BUILT_IN_POOL],
+        forcedAnswer: '',
+        successMsg:   'ACCESS GRANTED — WELCOME, OPERATOR',
+        failMsg:      'TERMINAL LOCKED — SECURITY ALERT TRIGGERED',
+        extractedData: [...DEF_EXFIL]
+    };
+
     const JUNK = '!@#$%^&*()-+=|;:,./<>?~`';
     function rjunk(n) {
         return Array.from({length: n}, () => JUNK[Math.floor(Math.random() * JUNK.length)]).join('');
     }
 
-    // ── Config ────────────────────────────────────────────────────
-    const DEF_CFG = {
-        enabled:    true,
-        targetName: 'MAINFRAME-ALPHA',
-        wordCount:  12,
-        attempts:   4,
-        wordPool:   [...BUILT_IN_POOL],
-        forcedAnswer: '',
-        successMsg: 'ACCESS GRANTED — WELCOME, OPERATOR',
-        failMsg:    'TERMINAL LOCKED — SECURITY ALERT TRIGGERED'
-    };
-
+    /* ── State / config ────────────────────────────────────────── */
     let cfg   = { ...DEF_CFG };
     let state = blankState();
 
@@ -526,46 +560,37 @@
     const session  = window.LuxorAuth && LuxorAuth.getSession();
     const username = session ? session.username : 'UNKNOWN';
 
-    // ── State factory ─────────────────────────────────────────────
     function blankState() {
         return {
-            phase:      'idle',   // idle | active | won | lost
-            answer:     null,
-            entries:    [],       // [{word, pre, post, addr}] — stable per-game
-            guesses:    [],       // [{word, likeness}]
-            attemptsMax: 4,
-            startedBy:  null,
-            startedAt:  null,
-            endedAt:    null,
-            log:        []
+            phase:        'idle',
+            answer:       null,
+            entries:      [],      // [{word,pre,post,addr,bracket,eliminated}]
+            guesses:      [],      // [{word,likeness}]
+            hints:        [],      // [{pos,char}]
+            attemptsMax:  4,
+            startedBy:    null,
+            startedAt:    null,
+            endedAt:      null,
+            extractedData: [],
+            log:          []
         };
     }
 
-    // ── Persistence ───────────────────────────────────────────────
+    /* ── Persistence ───────────────────────────────────────────── */
     function loadCfg() {
         try {
             const s = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
-            if (s) cfg = { ...DEF_CFG, ...s, wordPool: s.wordPool || DEF_CFG.wordPool };
+            if (s) cfg = { ...DEF_CFG, ...s, wordPool: s.wordPool || DEF_CFG.wordPool, extractedData: s.extractedData || DEF_CFG.extractedData };
         } catch (e) {}
     }
-    function saveCfg()   { localStorage.setItem(CFG_KEY,   JSON.stringify(cfg));   }
+    function saveCfg()   { localStorage.setItem(CFG_KEY,   JSON.stringify(cfg)); }
     function loadState() {
         try { state = JSON.parse(localStorage.getItem(STATE_KEY) || 'null') || blankState(); }
         catch (e) { state = blankState(); }
     }
     function saveState() { localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
 
-    // ── Game logic ────────────────────────────────────────────────
-
-    // Likeness = number of characters identical at the same position
-    function likeness(guess, answer) {
-        let n = 0;
-        for (let i = 0; i < Math.min(guess.length, answer.length); i++) {
-            if (guess[i] === answer[i]) n++;
-        }
-        return n;
-    }
-
+    /* ── Helpers ───────────────────────────────────────────────── */
     function shuffle(arr) {
         const a = [...arr];
         for (let i = a.length - 1; i > 0; i--) {
@@ -574,50 +599,97 @@
         }
         return a;
     }
-
-    function buildEntries(pool, count) {
-        const words = shuffle(pool).slice(0, count);
-        return words.map((word, i) => ({
-            word,
-            pre:  rjunk(2 + Math.floor(Math.random() * 4)),
-            post: rjunk(2 + Math.floor(Math.random() * 5)),
-            addr: '0x' + (0xA000 + i * 8).toString(16).toUpperCase().padStart(4, '0')
-        }));
+    function likeness(guess, answer) {
+        let n = 0;
+        for (let i = 0; i < Math.min(guess.length, answer.length); i++) {
+            if (guess[i] === answer[i]) n++;
+        }
+        return n;
+    }
+    function logEntry(type, msg) { return { t: Date.now(), user: username, type, msg }; }
+    function trimLog() { if (state.log && state.log.length > 60) state.log = state.log.slice(-60); }
+    function pad(n)    { return String(n).padStart(2, '0'); }
+    function esc(s)    {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    // ── Actions ───────────────────────────────────────────────────
+    /* ── Bracket effects generation ────────────────────────────── */
+    const BRACKET_PAIRS = [['[',']'], ['<','>'], ['{','}']];
+
+    function genEffects(wordCount) {
+        // ~1 bracket per 3 words, min 2 max 5
+        const count = Math.min(5, Math.max(2, Math.floor(wordCount / 3)));
+        const pool = [];
+        pool.push('attempt');                          // always 1 restore
+        if (count >= 3) pool.push('hint');             // hint if 3+
+        while (pool.length < count) pool.push('dud'); // rest are dud-removers
+        return shuffle(pool);
+    }
+
+    function buildEntries(pool, count) {
+        const words   = shuffle(pool).slice(0, count);
+        const effects = genEffects(words.length);
+
+        // Pick random indices to receive brackets
+        const bracketIdx = new Set();
+        while (bracketIdx.size < effects.length) {
+            bracketIdx.add(Math.floor(Math.random() * words.length));
+        }
+        const bIdxArr = [...bracketIdx];
+
+        return words.map((word, i) => {
+            const bi = bIdxArr.indexOf(i);
+            let bracket = null;
+            if (bi >= 0) {
+                const pair = BRACKET_PAIRS[Math.floor(Math.random() * BRACKET_PAIRS.length)];
+                bracket = {
+                    open:            pair[0],
+                    close:           pair[1],
+                    content:         rjunk(2 + Math.floor(Math.random() * 3)),
+                    effect:          effects[bi],
+                    used:            false,
+                    inPost:          Math.random() > 0.5,
+                    replacementJunk: null
+                };
+            }
+            return {
+                word,
+                pre:       rjunk(1 + Math.floor(Math.random() * 3)),
+                post:      rjunk(1 + Math.floor(Math.random() * 3)),
+                addr:      '0x' + (0xA000 + i * 8).toString(16).toUpperCase().padStart(4, '0'),
+                bracket,
+                eliminated: false
+            };
+        });
+    }
+
+    /* ── Game actions ──────────────────────────────────────────── */
     window.startGame = function () {
         const pool = cfg.wordPool.filter(w => w.trim().length > 0);
         if (pool.length < 2) { alert('Word pool too small — add more words in Overlord config.'); return; }
 
         const count   = Math.min(cfg.wordCount, pool.length);
         const entries = buildEntries(pool, count);
-        let answer    = cfg.forcedAnswer.trim().toUpperCase();
 
-        // Forced answer must appear in the displayed words
-        if (answer && entries.find(e => e.word === answer)) {
-            // ok — force it in
+        let answer = cfg.forcedAnswer.trim().toUpperCase();
+        if (answer && entries.some(e => e.word === answer)) {
+            // forced answer already in list — good
         } else if (answer) {
-            // Forced word not in pool/entries — replace first entry
-            entries[0] = {
-                word: answer,
-                pre:  rjunk(2 + Math.floor(Math.random() * 4)),
-                post: rjunk(2 + Math.floor(Math.random() * 5)),
-                addr: entries[0].addr
-            };
+            // inject forced answer
+            entries[0] = { ...entries[0], word: answer };
         } else {
-            // Random: pick any displayed word
             answer = entries[Math.floor(Math.random() * entries.length)].word;
         }
 
         state = {
             ...blankState(),
-            phase:       'active',
+            phase:         'active',
             answer,
             entries,
-            attemptsMax: cfg.attempts,
-            startedBy:   username,
-            startedAt:   Date.now(),
+            attemptsMax:   cfg.attempts,
+            startedBy:     username,
+            startedAt:     Date.now(),
+            extractedData: cfg.extractedData ? [...cfg.extractedData] : [...DEF_EXFIL],
             log: [...state.log, logEntry('warn', `TERMINAL ACTIVATED — TARGET: ${cfg.targetName}`)]
         };
         trimLog();
@@ -627,33 +699,81 @@
 
     window.tryWord = function (word) {
         if (state.phase !== 'active') return;
+        if (state.guesses.some(g => g.word === word)) return;
+        if (state.entries.find(e => e.word === word)?.eliminated) return;
+        const left = state.attemptsMax - state.guesses.length;
+        if (left <= 0) return;
 
-        const alreadyGuessed = state.guesses.some(g => g.word === word);
-        if (alreadyGuessed) return;
-
-        const remaining = state.attemptsMax - state.guesses.length;
-        if (remaining <= 0) return;
-
-        const score = likeness(word, state.answer);
+        const score   = likeness(word, state.answer);
         const perfect = word === state.answer;
 
         state.guesses.push({ word, likeness: score });
 
         if (perfect) {
-            state.log.push(logEntry('success', `PASSWORD ACCEPTED — "${word}" is correct`));
+            state.log.push(logEntry('success', `PASSWORD ACCEPTED — "${word}" — ACCESS GRANTED`));
             trimLog();
             endGame('won');
         } else {
-            const left = state.attemptsMax - state.guesses.length;
-            state.log.push(logEntry('', `Attempt: "${word}" — ${score}/${state.answer.length} match — ${left} attempt${left !== 1 ? 's' : ''} left`));
+            const remaining = state.attemptsMax - state.guesses.length;
+            state.log.push(logEntry('', `Attempt: "${word}" — ${score}/${state.answer.length} match — ${remaining} attempt${remaining !== 1 ? 's' : ''} left`));
             trimLog();
             saveState();
-            if (left <= 0) {
+            if (remaining <= 0) {
                 setTimeout(() => endGame('lost'), 300);
             } else {
                 render();
             }
         }
+    };
+
+    window.useBracket = function (entryIdx) {
+        if (state.phase !== 'active') return;
+        const e = state.entries[entryIdx];
+        if (!e || !e.bracket || e.bracket.used) return;
+
+        // Mark used, generate stable replacement junk
+        e.bracket.used = true;
+        e.bracket.replacementJunk = rjunk(e.bracket.content.length + 2);
+
+        const effect = e.bracket.effect;
+        if (effect === 'dud') {
+            // Eliminate a random wrong word that hasn't been guessed yet
+            const candidates = state.entries.filter(en =>
+                en.word !== state.answer &&
+                !state.guesses.some(g => g.word === en.word) &&
+                !en.eliminated
+            );
+            if (candidates.length > 0) {
+                const target = candidates[Math.floor(Math.random() * candidates.length)];
+                target.eliminated = true;
+                state.log.push(logEntry('warn', `DUD REMOVED — "${target.word}" eliminated from candidates`));
+            } else {
+                state.log.push(logEntry('warn', 'DUD REMOVAL — no candidates to remove'));
+            }
+        } else if (effect === 'attempt') {
+            state.attemptsMax = Math.min(state.attemptsMax + 1, 8);
+            state.log.push(logEntry('success', `ATTEMPT RESTORED — ${state.attemptsMax - state.guesses.length} attempts now available`));
+        } else if (effect === 'hint') {
+            // Reveal a character position not yet hinted
+            const hintedPos = new Set((state.hints || []).map(h => h.pos));
+            const available = [];
+            for (let i = 0; i < state.answer.length; i++) {
+                if (!hintedPos.has(i)) available.push(i);
+            }
+            if (available.length > 0) {
+                const pos  = available[Math.floor(Math.random() * available.length)];
+                const char = state.answer[pos];
+                if (!state.hints) state.hints = [];
+                state.hints.push({ pos, char });
+                state.log.push(logEntry('success', `HINT DECRYPTED — Position ${pos + 1} is "${char}"`));
+            } else {
+                state.log.push(logEntry('success', 'HINT — all positions already revealed'));
+            }
+        }
+
+        trimLog();
+        saveState();
+        render();
     };
 
     function endGame(result) {
@@ -666,9 +786,14 @@
         trimLog();
         saveState();
         render();
+        if (result === 'won') {
+            // Start typewriter after DOM settles
+            setTimeout(startExfilReadout, 400);
+        }
     }
 
     window.resetGame = function () {
+        typewriterStop();
         const prevLog = state.log || [];
         state = {
             ...blankState(),
@@ -679,44 +804,50 @@
         render();
     };
 
-    // ── Overlord controls ─────────────────────────────────────────
-    window.adminForceWin  = () => {
-        if (state.phase !== 'active') { state.answer = state.answer || 'UNKNOWN'; state.startedBy = username; state.startedAt = Date.now(); }
+    /* ── Overlord controls ─────────────────────────────────────── */
+    window.adminForceWin = function () {
+        if (state.phase !== 'active') {
+            state.answer = state.answer || (state.entries.length ? state.entries[0].word : 'ACCESS');
+            state.startedBy = username; state.startedAt = Date.now();
+            if (!state.entries.length) state.entries = buildEntries(cfg.wordPool.slice(0,4), 4);
+        }
         endGame('won');
     };
-    window.adminForceFail = () => {
-        if (state.phase !== 'active') { state.answer = state.answer || 'UNKNOWN'; state.startedBy = username; state.startedAt = Date.now(); }
+    window.adminForceFail = function () {
+        if (state.phase !== 'active') {
+            state.answer = state.answer || 'UNKNOWN'; state.startedBy = username; state.startedAt = Date.now();
+        }
         endGame('lost');
     };
-    window.adminReset     = () => window.resetGame();
-    window.adminReveal    = () => {
-        if (!state.answer) { showAdmMsg('No active game to reveal.', true); return; }
+    window.adminReset  = () => window.resetGame();
+    window.adminReveal = () => {
+        if (!state.answer) { showAdmMsg('No active game — start a game first.', true); return; }
         showAdmMsg(`Current answer: ${state.answer}`, false);
     };
-    window.toggleEnabled  = () => {
-        cfg.enabled = !cfg.enabled;
-        saveCfg();
-        document.getElementById('adm-toggle-btn').textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
+    window.toggleEnabled = () => {
+        cfg.enabled = !cfg.enabled; saveCfg();
+        const btn = document.getElementById('adm-toggle-btn');
+        if (btn) btn.textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
         render();
     };
 
     window.saveConfig = function () {
-        const g = id => document.getElementById(id);
-        cfg.targetName  = (g('adm-target').value.trim() || cfg.targetName).toUpperCase();
-        cfg.wordCount   = Math.max(8, Math.min(20, parseInt(g('adm-wordcount').value) || 12));
-        cfg.attempts    = Math.max(2, Math.min(8,  parseInt(g('adm-attempts').value)  || 4));
-        cfg.forcedAnswer = g('adm-answer').value.trim().toUpperCase();
-        cfg.successMsg  = g('adm-success-msg').value.trim() || cfg.successMsg;
-        cfg.failMsg     = g('adm-fail-msg').value.trim()    || cfg.failMsg;
+        const gv = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+        cfg.targetName   = (gv('adm-target').trim() || cfg.targetName).toUpperCase();
+        cfg.wordCount    = Math.max(8, Math.min(20, parseInt(gv('adm-wordcount')) || 12));
+        cfg.attempts     = Math.max(2, Math.min(8,  parseInt(gv('adm-attempts'))  || 4));
+        cfg.forcedAnswer = gv('adm-answer').trim().toUpperCase();
+        cfg.successMsg   = gv('adm-success-msg').trim() || cfg.successMsg;
+        cfg.failMsg      = gv('adm-fail-msg').trim()    || cfg.failMsg;
 
-        const rawPool = g('adm-pool').value.split('\n')
-            .map(w => w.trim().toUpperCase())
-            .filter(w => w.length > 0);
+        const rawPool = gv('adm-pool').split('\n').map(w => w.trim().toUpperCase()).filter(w => w.length > 0);
         if (rawPool.length >= 2) cfg.wordPool = rawPool;
+
+        const rawExfil = gv('adm-exfil').split('\n');
+        if (rawExfil.length > 0) cfg.extractedData = rawExfil;
 
         saveCfg();
         showAdmMsg('✓ CONFIGURATION SAVED', false);
-
         if (state.phase === 'idle') saveState();
         render();
     };
@@ -724,20 +855,97 @@
     function showAdmMsg(txt, isErr) {
         const el = document.getElementById('adm-msg');
         if (!el) return;
-        el.className  = 'adm-msg ' + (isErr ? 'err' : 'ok');
+        el.className = 'adm-msg ' + (isErr ? 'err' : 'ok');
         el.textContent = txt;
         setTimeout(() => { el.className = 'adm-msg'; }, 3500);
     }
 
-    // ── Log helpers ───────────────────────────────────────────────
-    function logEntry(type, msg) { return { t: Date.now(), user: username, type, msg }; }
-    function trimLog() { if (state.log && state.log.length > 60) state.log = state.log.slice(-60); }
-    function pad(n) { return String(n).padStart(2, '0'); }
-    function esc(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    /* ── Typewriter / exfil readout ───────────────────────────── */
+    let typeTimer  = null;
+    let typeActive = false;
+
+    function typewriterStop() {
+        clearTimeout(typeTimer);
+        typeActive = false;
     }
 
-    // ── Rendering ─────────────────────────────────────────────────
+    function startExfilReadout() {
+        if (typeActive) return;
+        const container = document.getElementById('cipher-exfil-output');
+        if (!container) return;
+
+        typewriterStop();
+        container.innerHTML = '';
+        typeActive = true;
+
+        const rawLines = (state.extractedData && state.extractedData.length ? state.extractedData : DEF_EXFIL);
+
+        // Parse lines → {text, cls}
+        const lines = rawLines.map(raw => {
+            let cls = 'exl';
+            const hasBorder = /[═║╔╗╚╝╠╣]/.test(raw);
+            if (raw.startsWith('>'))   cls += ' exl-sys';
+            else if (raw.startsWith('!')) cls += ' exl-warn';
+            else if (hasBorder)        cls += ' exl-border';
+            else if (raw.trim() === '') cls += ' exl-blank';
+            else                       cls += ' exl-data';
+            return { text: raw, cls };
+        });
+
+        let lineIdx = 0;
+        let charIdx = 0;
+        let curEl   = null;
+
+        function next() {
+            if (!typeActive) return;
+            if (lineIdx >= lines.length) {
+                // Done — add blinking cursor
+                const cur = document.createElement('span');
+                cur.className = 'exl-cursor'; cur.textContent = ' █';
+                if (curEl) curEl.appendChild(cur);
+                else container.appendChild(cur);
+                typeActive = false;
+                return;
+            }
+
+            const line = lines[lineIdx];
+
+            if (charIdx === 0) {
+                curEl = document.createElement('div');
+                curEl.className = line.cls;
+                container.appendChild(curEl);
+            }
+
+            if (line.text.length === 0) {
+                lineIdx++; charIdx = 0;
+                container.scrollTop = container.scrollHeight;
+                typeTimer = setTimeout(next, 80);
+                return;
+            }
+
+            curEl.textContent = line.text.slice(0, charIdx + 1);
+            charIdx++;
+            container.scrollTop = container.scrollHeight;
+
+            if (charIdx >= line.text.length) {
+                lineIdx++; charIdx = 0;
+                const pause = line.cls.includes('exl-sys') ? 110 : line.cls.includes('exl-warn') ? 130 : 45;
+                typeTimer = setTimeout(next, pause);
+            } else {
+                const ch = line.text[charIdx - 1];
+                // Borders type instantly, system lines slightly slower
+                const speed = line.cls.includes('exl-border') ? 8
+                            : line.cls.includes('exl-sys')    ? 32
+                            : line.cls.includes('exl-warn')   ? 40
+                            : 22;
+                typeTimer = setTimeout(next, speed);
+            }
+        }
+
+        typeTimer = setTimeout(next, 550);
+    }
+
+    /* ── Rendering ─────────────────────────────────────────────── */
     function render() {
         renderStatus();
         renderGame();
@@ -748,9 +956,9 @@
     function renderStatus() {
         const nameEl  = document.getElementById('cipher-target-name');
         const phaseEl = document.getElementById('cipher-phase-badge');
-        if (nameEl) nameEl.textContent = cfg.targetName;
+        if (nameEl)  nameEl.textContent = cfg.targetName;
         if (phaseEl) {
-            const lbl = { idle: 'STANDBY', active: 'TERMINAL ACTIVE', won: 'ACCESS GRANTED', lost: 'TERMINAL LOCKED' };
+            const lbl = { idle:'STANDBY', active:'TERMINAL ACTIVE', won:'ACCESS GRANTED', lost:'TERMINAL LOCKED' };
             phaseEl.textContent = lbl[state.phase] || 'STANDBY';
             phaseEl.className   = 'cipher-phase-badge ' + state.phase;
         }
@@ -758,6 +966,7 @@
 
     function renderGame() {
         const area = document.getElementById('cipher-game-area');
+        if (!area) return;
         if (!cfg.enabled) {
             area.innerHTML = '<div class="cipher-locked">▦ CIPHER TERMINAL OFFLINE — CONTACT OVERLORD</div>';
             return;
@@ -765,7 +974,8 @@
         switch (state.phase) {
             case 'idle':   renderIdle(area);   break;
             case 'active': renderActive(area); break;
-            default:       renderResult(area); break;
+            case 'won':    renderWin(area);    break;
+            default:       renderLost(area);   break;
         }
     }
 
@@ -777,25 +987,24 @@
                 <div class="cipher-splash-meta">TARGET: ${esc(cfg.targetName)}</div>
                 <div class="cipher-splash-desc">
                     Password bypass required for mainframe access.<br>
-                    ${cfg.wordCount} candidate passwords detected — ${cfg.attempts} attempt${cfg.attempts !== 1 ? 's' : ''} available.<br>
-                    Match characters in the correct position to narrow the answer.
+                    ${cfg.wordCount} candidate passwords detected — ${cfg.attempts} attempt${cfg.attempts !== 1?'s':''} available.<br>
+                    Bracket pairs <span style="color:#55bb66">[ ]</span> <span style="color:#b8a800">&lt; &gt;</span> <span style="color:#00bba0">{ }</span> hidden in the junk — click them for bonuses.
                 </div>
-                <div class="cipher-actions" style="margin-top:0.3rem;">
+                <div class="cipher-actions" style="margin-top:0.4rem;">
                     <button class="cipher-btn cipher-btn-primary" onclick="startGame()">⬡ ACTIVATE TERMINAL</button>
                 </div>
             </div>`;
     }
 
-    function renderResult(area) {
-        const won = state.phase === 'won';
+    function renderLost(area) {
         area.innerHTML = `
-            <div class="cipher-splash ${won ? 's-won' : 's-lost'}">
-                <div class="cipher-splash-icon">${won ? '◈' : '⊠'}</div>
-                <div class="cipher-splash-title">${esc(won ? cfg.successMsg : cfg.failMsg)}</div>
+            <div class="cipher-splash s-lost">
+                <div class="cipher-splash-icon">⊠</div>
+                <div class="cipher-splash-title">${esc(cfg.failMsg)}</div>
                 <div class="cipher-splash-desc">
-                    ${state.guesses.length} guess${state.guesses.length !== 1 ? 'es' : ''} made
-                    &nbsp;·&nbsp; ${won ? 'Password cracked' : `Answer was: ${esc(state.answer || '???')}`}
-                    &nbsp;·&nbsp; Operator: ${esc(state.startedBy || '???')}
+                    ${state.guesses.length} guess${state.guesses.length!==1?'es':''} made
+                    &nbsp;·&nbsp; Answer was: <span style="color:var(--warn)">${esc(state.answer||'???')}</span>
+                    &nbsp;·&nbsp; Operator: ${esc(state.startedBy||'???')}
                 </div>
                 <div class="cipher-actions" style="margin-top:0.5rem;">
                     <button class="cipher-btn cipher-btn-primary" onclick="resetGame()">↺ RESET TERMINAL</button>
@@ -803,31 +1012,83 @@
             </div>`;
     }
 
+    function renderWin(area) {
+        const guesses = state.guesses.length;
+        const maxA    = state.attemptsMax;
+
+        area.innerHTML = `
+            <div class="cipher-win-screen">
+                <!-- ACCESS GRANTED header -->
+                <div class="cipher-win-header">
+                    <div class="win-badge">LUXOR // SECURITY BYPASS COMPLETE</div>
+                    <div class="win-icon">◈</div>
+                    <div class="win-title">ACCESS GRANTED</div>
+                    <div class="win-sub">${esc(cfg.successMsg)}</div>
+                    <div class="win-detail">
+                        ${guesses} GUESS${guesses!==1?'ES':''} USED &nbsp;·&nbsp; ${maxA - guesses} ATTEMPT${(maxA-guesses)!==1?'S':''} REMAINING &nbsp;·&nbsp; OPERATOR: ${esc(state.startedBy||'???')}
+                    </div>
+                </div>
+
+                <!-- Cinematic exfil terminal -->
+                <div class="cipher-exfil-wrap">
+                    <div class="cipher-exfil-hdr">
+                        <span class="exfil-hdr-title">LUXOR // DATA EXFILTRATION STREAM &mdash; ${esc(cfg.targetName)}</span>
+                        <span class="exfil-hdr-blink">● EXTRACTING</span>
+                    </div>
+                    <div class="cipher-exfil-output" id="cipher-exfil-output"></div>
+                </div>
+
+                <div class="cipher-actions">
+                    <button class="cipher-btn cipher-btn-primary" onclick="resetGame()">↺ RESET TERMINAL</button>
+                </div>
+            </div>`;
+
+        // Kick off typewriter after DOM is ready
+        setTimeout(startExfilReadout, 80);
+    }
+
     function renderActive(area) {
         const entries = state.entries || [];
         const guesses = state.guesses || [];
+        const hints   = state.hints   || [];
         const used    = guesses.length;
         const maxA    = state.attemptsMax;
         const left    = maxA - used;
 
-        // Split entries into two columns
-        const half   = Math.ceil(entries.length / 2);
-        const col1   = entries.slice(0, half);
-        const col2   = entries.slice(half);
+        // Two-column grid
+        const half = Math.ceil(entries.length / 2);
+        const col1 = entries.slice(0, half);
+        const col2 = entries.slice(half);
 
-        function entryHtml(e) {
+        function bracketHtml(e, idx) {
+            if (!e.bracket) return '';
+            const b = e.bracket;
+            const inner = b.used
+                ? `<span class="c-bracket b-used">${esc(b.replacementJunk || rjunk(b.content.length + 2))}</span>`
+                : `<span class="c-bracket b-${b.effect}" onclick="useBracket(${idx})" title="${b.effect.toUpperCase()}: click to activate">${esc(b.open)}${esc(b.content)}${esc(b.close)}</span>`;
+            return inner;
+        }
+
+        function lineHtml(e, idx) {
             const guessedWrong = guesses.some(g => g.word === e.word && e.word !== state.answer);
             const isAnswer     = state.phase === 'won' && e.word === state.answer;
-            let cls = 'c-word';
-            let click = '';
-            if (guessedWrong)     { cls += ' w-guessed'; }
-            else if (isAnswer)    { cls += ' w-correct'; }
-            else if (state.phase === 'active') { click = `onclick="tryWord('${e.word}')" title="Try: ${e.word}"`; }
-            else { cls += ' w-locked'; }
+            let wordCls = 'c-word';
+            let click   = '';
+            if (e.eliminated)  { wordCls += ' w-eliminated'; }
+            else if (guessedWrong) { wordCls += ' w-guessed'; }
+            else if (isAnswer) { wordCls += ' w-correct'; }
+            else if (state.phase === 'active' && !e.eliminated) {
+                click = `onclick="tryWord('${e.word}')" title="Try: ${e.word}"`;
+            } else { wordCls += ' w-locked'; }
 
+            const bh = bracketHtml(e, idx);
             return `<div class="cipher-line">
-                <span class="c-addr">${e.addr}</span>
-                <span class="c-junk">${esc(e.pre)}</span><span class="${cls}" ${click}>${esc(e.word)}</span><span class="c-junk">${esc(e.post)}</span>
+                <span class="c-addr">${esc(e.addr)}</span>
+                <span class="c-junk">${esc(e.pre)}</span>
+                ${!e.bracket?.inPost ? bh : ''}
+                <span class="${wordCls}" ${click}>${esc(e.word)}</span>
+                ${e.bracket?.inPost  ? bh : ''}
+                <span class="c-junk">${esc(e.post)}</span>
             </div>`;
         }
 
@@ -838,14 +1099,27 @@
 
         // Guess history
         const histHtml = guesses.length === 0
-            ? '<div class="cs-guess" style="opacity:0.4">— no guesses yet —</div>'
+            ? '<div class="cs-guess" style="opacity:0.35">— no guesses —</div>'
             : guesses.map(g => {
                 const perfect = g.word === state.answer;
-                return `<div class="cs-guess ${perfect ? 'perfect' : ''}">
+                return `<div class="cs-guess ${perfect?'perfect':''}">
                     <span class="gw">&gt; ${esc(g.word)}</span>
                     <span class="gr"> ${g.likeness}/${g.word.length}</span>
                 </div>`;
             }).join('');
+
+        // Hints
+        const hintsHtml = hints.length === 0
+            ? '<div class="cs-hint" style="opacity:0.35">— none unlocked —</div>'
+            : hints.map(h => `<div class="cs-hint">POS ${h.pos+1}: "${esc(h.char)}"</div>`).join('');
+
+        // Bracket legend
+        const legendHtml = `
+            <div class="cs-legend">
+                <div class="cs-leg-row"><span class="leg-b-dud">[…]</span>&nbsp;Remove dud</div>
+                <div class="cs-leg-row"><span class="leg-b-attempt">&lt;…&gt;</span>&nbsp;Restore attempt</div>
+                <div class="cs-leg-row"><span class="leg-b-hint">{…}</span>&nbsp;Reveal hint</div>
+            </div>`;
 
         area.innerHTML = `
             <div class="cipher-terminal">
@@ -856,8 +1130,8 @@
                 </div>
                 <div class="cipher-body">
                     <div class="cipher-grid">
-                        ${col1.map(entryHtml).join('')}
-                        ${col2.map(entryHtml).join('')}
+                        ${col1.map((e,i) => lineHtml(e, i)).join('')}
+                        ${col2.map((e,i) => lineHtml(e, half+i)).join('')}
                     </div>
                     <div class="cipher-sidebar">
                         <div class="cs-label">ATTEMPTS REMAINING</div>
@@ -868,8 +1142,12 @@
                         <div class="cs-label">GUESS HISTORY</div>
                         <div class="cs-history">
                             ${histHtml}
-                            ${state.phase === 'active' ? '<div class="cs-cursor">█</div>' : ''}
+                            <div class="cs-cursor">█</div>
                         </div>
+                        <div class="cs-label">HINTS</div>
+                        <div class="cs-hint-list">${hintsHtml}</div>
+                        <div class="cs-label">BRACKET LEGEND</div>
+                        ${legendHtml}
                     </div>
                 </div>
             </div>
@@ -883,24 +1161,24 @@
         const countEl = document.getElementById('log-count');
         if (!el) return;
         const log = state.log || [];
-        if (countEl) countEl.textContent = `${log.length} ENTR${log.length === 1 ? 'Y' : 'IES'}`;
+        if (countEl) countEl.textContent = `${log.length} ENTR${log.length===1?'Y':'IES'}`;
         if (log.length === 0) {
             el.innerHTML = '<div class="hle"><span class="hle-m" style="opacity:0.3">— AWAITING TERMINAL ACTIVATION —</span></div>';
             return;
         }
         el.innerHTML = log.slice(-25).map(e => {
-            const d = new Date(e.t);
+            const d  = new Date(e.t);
             const ts = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-            return `<div class="hle ${e.type || ''}">
+            return `<div class="hle ${e.type||''}">
                 <span class="hle-t">${ts}</span>
-                <span class="hle-u">${esc(e.user || 'SYSTEM')}</span>
-                <span class="hle-m">${esc(e.msg || '')}</span>
+                <span class="hle-u">${esc(e.user||'SYSTEM')}</span>
+                <span class="hle-m">${esc(e.msg||'')}</span>
             </div>`;
         }).join('');
         el.scrollTop = el.scrollHeight;
     }
 
-    // ── Admin panel ───────────────────────────────────────────────
+    /* ── Admin panel ───────────────────────────────────────────── */
     function initAdmin() {
         if (!isAdmin) return;
         const panel = document.getElementById('hack-admin-panel');
@@ -917,6 +1195,7 @@
         sv('adm-pool',        cfg.wordPool.join('\n'));
         sv('adm-success-msg', cfg.successMsg);
         sv('adm-fail-msg',    cfg.failMsg);
+        sv('adm-exfil',       (cfg.extractedData || DEF_EXFIL).join('\n'));
         renderAdminStatus();
         const btn = document.getElementById('adm-toggle-btn');
         if (btn) btn.textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
@@ -929,15 +1208,17 @@
         const color  = colors[state.phase] || 'var(--text-dim)';
         let txt = `Phase: <span style="color:${color}">${state.phase.toUpperCase()}</span>`;
         if (state.startedBy) txt += ` &nbsp;|&nbsp; Operator: ${esc(state.startedBy)}`;
-        if (state.answer && isAdmin) txt += ` &nbsp;|&nbsp; Answer: <span style="color:var(--warn)">${esc(state.answer)}</span>`;
+        if (state.answer)    txt += ` &nbsp;|&nbsp; Answer: <span style="color:var(--warn)">${esc(state.answer)}</span>`;
         el.innerHTML = txt;
     }
 
-    // ── Cross-tab sync ────────────────────────────────────────────
+    /* ── Cross-tab sync ────────────────────────────────────────── */
     window.addEventListener('storage', function (e) {
         if (e.key === STATE_KEY) {
+            const prev = state.phase;
             try { state = JSON.parse(e.newValue) || blankState(); } catch (ex) {}
             render();
+            if (state.phase === 'won' && prev !== 'won') setTimeout(startExfilReadout, 400);
         }
         if (e.key === CFG_KEY) {
             try { cfg = JSON.parse(e.newValue) || { ...DEF_CFG }; } catch (ex) {}
@@ -946,11 +1227,14 @@
         }
     });
 
-    // ── Init ──────────────────────────────────────────────────────
+    /* ── Init ──────────────────────────────────────────────────── */
     loadCfg();
     loadState();
+    // Restore typewriter if page loads mid-win
+    const prevPhase = state.phase;
     render();
     initAdmin();
+    if (prevPhase === 'won') setTimeout(startExfilReadout, 500);
 
 })();
 </script>
