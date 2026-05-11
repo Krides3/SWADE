@@ -14,8 +14,6 @@ let PLAYER_CLEARANCE = 1;
     if (!session) return;
     if (!LuxorAuth.isAdmin()) {
         PLAYER_CLEARANCE = session.clearance || 1;
-    } else {
-        PLAYER_CLEARANCE = 5; // Overlord starts at max; use slider to preview lower clearances
         document.addEventListener('DOMContentLoaded', function () {
             const label = document.querySelector('#clearance-panel .panel-label');
             if (label) label.textContent = 'Clearance: ' + PLAYER_CLEARANCE;
@@ -25,6 +23,12 @@ let PLAYER_CLEARANCE = 1;
                 b.style.pointerEvents = 'none';
                 if (+b.dataset.level !== PLAYER_CLEARANCE) b.style.opacity = '0.22';
             });
+        });
+    } else {
+        PLAYER_CLEARANCE = 5;
+        document.addEventListener('DOMContentLoaded', function () {
+            const label = document.querySelector('#clearance-panel .panel-label');
+            if (label) label.textContent = 'Preview Clearance';
         });
     }
 })();
