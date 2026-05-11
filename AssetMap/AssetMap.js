@@ -1737,4 +1737,5 @@ buildDeployments();
 buildVehicles();
 setClearance(PLAYER_CLEARANCE);
 requestAnimationFrame(animLoop);
+setTimeout(() => document.getElementById('map').classList.add('pulses-done'), 5000);
 if (window.LuxorAuth && LuxorAuth.isAdmin()) injectAddUI();

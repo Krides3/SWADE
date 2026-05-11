@@ -322,6 +322,11 @@ body {
     animation: rotor-spin 0.18s linear infinite;
 }
 
+/* ─── PULSE SETTLE (added to #map after 5s) ──────────── */
+#map.pulses-done .dm-ring,
+#map.pulses-done .dm-ring-2 { animation: none; opacity: 0; }
+#map.pulses-done .dm-mission { animation: none; }
+
 /* ─── MISSION MARKER ─────────────────────────────────── */
 .dm-mission {
     position: relative;
