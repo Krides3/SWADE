@@ -474,6 +474,13 @@
                             <textarea class="adm-textarea" id="adm-exfil" rows="10" style="min-height:120px;"></textarea>
                             <div class="adm-hint">Lines starting with &gt; = system msg (green) | lines with ║╔╚ = border (dim) | others = data (gold). Blank lines = pause.</div>
                         </div>
+                        <div class="adm-field full" style="border-top:1px solid var(--border);padding-top:0.6rem;margin-top:0.2rem;">
+                            <label class="adm-label">REVEAL NODE ON WIN — Asset Map node to un-redact when this terminal is cracked</label>
+                            <select class="adm-input" id="adm-reveal-node" style="cursor:pointer;">
+                                <option value="">— NONE —</option>
+                            </select>
+                            <div class="adm-hint">Node must have its REDACTED flag set in the Asset Map for this to take effect. Cleared automatically on win.</div>
+                        </div>
                     </div>
 
                     <div class="adm-ctrl-row" style="border-top:1px solid var(--border);padding-top:0.65rem;">
@@ -556,16 +563,44 @@
     ];
 
     const DEF_CFG = {
-        enabled:      true,
-        targetName:   'MAINFRAME-ALPHA',
-        wordCount:    12,
-        attempts:     4,
-        wordPool:     [...BUILT_IN_POOL],
-        forcedAnswer: '',
-        successMsg:   'ACCESS GRANTED — WELCOME, OPERATOR',
-        failMsg:      'TERMINAL LOCKED — SECURITY ALERT TRIGGERED',
-        extractedData: [...DEF_EXFIL]
+        enabled:        true,
+        targetName:     'MAINFRAME-ALPHA',
+        wordCount:      12,
+        attempts:       4,
+        wordPool:       [...BUILT_IN_POOL],
+        forcedAnswer:   '',
+        successMsg:     'ACCESS GRANTED — WELCOME, OPERATOR',
+        failMsg:        'TERMINAL LOCKED — SECURITY ALERT TRIGGERED',
+        extractedData:  [...DEF_EXFIL],
+        revealNodeOnWin: ''   // Asset Map node ID to un-redact on win
     };
+
+    // Read Asset Map node list from the same localStorage keys used by AssetMap.js
+    function getAssetNodes() {
+        const BUILTIN_IDS = [
+            {id:'luxor-hq',name:'LUXOR HQ'},{id:'london-stn',name:'London Station'},
+            {id:'paris-safe',name:'Paris Safehouse'},{id:'madrid-relay',name:'Madrid Relay'},
+            {id:'oslo-stn',name:'Oslo Station'},{id:'warsaw-stn',name:'Warsaw Station'},
+            {id:'prague-contact',name:'Prague Contact'},{id:'athens-out',name:'Athens Outpost'},
+            {id:'istanbul-cross',name:'Istanbul Crossing'},{id:'moscow-echo',name:'Echo Station'},
+            {id:'berlin-asset',name:'Berlin Asset'},{id:'cairo-hub',name:'Cairo Hub'},
+            {id:'dubai-relay',name:'Dubai Relay'},{id:'nairobi-stn',name:'Nairobi Station'},
+            {id:'johannesburg-out',name:'Johannesburg Outpost'},{id:'lagos-contact',name:'Lagos Contact'},
+            {id:'mumbai-port',name:'Mumbai Port Watch'},{id:'karachi-surv',name:'Karachi Surveillance'},
+            {id:'bangkok-transit',name:'Bangkok Transit'},{id:'singapore-hub',name:'Singapore Hub'},
+            {id:'tokyo-office',name:'Tokyo Office'},{id:'beijing-watch',name:'Beijing Watch'},
+            {id:'sydney-delta',name:'Team Delta'},{id:'newyork-office',name:'New York Office'},
+            {id:'dc-contact',name:'Washington Contact'},{id:'mexico-relay',name:'Mexico City Relay'},
+            {id:'bogota-stn',name:'Bogotá Station'},{id:'saopaulo-hub',name:'São Paulo Hub'},
+            {id:'buenosaires-cntct',name:'Buenos Aires Contact'},{id:'vancouver-stn',name:'Vancouver Station'},
+            {id:'sigma-naval',name:'Maritime Unit Sigma'},{id:'malta-fleet',name:'Mediterranean Fleet'},
+            {id:'natl-patrol',name:'North Atlantic Patrol'},{id:'scs-watch',name:'South China Sea Watch'}
+        ];
+        try {
+            const custom = JSON.parse(localStorage.getItem('luxor_custom_deployments') || '[]');
+            return [...BUILTIN_IDS, ...custom.map(d => ({ id: d.id, name: d.name }))];
+        } catch (e) { return BUILTIN_IDS; }
+    }
 
     const JUNK = '!@#$%^&*()-+=|;:,./<>?~`';
     function rjunk(n) {
@@ -808,6 +843,13 @@
         render();
         if (result === 'won') {
             freshWin = true;
+            if (cfg.revealNodeOnWin) {
+                try {
+                    const r = JSON.parse(localStorage.getItem('luxorAssetRedacted') || '{}');
+                    delete r[cfg.revealNodeOnWin];
+                    localStorage.setItem('luxorAssetRedacted', JSON.stringify(r));
+                } catch(e) {}
+            }
             setTimeout(startExfilReadout, 400);
         }
     }
@@ -865,6 +907,8 @@
 
         const rawExfil = gv('adm-exfil').split('\n');
         if (rawExfil.length > 0) cfg.extractedData = rawExfil;
+
+        cfg.revealNodeOnWin = gv('adm-reveal-node');
 
         saveCfg();
         showAdmMsg('✓ CONFIGURATION SAVED', false);
@@ -1259,6 +1303,17 @@
         renderAdminStatus();
         const btn = document.getElementById('adm-toggle-btn');
         if (btn) btn.textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
+        const revealSel = document.getElementById('adm-reveal-node');
+        if (revealSel) {
+            revealSel.innerHTML = '<option value="">— NONE —</option>';
+            getAssetNodes().forEach(n => {
+                const opt = document.createElement('option');
+                opt.value = n.id;
+                opt.textContent = n.name + ' [' + n.id + ']';
+                if (n.id === cfg.revealNodeOnWin) opt.selected = true;
+                revealSel.appendChild(opt);
+            });
+        }
     }
 
     function renderAdminStatus() {

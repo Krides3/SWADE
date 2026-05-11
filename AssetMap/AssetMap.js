@@ -776,13 +776,19 @@ function makeVehicleIcon(type, bearing) {
 // ---- Tooltip builders ----
 
 function deployTT(d) {
-    const ok = PLAYER_CLEARANCE >= d.clearance;
+    const redacted   = isNodeRedacted(d.id);
+    const admin      = window.LuxorAuth && LuxorAuth.isAdmin();
+    // Players see the name only when clearance is met AND node is not redacted
+    const showName   = admin || (!redacted && PLAYER_CLEARANCE >= d.clearance);
     const sc = { active:'#00ffe7', inactive:'#666', compromised:'#ff3333', unknown:'#ff9900' }[d.status];
+    const nameHtml   = admin
+        ? `<div class="tt-name">${d.name}${redacted ? ' <span style="color:#c0392b;font-size:0.78em">[REDACTED]</span>' : ''}</div>`
+        : `<div class="${showName ? 'tt-name' : 'tt-redact'}">${showName ? d.name : '████ REDACTED ████'}</div>`;
     return `<div>
-    <div class="${ok ? 'tt-name' : 'tt-redact'}">${ok ? d.name : '████ REDACTED ████'}</div>
+    ${nameHtml}
     <div class="tt-row">TYPE: <b>${d.type.toUpperCase()}</b></div>
     <div class="tt-row">STATUS: <b style="color:${sc}">${d.status.toUpperCase()}</b></div>
-    ${ok && d.notes ? `<div class="tt-notes">${d.notes}</div>` : ''}
+    ${showName && d.notes ? `<div class="tt-notes">${d.notes}</div>` : ''}
     <div class="tt-clr">CLR REQUIRED: ${d.clearance}</div>
   </div>`;
 }
@@ -822,15 +828,40 @@ function vehicleTT(v) {
 
 const deployMarkers = {};
 
+function canSeeDeployment(d) {
+    const admin = window.LuxorAuth && LuxorAuth.isAdmin();
+    return admin || PLAYER_CLEARANCE >= d.clearance;
+}
+
 function buildDeployments() {
     Object.values(deployMarkers).forEach(m => m.remove());
     for (const k in deployMarkers) delete deployMarkers[k];
 
     DEPLOYMENTS.forEach(d => {
+        if (!canSeeDeployment(d)) return;
         const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
             .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
             .addTo(map);
         deployMarkers[d.id] = m;
+    });
+}
+
+// Called when clearance or redacted state changes — show/hide without full rebuild
+function updateDeployVisibility() {
+    DEPLOYMENTS.forEach(d => {
+        const show   = canSeeDeployment(d);
+        const marker = deployMarkers[d.id];
+        if (show && !marker) {
+            const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
+                .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
+                .addTo(map);
+            deployMarkers[d.id] = m;
+        } else if (show && marker) {
+            marker.setTooltipContent(deployTT(d));
+        } else if (!show && marker) {
+            marker.remove();
+            delete deployMarkers[d.id];
+        }
     });
 }
 
@@ -859,6 +890,7 @@ class Vehicle {
         this.lastTooltipUpdate = 0;
         this.lastTs  = null;
         this.done    = false;
+        this._visible = null;  // null = unset, synced lazily in tick()
 
         // Precompute progress-per-ms for each segment
         this.segRates = this.wps.slice(0, -1).map((wp, i) => {
@@ -883,8 +915,30 @@ class Vehicle {
             .addTo(map);
     }
 
+    _canSee() {
+        const admin = window.LuxorAuth && LuxorAuth.isAdmin();
+        return admin || PLAYER_CLEARANCE >= this.route.clearance;
+    }
+
+    updateVisibility() {
+        const show = this._canSee();
+        if (show === this._visible) return;
+        this._visible = show;
+        if (show) {
+            if (this.marker   && !map.hasLayer(this.marker))   this.marker.addTo(map);
+            if (this.pathLine && !map.hasLayer(this.pathLine)) this.pathLine.addTo(map);
+        } else {
+            if (this.marker)   this.marker.remove();
+            if (this.pathLine) this.pathLine.remove();
+        }
+    }
+
     tick(ts) {
         if (this.done) return;
+        // Hide vehicle when player clearance is insufficient
+        const show = this._canSee();
+        if (show !== this._visible) { this.updateVisibility(); }
+        if (!show) return;
         if (this.lastTs === null) { this.lastTs = ts; return; }
         const dt = ts - this.lastTs;
         this.lastTs = ts;
@@ -993,15 +1047,20 @@ function setClearance(level) {
     document.querySelectorAll('.cl-btn').forEach(b =>
         b.classList.toggle('active', +b.dataset.level === level)
     );
-    DEPLOYMENTS.forEach(d => {
-        if (deployMarkers[d.id]) deployMarkers[d.id].setTooltipContent(deployTT(d));
-    });
-    vehicles.forEach(v => v.refreshTooltip());
+    updateDeployVisibility();
+    vehicles.forEach(v => v.updateVisibility());
 }
 
 document.querySelectorAll('.cl-btn').forEach(b =>
     b.addEventListener('click', () => setClearance(+b.dataset.level))
 );
+
+// Cross-tab sync — update map when redaction state changes (e.g. hack win reveals a node)
+window.addEventListener('storage', function (e) {
+    if (e.key === LS_REDACTED) {
+        updateDeployVisibility();
+    }
+});
 
 // ---- UTC clock ----
 
@@ -1020,11 +1079,21 @@ tickClock();
 //  LOCALSTORAGE — custom entry persistence
 // ================================================================
 
-const LS_DEPS = 'luxor_custom_deployments';
-const LS_RTES = 'luxor_custom_routes';
+const LS_DEPS     = 'luxor_custom_deployments';
+const LS_RTES     = 'luxor_custom_routes';
+const LS_REDACTED = 'luxorAssetRedacted';   // {nodeId: true} map of redacted nodes
 
-function getStoredDeps() { try { return JSON.parse(localStorage.getItem(LS_DEPS) || '[]'); } catch { return []; } }
-function getStoredRtes() { try { return JSON.parse(localStorage.getItem(LS_RTES) || '[]'); } catch { return []; } }
+function getStoredDeps()  { try { return JSON.parse(localStorage.getItem(LS_DEPS)     || '[]'); } catch { return []; } }
+function getStoredRtes()  { try { return JSON.parse(localStorage.getItem(LS_RTES)     || '[]'); } catch { return []; } }
+function getRedactedMap() { try { return JSON.parse(localStorage.getItem(LS_REDACTED) || '{}'); } catch { return {}; } }
+
+function isNodeRedacted(id) { return !!getRedactedMap()[id]; }
+
+function setNodeRedacted(id, val) {
+    const r = getRedactedMap();
+    if (val) r[id] = true; else delete r[id];
+    localStorage.setItem(LS_REDACTED, JSON.stringify(r));
+}
 
 function persistDep(d)  { const a = getStoredDeps(); a.push(d); localStorage.setItem(LS_DEPS, JSON.stringify(a)); }
 function persistRte(r)  { const a = getStoredRtes(); a.push(r); localStorage.setItem(LS_RTES, JSON.stringify(a)); }
@@ -1263,6 +1332,19 @@ function injectAddUI() {
         }
         .lx-mgr-del:hover { border-color:#ff3333; }
         .lx-mgr-empty { font-size:10px; opacity:0.45; line-height:1.6; padding:6px 0; }
+        .lx-rdt-row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:5px 0; border-bottom:1px solid #00ffe715;
+        }
+        .lx-rdt-chk-wrap {
+            display:flex; align-items:center; gap:5px; cursor:pointer;
+            padding:2px 6px; border:1px solid #ff333340;
+            transition:border-color 0.15s, background 0.15s;
+        }
+        .lx-rdt-chk-wrap:hover { border-color:#ff3333; background:rgba(255,51,51,0.06); }
+        .lx-rdt-chk-wrap.is-redacted { border-color:#ff3333; background:rgba(255,51,51,0.08); }
+        .lx-rdt-chk { width:auto !important; cursor:pointer; accent-color:#ff3333; }
+        .lx-rdt-lbl { font-size:9px; letter-spacing:1px; color:#ff3333; }
         .lx-export {
             width:100%; background:none; border:1px solid #00ffe730; color:#00ffe760;
             font-family:'Consolas',monospace; font-size:10px; letter-spacing:1px;
@@ -1286,6 +1368,7 @@ function injectAddUI() {
             <button class="lx-tab active" data-tab="dep">DEPLOY</button>
             <button class="lx-tab"        data-tab="rte">ROUTE</button>
             <button class="lx-tab"        data-tab="mgr">MANAGE</button>
+            <button class="lx-tab"        data-tab="rdt">REDACT</button>
         </div>
         <div class="lx-tab-body">
 
@@ -1400,13 +1483,19 @@ function injectAddUI() {
             <button class="lx-export" id="lx-export">⬇ EXPORT CUSTOM JSON TO CLIPBOARD</button>
         </div>
 
+        <!-- ── REDACT TAB ── -->
+        <div class="lx-tc hidden" id="lx-tc-rdt">
+            <div class="lx-note">Toggle NAME REDACTED per node. Redacted nodes stay on the map — players see ████ instead of the real name. Uncheck to reveal (e.g. after a successful hack).</div>
+            <div id="lx-rdt-list"></div>
+        </div>
+
         </div><!-- end tab-body -->
     </div>`;
     document.body.appendChild(wrap);
 
     // ---- Tab switching ----
     const panel = document.getElementById('lx-add-panel');
-    const tabs  = ['dep','rte','mgr'];
+    const tabs  = ['dep','rte','mgr','rdt'];
 
     document.querySelectorAll('.lx-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1415,8 +1504,40 @@ function injectAddUI() {
             tabs.forEach(t => document.getElementById(`lx-tc-${t}`).classList.toggle('hidden', t !== tab));
             if (tab === 'mgr') renderManageTab();
             if (tab === 'rte') renderWpRows();
+            if (tab === 'rdt') renderRedactTab();
         });
     });
+
+    // ---- Redact tab renderer ----
+    function renderRedactTab() {
+        const c = document.getElementById('lx-rdt-list');
+        if (!c) return;
+        const redacted = getRedactedMap();
+        c.innerHTML = '';
+        DEPLOYMENTS.forEach(d => {
+            const isRed = !!redacted[d.id];
+            const row   = document.createElement('div');
+            row.className = 'lx-rdt-row';
+            const info  = document.createElement('div');
+            info.innerHTML = `<div class="lx-mgr-name">${d.name}</div><div class="lx-mgr-sub">${d.id} · CLR ${d.clearance}</div>`;
+            const label = document.createElement('label');
+            label.className = 'lx-rdt-chk-wrap' + (isRed ? ' is-redacted' : '');
+            const chk   = document.createElement('input');
+            chk.type = 'checkbox'; chk.className = 'lx-rdt-chk';
+            chk.checked = isRed;
+            chk.addEventListener('change', () => {
+                setNodeRedacted(d.id, chk.checked);
+                label.classList.toggle('is-redacted', chk.checked);
+                updateDeployVisibility();
+            });
+            const lbl = document.createElement('span');
+            lbl.className = 'lx-rdt-lbl';
+            lbl.textContent = 'REDACTED';
+            label.appendChild(chk); label.appendChild(lbl);
+            row.appendChild(info); row.appendChild(label);
+            c.appendChild(row);
+        });
+    }
 
     // ---- Toggle open/close ----
     document.getElementById('lx-add-btn').addEventListener('click', () => {
