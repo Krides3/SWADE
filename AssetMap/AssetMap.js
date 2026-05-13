@@ -33,8 +33,20 @@ let PLAYER_CLEARANCE = 1;
     }
 })();
 
-// Animation speed multiplier. 300 = vehicles move 300x real-world speed.
-const TIME_SCALE = 300;
+// Animation speed multiplier — read from admin settings (luxorAssetMapSettings.timeScale).
+// 5 = vehicles move 5× real-world speed (Paris→NY ≈ 80 min on-screen).
+let TIME_SCALE = (function () {
+    try { const c = JSON.parse(localStorage.getItem('luxorAssetMapSettings') || '{}'); return typeof c.timeScale === 'number' ? c.timeScale : 5; } catch { return 5; }
+})();
+
+function setTimeScale(val) {
+    TIME_SCALE = Math.max(0.1, Math.min(500, +val || 5));
+    try {
+        const c = JSON.parse(localStorage.getItem('luxorAssetMapSettings') || '{}');
+        c.timeScale = TIME_SCALE;
+        localStorage.setItem('luxorAssetMapSettings', JSON.stringify(c));
+    } catch {}
+}
 
 // ----------------------------------------------------------------
 //  DEPLOYMENTS  — place a ping on the map
@@ -757,6 +769,15 @@ function bearingDeg(from, to) {
     return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
 
+// Bearing that matches the SCREEN direction on the Mercator map (accounts for cos-latitude
+// compression so the plane nose aligns with its visible path, not the geodetic great circle).
+function screenBearing(from, to) {
+    const avgLat = (from[0] + to[0]) / 2 * Math.PI / 180;
+    const dLat = to[0] - from[0];
+    const dLng = (to[1] - from[1]) * Math.cos(avgLat);
+    return (Math.atan2(dLng, dLat) * 180 / Math.PI + 360) % 360;
+}
+
 function lerp(a, b, t) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
 }
@@ -960,11 +981,10 @@ class Vehicle {
         this.done    = false;
         this._visible = null;  // null = unset, synced lazily in tick()
 
-        // Precompute progress-per-ms for each segment
-        this.segRates = this.wps.slice(0, -1).map((wp, i) => {
+        // Precompute travel time (hours) per segment — TIME_SCALE applied dynamically in tick().
+        this.segHours = this.wps.slice(0, -1).map((wp, i) => {
             const dist = haversineKm(wp.pos, this.wps[i + 1].pos);
-            if (dist < 0.001) return 0.001;
-            return TIME_SCALE / ((dist / route.speedKmh) * 3600000);
+            return Math.max(dist, 0.001) / route.speedKmh;
         });
 
         if (route.showPath) {
@@ -975,7 +995,7 @@ class Vehicle {
 
         const fromPos    = this.wps[this.segIdx].pos;
         const toPos      = this.wps[this.segIdx + 1].pos;
-        const initBrng   = bearingDeg(fromPos, toPos);
+        const initBrng   = screenBearing(fromPos, toPos);
         const initPos    = lerp(fromPos, toPos, this.progress);
 
         this.marker = L.marker(initPos, { icon: makeVehicleIcon(route.type, initBrng), zIndexOffset: 500 })
@@ -1026,7 +1046,7 @@ class Vehicle {
             return;
         }
 
-        this.progress += (this.segRates[this.segIdx] || 0.001) * dt;
+        this.progress += (TIME_SCALE / ((this.segHours[this.segIdx] || 0.001) * 3600000)) * dt;
 
         if (this.progress >= 1) {
             this.progress = 0;
@@ -1070,7 +1090,7 @@ class Vehicle {
             if (!fromPos || !toPos) return;
 
             const pos  = lerp(fromPos, toPos, this.progress);
-            const brng = bearingDeg(fromPos, toPos);
+            const brng = screenBearing(fromPos, toPos);
 
             this.marker.setLatLng(pos);
             const el = this.marker.getElement();
@@ -1419,6 +1439,44 @@ function injectAddUI() {
         }
         .lx-export:hover { color:#00ffe7; border-color:#00ffe7; }
         .lx-note { font-size:9px; opacity:0.4; line-height:1.5; margin-bottom:8px; }
+
+        /* ── Settings panel (time scale) ── */
+        #lx-set-btn {
+            position:fixed; bottom:1em; left:1em; z-index:950;
+            width:42px; height:42px;
+            background:rgba(8,8,18,0.95); border:1px solid #b8a80080;
+            color:#b8a800; font-size:16px; cursor:pointer;
+            font-family:'Consolas',monospace; border-radius:4px;
+            box-shadow:0 0 8px rgba(184,168,0,0.15); transition:background 0.2s;
+        }
+        #lx-set-btn:hover { background:rgba(184,168,0,0.1); }
+        #lx-set-panel {
+            position:fixed; bottom:4.5em; left:1em; z-index:950;
+            width:260px; padding:14px 16px;
+            background:rgba(6,8,18,0.98); border:1px solid #b8a80060;
+            font-family:'Consolas','Courier New',monospace; font-size:12px; color:#b8a800;
+            box-shadow:0 0 20px rgba(184,168,0,0.12);
+        }
+        #lx-set-panel.hidden { display:none; }
+        .lx-set-title {
+            font-size:10px; letter-spacing:2px; font-weight:bold;
+            border-bottom:1px solid #b8a80030; padding-bottom:7px; margin-bottom:12px;
+        }
+        .lx-set-row { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+        .lx-set-lbl { font-size:9px; letter-spacing:1px; opacity:0.6; min-width:90px; }
+        .lx-set-inp {
+            flex:1; background:rgba(184,168,0,0.05); border:1px solid #b8a80040;
+            color:#b8a800; font-family:'Consolas',monospace; font-size:11px;
+            padding:4px 6px; outline:none;
+        }
+        .lx-set-inp:focus { border-color:#b8a800; }
+        .lx-set-note { font-size:9px; opacity:0.35; line-height:1.5; margin-top:4px; }
+        .lx-set-apply {
+            width:100%; background:rgba(184,168,0,0.07); border:1px solid #b8a80060;
+            color:#b8a800; font-family:'Consolas',monospace; font-size:10px;
+            letter-spacing:2px; padding:7px; cursor:pointer; margin-top:6px; transition:background 0.2s;
+        }
+        .lx-set-apply:hover { background:rgba(184,168,0,0.18); }
     `;
     document.head.appendChild(style);
 
@@ -1426,6 +1484,19 @@ function injectAddUI() {
     const wrap = document.createElement('div');
     wrap.innerHTML = `
     <button id="lx-add-btn" title="Add deployment or route">+</button>
+    <button id="lx-set-btn" title="Map speed settings">⚙</button>
+    <div id="lx-set-panel" class="hidden">
+        <div class="lx-set-title">⚙ MAP SETTINGS</div>
+        <div class="lx-set-row">
+            <span class="lx-set-lbl">TIME SCALE</span>
+            <input class="lx-set-inp" id="lx-ts-inp" type="number" min="0.1" max="500" step="0.5" value="5">
+        </div>
+        <div class="lx-set-note">
+            1× = real-time &nbsp;|&nbsp; 5× ≈ 80 min/transatlantic<br>
+            10× ≈ 40 min/transatlantic &nbsp;|&nbsp; 300× ≈ 80 sec
+        </div>
+        <button class="lx-set-apply" id="lx-ts-apply">APPLY</button>
+    </div>
     <div id="lx-add-panel" class="hidden">
         <div class="lx-ph">
             <span>⊕ ADD ASSET DATA</span>
@@ -1712,6 +1783,23 @@ function injectAddUI() {
             { lat:'', lng:'', dwell:'0', label:'' }
         ];
         renderWpRows();
+    });
+
+    // ---- Settings button ----
+    const setPanel = document.getElementById('lx-set-panel');
+    document.getElementById('lx-set-btn').addEventListener('click', () => {
+        setPanel.classList.toggle('hidden');
+        if (!setPanel.classList.contains('hidden')) {
+            document.getElementById('lx-ts-inp').value = TIME_SCALE;
+        }
+        // Close add panel if open
+        panel.classList.add('hidden');
+    });
+    document.getElementById('lx-ts-apply').addEventListener('click', () => {
+        const v = parseFloat(document.getElementById('lx-ts-inp').value);
+        if (isNaN(v) || v <= 0) return;
+        setTimeScale(v);
+        setPanel.classList.add('hidden');
     });
 
     // ---- Export ----

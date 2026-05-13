@@ -352,8 +352,34 @@
                 <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
                     <a href="hack.html"     class="admin-btn" style="text-decoration:none;display:inline-block;">▦ HACKING TERMINAL</a>
                     <a href="bomb.html"     class="admin-btn" style="text-decoration:none;display:inline-block;opacity:0.45;pointer-events:none;">◉ BOMB DEFUSAL</a>
-                    <a href="lockpick.html" class="admin-btn" style="text-decoration:none;display:inline-block;opacity:0.45;pointer-events:none;">⌗ LOCKPICK</a>
+                    <a href="lockpick.html" class="admin-btn" style="text-decoration:none;display:inline-block;">⌗ LOCKPICK</a>
                 </div>
+            </div>
+
+            <!-- ── Asset Map Settings ──────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ ASSET MAP SETTINGS</div>
+                <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
+                    Controls how fast vehicles move on the Asset Map. <b style="color:var(--gold)">1×</b> = real-time (Paris→NY ≈ 7 hours).
+                    <b style="color:var(--gold)">5×</b> ≈ 80 min/transatlantic. <b style="color:var(--gold)">300×</b> ≈ 80 sec (old default).
+                    Changes take effect immediately on the live map — no reload needed.
+                </p>
+                <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+                    <div class="form-field">
+                        <label class="form-label">TIME SCALE MULTIPLIER</label>
+                        <input class="form-input" type="number" id="map-ts-input" min="0.1" max="500" step="0.5" value="5" style="width:140px;">
+                    </div>
+                    <button class="admin-btn" id="map-ts-btn">APPLY TO MAP</button>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                    <button class="admin-btn" style="font-size:0.65rem;padding:6px 12px;" onclick="applyMapTs(1)">1× Real-time</button>
+                    <button class="admin-btn" style="font-size:0.65rem;padding:6px 12px;" onclick="applyMapTs(3)">3×</button>
+                    <button class="admin-btn" style="font-size:0.65rem;padding:6px 12px;" onclick="applyMapTs(5)">5× Default</button>
+                    <button class="admin-btn" style="font-size:0.65rem;padding:6px 12px;" onclick="applyMapTs(10)">10×</button>
+                    <button class="admin-btn" style="font-size:0.65rem;padding:6px 12px;" onclick="applyMapTs(60)">60×</button>
+                    <button class="admin-btn" style="font-size:0.65rem;padding:6px 12px;" onclick="applyMapTs(300)">300× Fast</button>
+                </div>
+                <div class="form-msg" id="map-ts-msg"></div>
             </div>
 
         </div><!-- /.admin-main -->
@@ -479,7 +505,10 @@ renderRoster();
     if (!grid) return;
 
     const games = [
-        { key: 'luxorHackConfig', stateKey: 'luxorHackState', label: '▦ HACKING TERMINAL', href: 'hack.html' }
+        { key: 'luxorHackConfig',     stateKey: 'luxorHackState',     label: '▦ HACKING TERMINAL', href: 'hack.html',
+          phaseLabels: { idle:'STANDBY', active:'BREACH ACTIVE', won:'ACCESS GRANTED', lost:'TRACE DETECTED' } },
+        { key: 'luxorLockpickConfig', stateKey: 'luxorLockpickState', label: '⌗ LOCKPICK',          href: 'lockpick.html',
+          phaseLabels: { idle:'STANDBY', active:'PICKING',       won:'LOCK OPEN',      lost:'LOCKOUT'         } }
     ];
 
     games.forEach(function (game) {
@@ -489,7 +518,7 @@ renderRoster();
 
         const phase = state.phase || 'idle';
         const phaseColors = { idle: '#6b6860', active: '#00e5c8', won: '#00e5c8', lost: '#c0392b' };
-        const phaseLabels = { idle: 'STANDBY', active: 'BREACH ACTIVE', won: 'ACCESS GRANTED', lost: 'TRACE DETECTED' };
+        const phaseLabels = game.phaseLabels || { idle:'STANDBY', active:'ACTIVE', won:'SUCCESS', lost:'FAILED' };
         const color = phaseColors[phase] || '#6b6860';
 
         const row = document.createElement('div');
@@ -528,6 +557,43 @@ document.getElementById('lock-roster-btn').addEventListener('click', function ()
             msg.textContent = '⚠ FAILED — could not read auth.js (try running from a local server)';
         });
 });
+
+// ── Asset Map time scale ─────────────────────────────────────
+function applyMapTs(val) {
+    const v = Math.max(0.1, Math.min(500, +val || 5));
+    try {
+        const c = JSON.parse(localStorage.getItem('luxorAssetMapSettings') || '{}');
+        c.timeScale = v;
+        localStorage.setItem('luxorAssetMapSettings', JSON.stringify(c));
+    } catch(e) {}
+    document.getElementById('map-ts-input').value = v;
+    const msg = document.getElementById('map-ts-msg');
+    msg.className = 'form-msg ok';
+    msg.textContent = `✓ TIME SCALE SET TO ${v}× — takes effect on live Asset Map immediately`;
+    setTimeout(() => { msg.className = 'form-msg'; msg.textContent = ''; }, 3000);
+}
+
+document.getElementById('map-ts-btn').addEventListener('click', function () {
+    const v = parseFloat(document.getElementById('map-ts-input').value);
+    if (isNaN(v) || v <= 0) {
+        const msg = document.getElementById('map-ts-msg');
+        msg.className = 'form-msg err';
+        msg.textContent = '⚠ INVALID VALUE';
+        setTimeout(() => { msg.className = 'form-msg'; msg.textContent = ''; }, 2000);
+        return;
+    }
+    applyMapTs(v);
+});
+
+// Populate current map ts value on load
+(function () {
+    try {
+        const c = JSON.parse(localStorage.getItem('luxorAssetMapSettings') || '{}');
+        if (typeof c.timeScale === 'number') {
+            document.getElementById('map-ts-input').value = c.timeScale;
+        }
+    } catch(e) {}
+})();
 
 // ── Backup / Restore ─────────────────────────────────────────
 document.getElementById('export-btn').addEventListener('click', function () {

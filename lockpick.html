@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR — Lock Interface</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           LOCK INTERFACE — lockpick.html styles
+           ══════════════════════════════════════════════════════════ */
+
+        .lp-wrap { display:flex; flex-direction:column; gap:1rem; }
+
+        /* ── Status bar ─────────────────────────────────────────── */
+        .lp-statusbar {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.65rem 1rem; display:flex; align-items:center;
+            justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+        }
+        .lp-target-block { display:flex; flex-direction:column; gap:2px; }
+        .lp-target-name  { font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--gold); letter-spacing:0.12em; }
+        .lp-target-sub   { font-family:'Share Tech Mono',monospace; font-size:0.58rem; color:var(--text-dim); letter-spacing:0.14em; }
+        .lp-stats { display:flex; align-items:center; gap:1rem; }
+        .lp-stat  { display:flex; flex-direction:column; align-items:center; gap:1px; }
+        .lp-stat-val  { font-family:'Orbitron',monospace; font-size:0.9rem; color:var(--cyan); }
+        .lp-stat-lbl  { font-size:0.52rem; letter-spacing:0.15em; color:var(--text-dim); }
+        .lp-stat-val.danger { color:#e74c3c; }
+        .lp-phase-badge {
+            font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+            letter-spacing:0.14em; padding:3px 9px;
+            border:1px solid var(--border); color:var(--text-dim);
+        }
+        .lp-phase-badge.active { color:var(--cyan);  border-color:var(--cyan);  background:rgba(0,229,200,0.04); animation:blink 2s ease-in-out infinite; }
+        .lp-phase-badge.won    { color:var(--gold);  border-color:var(--gold);  background:rgba(184,168,0,0.07); }
+        .lp-phase-badge.lost   { color:#e74c3c;      border-color:#e74c3c;      background:rgba(192,57,43,0.07); }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+        /* ── Main game area ─────────────────────────────────────── */
+        .lp-game-area {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:1.5rem 1rem; display:flex; gap:2rem;
+            align-items:flex-start; flex-wrap:wrap;
+        }
+
+        /* ── Cylinder / progress indicator ─────────────────────── */
+        .lp-cylinder-wrap {
+            display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+            min-width:110px;
+        }
+        .lp-cyl-label {
+            font-size:0.55rem; letter-spacing:0.18em; color:var(--text-dim);
+        }
+        .lp-cylinder-svg { display:block; }
+        .lp-cyl-pips { display:flex; gap:5px; margin-top:4px; }
+        .lp-cyl-pip {
+            width:12px; height:12px; border-radius:50%;
+            border:1px solid var(--border); background:transparent;
+            transition:background 0.3s, border-color 0.3s;
+        }
+        .lp-cyl-pip.set  { background:var(--gold); border-color:var(--gold); }
+        .lp-cyl-pip.active { border-color:var(--cyan); animation:blink 1s ease-in-out infinite; }
+
+        /* ── Pin columns ────────────────────────────────────────── */
+        .lp-pins { display:flex; gap:12px; align-items:flex-end; flex:1; justify-content:center; }
+
+        .lp-pin-col {
+            display:flex; flex-direction:column; align-items:center; gap:6px;
+            cursor:pointer; user-select:none;
+        }
+        .lp-pin-col.active .lp-chamber { border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,200,0.25); }
+        .lp-pin-col.set    .lp-chamber { border-color:var(--gold); box-shadow:0 0 10px rgba(184,168,0,0.2); }
+        .lp-pin-col.failed .lp-chamber { border-color:#e74c3c; }
+
+        .lp-chamber {
+            position:relative; width:44px; height:200px;
+            background:#06090f; border:1px solid var(--border);
+            overflow:hidden; transition:border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Shear line zone (the green band = sweet spot) */
+        .lp-zone {
+            position:absolute; left:0; right:0;
+            background:rgba(0,229,200,0.08); border-top:1px solid rgba(0,229,200,0.4);
+            border-bottom:1px solid rgba(0,229,200,0.4);
+            pointer-events:none; transition:top 0.1s, height 0.1s;
+        }
+        .lp-zone::before {
+            content:''; position:absolute; inset:0;
+            background:repeating-linear-gradient(
+                90deg, transparent, transparent 3px, rgba(0,229,200,0.03) 3px, rgba(0,229,200,0.03) 6px);
+        }
+
+        /* Driver pin (top half, above shear) */
+        .lp-driver {
+            position:absolute; left:6px; right:6px; top:0;
+            background:linear-gradient(180deg, #1a2a1e 0%, #0d1a0f 100%);
+            border-bottom:1px solid #254a30; pointer-events:none;
+        }
+
+        /* Moving indicator block */
+        .lp-mover {
+            position:absolute; left:4px; right:4px; height:28px;
+            background:linear-gradient(180deg, #1e5f3a 0%, #0a3020 50%, #1e5f3a 100%);
+            border:1px solid #30cc70; border-radius:2px;
+            pointer-events:none; transition:background 0.15s, border-color 0.15s;
+            box-shadow:0 0 6px rgba(48,204,112,0.4);
+        }
+        .lp-pin-col.active .lp-mover {
+            background:linear-gradient(180deg, #00e5c8 0%, #009980 50%, #00e5c8 100%);
+            border-color:#00e5c8;
+            box-shadow:0 0 10px rgba(0,229,200,0.6);
+        }
+        .lp-pin-col.set .lp-mover {
+            background:linear-gradient(180deg, #b8a800 0%, #806000 50%, #b8a800 100%);
+            border-color:#b8a800;
+            box-shadow:0 0 8px rgba(184,168,0,0.5);
+        }
+        .lp-pin-col.failed .lp-mover { background:#3a1010; border-color:#e74c3c; box-shadow:none; }
+
+        /* Pin label below chamber */
+        .lp-pin-label {
+            font-family:'Share Tech Mono',monospace; font-size:0.62rem;
+            letter-spacing:0.15em; color:var(--text-dim);
+        }
+        .lp-pin-col.active .lp-pin-label { color:var(--cyan); }
+        .lp-pin-col.set    .lp-pin-label { color:var(--gold); }
+
+        /* Binding indicator bar */
+        .lp-binding-bar {
+            width:100%; height:3px; background:transparent;
+            border-radius:1px; transition:background 0.2s;
+        }
+        .lp-pin-col.active .lp-binding-bar { background:var(--cyan); animation:blink 0.8s ease-in-out infinite; }
+        .lp-pin-col.set    .lp-binding-bar { background:var(--gold); }
+
+        /* ── Action button ──────────────────────────────────────── */
+        .lp-action-wrap { display:flex; justify-content:center; margin-top:0.5rem; gap:1rem; }
+        .lp-pick-btn {
+            background:rgba(0,229,200,0.07); border:1px solid var(--cyan);
+            color:var(--cyan); font-family:'Share Tech Mono',monospace;
+            font-size:0.8rem; letter-spacing:0.2em; padding:10px 28px;
+            cursor:pointer; transition:background 0.15s;
+        }
+        .lp-pick-btn:hover { background:rgba(0,229,200,0.18); }
+        .lp-pick-btn:disabled { opacity:0.25; cursor:not-allowed; }
+        .lp-reset-btn {
+            background:rgba(192,57,43,0.07); border:1px solid rgba(192,57,43,0.5);
+            color:#e74c3c; font-family:'Share Tech Mono',monospace;
+            font-size:0.8rem; letter-spacing:0.2em; padding:10px 18px;
+            cursor:pointer; transition:background 0.15s;
+        }
+        .lp-reset-btn:hover { background:rgba(192,57,43,0.15); }
+        .lp-key-hint {
+            font-family:'Share Tech Mono',monospace; font-size:0.55rem;
+            letter-spacing:0.1em; color:var(--text-dim); text-align:center;
+            margin-top:0.25rem;
+        }
+
+        /* ── Terminal log ───────────────────────────────────────── */
+        .lp-terminal {
+            background:#050e08; border:1px solid #1c3a25;
+            font-family:'Share Tech Mono',monospace; min-height:120px; max-height:160px;
+            overflow-y:auto; padding:0.6rem 0.8rem;
+            position:relative;
+        }
+        .lp-terminal::before {
+            content:''; position:absolute; inset:0;
+            background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+            pointer-events:none; z-index:1;
+        }
+        .lp-term-line {
+            font-size:0.68rem; letter-spacing:0.06em; margin-bottom:2px;
+            position:relative; z-index:2;
+        }
+        .lp-term-line.ok   { color:#5dbf72; }
+        .lp-term-line.err  { color:#e74c3c; }
+        .lp-term-line.warn { color:#b8a800; }
+        .lp-term-line.info { color:#254a30; }
+        .lp-term-line.sys  { color:#3d7a50; }
+        .lp-term-line.win  { color:#b8a800; text-shadow:0 0 8px rgba(184,168,0,0.5); }
+        .lp-cursor { display:inline-block; width:7px; height:12px; background:#5dbf72; margin-left:2px; animation:blink 0.9s step-end infinite; vertical-align:middle; }
+
+        /* ── Idle screen ────────────────────────────────────────── */
+        .lp-idle-screen {
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding:3rem 1rem; gap:1rem; text-align:center;
+        }
+        .lp-idle-icon { font-size:3rem; color:var(--text-dim); opacity:0.3; }
+        .lp-idle-msg  { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); letter-spacing:0.18em; line-height:1.8; }
+
+        /* ── Win / Lose overlays ────────────────────────────────── */
+        .lp-overlay {
+            display:none; position:absolute; inset:0;
+            background:rgba(5,8,15,0.88); z-index:10;
+            flex-direction:column; align-items:center; justify-content:center; gap:1rem;
+        }
+        .lp-overlay.show { display:flex; }
+        .lp-ov-title { font-family:'Orbitron',monospace; font-size:1.6rem; letter-spacing:0.25em; }
+        .lp-ov-title.win  { color:var(--gold); text-shadow:0 0 24px rgba(184,168,0,0.6); }
+        .lp-ov-title.lose { color:#e74c3c; }
+        .lp-ov-sub { font-family:'Share Tech Mono',monospace; font-size:0.75rem; letter-spacing:0.2em; color:var(--text-dim); }
+        .lp-ov-btn {
+            background:transparent; border:1px solid var(--border); color:var(--text-dim);
+            font-family:'Share Tech Mono',monospace; font-size:0.72rem; letter-spacing:0.2em;
+            padding:8px 20px; cursor:pointer; transition:all 0.15s;
+        }
+        .lp-ov-btn:hover { color:var(--cyan); border-color:var(--cyan); }
+
+        /* ── Overlord panel ─────────────────────────────────────── */
+        #lp-ov-toggle {
+            position:fixed; bottom:1.5em; right:1.5em; z-index:900;
+            background:rgba(8,8,18,0.95); border:1px solid var(--gold-dim);
+            color:var(--gold); font-family:'Share Tech Mono',monospace;
+            font-size:0.65rem; letter-spacing:0.2em; padding:6px 14px;
+            cursor:pointer; transition:background 0.15s;
+        }
+        #lp-ov-toggle:hover { background:rgba(184,168,0,0.1); }
+
+        #lp-ov-panel {
+            position:fixed; bottom:4em; right:1.5em; z-index:900;
+            width:320px; max-height:80vh; overflow-y:auto;
+            background:rgba(6,8,18,0.98); border:1px solid var(--gold-dim);
+            font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gold);
+            box-shadow:0 0 24px rgba(184,168,0,0.12);
+        }
+        #lp-ov-panel.hidden { display:none; }
+        .lp-ov-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid var(--gold-dim);
+            font-size:11px; letter-spacing:2px; font-weight:bold; background:rgba(184,168,0,0.04);
+        }
+        .lp-ov-ph-close { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; }
+        .lp-cfg { padding:14px; display:flex; flex-direction:column; gap:10px; }
+        .lp-cfg-row { display:flex; flex-direction:column; gap:3px; }
+        .lp-cfg-lbl { font-size:9px; letter-spacing:1px; opacity:0.55; }
+        .lp-cfg-inp, .lp-cfg-sel {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.3);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:11px;
+            padding:5px 7px; outline:none; width:100%;
+        }
+        .lp-cfg-inp:focus, .lp-cfg-sel:focus { border-color:var(--gold); }
+        .lp-cfg-sel option { background:#050d0d; }
+        .lp-cfg-2col { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .lp-cfg-div { border-top:1px solid rgba(184,168,0,0.12); margin:4px 0; }
+        .lp-cfg-btn {
+            padding:8px; background:rgba(184,168,0,0.07); border:1px solid rgba(184,168,0,0.5);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:10px;
+            letter-spacing:2px; cursor:pointer; transition:background 0.15s; width:100%;
+        }
+        .lp-cfg-btn:hover { background:rgba(184,168,0,0.18); }
+        .lp-cfg-btn.activate { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.06); }
+        .lp-cfg-btn.activate:hover { background:rgba(0,229,200,0.15); }
+        .lp-cfg-btn.deactivate { border-color:#e74c3c; color:#e74c3c; background:rgba(192,57,43,0.06); }
+        .lp-cfg-btn.deactivate:hover { background:rgba(192,57,43,0.15); }
+        .lp-cfg-status {
+            font-size:9px; letter-spacing:1px; padding:5px 8px;
+            border:1px solid rgba(184,168,0,0.2); background:rgba(184,168,0,0.03);
+            opacity:0.7; line-height:1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">LOCK.SYS</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">INITIALIZING LOCK INTERFACE...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"                data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"    data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"                data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"                data-icon="04">Tools</a></li>
+            <li><a href="dice.html"                 data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"                data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html"   data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"                 data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"             data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"                 data-icon="10">Hacking</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">◈ OVERLORD PANEL</a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">——————</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Lock Interface</h1>
+            <div class="tagline">// PIN TUMBLER BYPASS — MECHANICAL ENTRY SYSTEM //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="lp-wrap" id="lp-wrap">
+
+            <!-- ── Status bar ─────────────────────────────────────── -->
+            <div class="lp-statusbar">
+                <div class="lp-target-block">
+                    <div class="lp-target-name" id="lp-lock-name">UNKNOWN TARGET</div>
+                    <div class="lp-target-sub" id="lp-lock-desc">Waiting for Overlord activation...</div>
+                </div>
+                <div class="lp-stats">
+                    <div class="lp-stat">
+                        <div class="lp-stat-val" id="lp-pins-stat">0/0</div>
+                        <div class="lp-stat-lbl">PINS SET</div>
+                    </div>
+                    <div class="lp-stat">
+                        <div class="lp-stat-val" id="lp-time-stat">—</div>
+                        <div class="lp-stat-lbl">TIME LEFT</div>
+                    </div>
+                    <div class="lp-stat">
+                        <div class="lp-stat-val" id="lp-att-stat">0</div>
+                        <div class="lp-stat-lbl">ATTEMPTS</div>
+                    </div>
+                </div>
+                <div class="lp-phase-badge" id="lp-phase-badge">STANDBY</div>
+            </div>
+
+            <!-- ── Idle screen ─────────────────────────────────────── -->
+            <div id="lp-idle-screen" class="lp-idle-screen">
+                <div class="lp-idle-icon">⌗</div>
+                <div class="lp-idle-msg">
+                    LOCK SYSTEM OFFLINE<br>
+                    <span style="opacity:0.5">AWAITING OVERLORD ACTIVATION</span>
+                </div>
+            </div>
+
+            <!-- ── Game area ───────────────────────────────────────── -->
+            <div id="lp-game" style="display:none;">
+                <div class="lp-game-area" style="position:relative;">
+                    <!-- Cylinder / progress visual -->
+                    <div class="lp-cylinder-wrap">
+                        <div class="lp-cyl-label">CYLINDER</div>
+                        <svg class="lp-cylinder-svg" id="lp-cyl-svg" width="90" height="90" viewBox="-45 -45 90 90">
+                            <!-- Outer ring -->
+                            <circle cx="0" cy="0" r="40" fill="none" stroke="#1a2035" stroke-width="6"/>
+                            <!-- Rotation indicator arc (grows as pins set) -->
+                            <circle id="lp-cyl-arc" cx="0" cy="0" r="40"
+                                fill="none" stroke="#b8a800" stroke-width="4"
+                                stroke-dasharray="0 251.2" stroke-dashoffset="62.8"
+                                stroke-linecap="round" opacity="0.6"
+                                style="transition:stroke-dasharray 0.4s ease"/>
+                            <!-- Cylinder body -->
+                            <circle cx="0" cy="0" r="28" fill="#080d16" stroke="#1a2035" stroke-width="1.5"/>
+                            <!-- Keyhole -->
+                            <ellipse cx="0" cy="-4" rx="5" ry="8" fill="#0d1520" stroke="#2a3050" stroke-width="1"/>
+                            <rect x="-2.5" y="4" width="5" height="8" rx="1" fill="#0d1520" stroke="#2a3050" stroke-width="1"/>
+                            <!-- Rotation needle -->
+                            <g id="lp-cyl-needle" style="transform-origin:center;transition:transform 0.4s ease">
+                                <line x1="0" y1="-28" x2="0" y2="-16" stroke="#b8a800" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+                            </g>
+                        </svg>
+                        <div class="lp-cyl-label" id="lp-cyl-pct">0%</div>
+                        <!-- Pin pip indicators -->
+                        <div class="lp-cyl-pips" id="lp-cyl-pips"></div>
+                    </div>
+
+                    <!-- Pin columns -->
+                    <div class="lp-pins" id="lp-pins-container"></div>
+                </div>
+
+                <!-- Action controls -->
+                <div class="lp-action-wrap">
+                    <button class="lp-pick-btn" id="lp-pick-btn">⌗ APPLY PICK  [SPACE]</button>
+                    <button class="lp-reset-btn" id="lp-restart-btn">↺ RESTART</button>
+                </div>
+                <div class="lp-key-hint">Click on a pin or press SPACE to attempt. Only the active (cyan) pin responds.</div>
+            </div>
+
+            <!-- ── Terminal log ─────────────────────────────────────── -->
+            <div class="lp-terminal" id="lp-terminal">
+                <div class="lp-term-line sys">&gt; LOCK.SYS v2.4.1 — PIN TUMBLER INTERFACE</div>
+                <div class="lp-term-line info">&gt; Awaiting system activation from Overlord...</div>
+                <div class="lp-term-line info"><span class="lp-cursor"></span></div>
+            </div>
+
+        </div><!-- /.lp-wrap -->
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<!-- ── Overlord admin panel (injected for admins) ──────────────── -->
+<button id="lp-ov-toggle" style="display:none;">◈ OVERLORD</button>
+<div id="lp-ov-panel" class="hidden">
+    <div class="lp-ov-ph">
+        <span>◈ LOCKPICK — OVERLORD CONFIG</span>
+        <button class="lp-ov-ph-close" id="lp-ov-close">✕</button>
+    </div>
+    <div class="lp-cfg">
+
+        <div class="lp-cfg-status" id="lp-cfg-status-bar">STATUS: STANDBY</div>
+
+        <!-- Activate / Deactivate -->
+        <button class="lp-cfg-btn activate" id="lp-cfg-activate">▶ ACTIVATE LOCK</button>
+        <button class="lp-cfg-btn deactivate" id="lp-cfg-deactivate">■ DEACTIVATE</button>
+        <button class="lp-cfg-btn" id="lp-cfg-reset-game" style="border-color:#888;color:#888;">↺ FORCE RESET</button>
+
+        <div class="lp-cfg-div"></div>
+
+        <!-- Lock identity -->
+        <div class="lp-cfg-row">
+            <div class="lp-cfg-lbl">LOCK NAME / TARGET</div>
+            <input class="lp-cfg-inp" id="lp-cfg-name" type="text" value="FACILITY ALPHA" maxlength="40">
+        </div>
+        <div class="lp-cfg-row">
+            <div class="lp-cfg-lbl">DESCRIPTION</div>
+            <input class="lp-cfg-inp" id="lp-cfg-desc" type="text" value="Security door — Level 3" maxlength="60">
+        </div>
+
+        <div class="lp-cfg-div"></div>
+
+        <!-- Difficulty -->
+        <div class="lp-cfg-2col">
+            <div class="lp-cfg-row">
+                <div class="lp-cfg-lbl">PIN COUNT (3–8)</div>
+                <input class="lp-cfg-inp" id="lp-cfg-pins" type="number" min="3" max="8" value="5">
+            </div>
+            <div class="lp-cfg-row">
+                <div class="lp-cfg-lbl">DIFFICULTY</div>
+                <select class="lp-cfg-sel" id="lp-cfg-diff">
+                    <option value="easy">EASY — wide zone</option>
+                    <option value="medium" selected>MEDIUM</option>
+                    <option value="hard">HARD — narrow</option>
+                    <option value="expert">EXPERT — very narrow</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="lp-cfg-2col">
+            <div class="lp-cfg-row">
+                <div class="lp-cfg-lbl">PIN SPEED (0.5–3)</div>
+                <input class="lp-cfg-inp" id="lp-cfg-speed" type="number" min="0.5" max="3" step="0.1" value="1.0">
+            </div>
+            <div class="lp-cfg-row">
+                <div class="lp-cfg-lbl">TIME LIMIT (sec, 0=∞)</div>
+                <input class="lp-cfg-inp" id="lp-cfg-time" type="number" min="0" max="300" step="5" value="60">
+            </div>
+        </div>
+
+        <div class="lp-cfg-row">
+            <div class="lp-cfg-lbl">ON MISS</div>
+            <select class="lp-cfg-sel" id="lp-cfg-fail">
+                <option value="reset">Reset ALL pins (tension breaks)</option>
+                <option value="partial">Only lose current pin progress</option>
+            </select>
+        </div>
+
+        <div class="lp-cfg-div"></div>
+
+        <button class="lp-cfg-btn" id="lp-cfg-save" style="border-color:var(--cyan);color:var(--cyan);">SAVE CONFIG</button>
+        <div style="font-size:9px;opacity:0.35;letter-spacing:0.5px;line-height:1.5;">
+            Config auto-persists in browser localStorage.<br>
+            Activate to push changes to all players.
+        </div>
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script src="./nav.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+//  LOCKPICK MINIGAME
+// ═══════════════════════════════════════════════════════════════════
+
+if (!LuxorAuth.requireAuth('login.html')) { /* nav.js handles redirect */ }
+
+// ── Config + state localStorage keys ────────────────────────────
+const LP_CFG_KEY   = 'luxorLockpickConfig';
+const LP_STATE_KEY = 'luxorLockpickState';
+
+const ZONE_SIZES = { easy: 46, medium: 28, hard: 16, expert: 8 };  // px
+const CHAMBER_H  = 200;
+const MOVER_H    = 28;
+
+// ── Load / save config ───────────────────────────────────────────
+function defaultCfg() {
+    return { numPins:5, difficulty:'medium', speedMult:1.0, timeLimit:60, failMode:'reset',
+             lockName:'UNKNOWN TARGET', lockDesc:'Awaiting Overlord activation...', active:false };
+}
+
+function loadCfg() {
+    try { return Object.assign(defaultCfg(), JSON.parse(localStorage.getItem(LP_CFG_KEY) || '{}')); }
+    catch { return defaultCfg(); }
+}
+
+function saveCfg(cfg) {
+    localStorage.setItem(LP_CFG_KEY, JSON.stringify(cfg));
+}
+
+function loadState() {
+    try { return Object.assign({ phase:'idle', pinsSet:0, startedBy:null, attempts:0 },
+                               JSON.parse(localStorage.getItem(LP_STATE_KEY) || '{}')); }
+    catch { return { phase:'idle', pinsSet:0, startedBy:null, attempts:0 }; }
+}
+
+function saveState(st) {
+    localStorage.setItem(LP_STATE_KEY, JSON.stringify(st));
+}
+
+// ── Game runtime state ───────────────────────────────────────────
+let cfg   = loadCfg();
+let gst   = { phase:'idle', pinsSet:0, activePinIdx:0, attempts:0, timeRemaining:0 };
+let pins  = [];   // per-pin: { position, speed, phase, set }
+let animId = null;
+let timerInterval = null;
+
+// ── Pin animation ────────────────────────────────────────────────
+function buildPins() {
+    pins = [];
+    const baseSpeed = 0.0015 * cfg.speedMult;
+    for (let i = 0; i < cfg.numPins; i++) {
+        pins.push({
+            position: Math.random() * (CHAMBER_H - MOVER_H),
+            speed:    baseSpeed * (0.6 + Math.random() * 0.9),
+            phase:    Math.random() * Math.PI * 2,
+            set:      false,
+            elapsed:  Math.random() * 10000
+        });
+    }
+}
+
+function pinZoneTop(zoneH) { return (CHAMBER_H - zoneH) / 2; }
+
+function isPinInZone(pin) {
+    const zoneH  = ZONE_SIZES[cfg.difficulty] || 28;
+    const zTop   = pinZoneTop(zoneH);
+    const center = pin.position + MOVER_H / 2;
+    return center >= zTop && center <= zTop + zoneH;
+}
+
+let lastTs = null;
+function animFrame(ts) {
+    if (gst.phase !== 'active') { lastTs = null; animId = null; return; }
+    const dt = lastTs === null ? 0 : ts - lastTs;
+    lastTs = ts;
+
+    pins.forEach(pin => {
+        if (pin.set) return;
+        pin.elapsed += dt;
+        const amp = (CHAMBER_H - MOVER_H) / 2 - 4;
+        const center = (CHAMBER_H - MOVER_H) / 2;
+        pin.position = center + amp * Math.sin(pin.elapsed * pin.speed + pin.phase);
+    });
+
+    renderPinPositions();
+    animId = requestAnimationFrame(animFrame);
+}
+
+// ── DOM rendering ────────────────────────────────────────────────
+function buildPinDOM() {
+    const container = document.getElementById('lp-pins-container');
+    const pips      = document.getElementById('lp-cyl-pips');
+    container.innerHTML = '';
+    pips.innerHTML = '';
+
+    for (let i = 0; i < cfg.numPins; i++) {
+        const zoneH = ZONE_SIZES[cfg.difficulty] || 28;
+        const zTop  = pinZoneTop(zoneH);
+
+        const col = document.createElement('div');
+        col.className = 'lp-pin-col';
+        col.id = `lp-pin-col-${i}`;
+        col.dataset.idx = i;
+        col.innerHTML = `
+            <div class="lp-chamber" id="lp-chamber-${i}">
+                <div class="lp-zone" id="lp-zone-${i}" style="top:${zTop}px;height:${zoneH}px;"></div>
+                <div class="lp-driver" id="lp-driver-${i}"></div>
+                <div class="lp-mover" id="lp-mover-${i}" style="top:${Math.round(pins[i].position)}px;"></div>
+            </div>
+            <div class="lp-pin-label">P${i + 1}</div>
+            <div class="lp-binding-bar" id="lp-bbar-${i}"></div>
+        `;
+        col.addEventListener('click', () => attemptPin(i));
+        container.appendChild(col);
+
+        // Driver pin (above shear line, reveals as pin sets)
+        updateDriverPin(i);
+
+        // Pip for cylinder
+        const pip = document.createElement('div');
+        pip.className = 'lp-cyl-pip';
+        pip.id = `lp-pip-${i}`;
+        pips.appendChild(pip);
+    }
+}
+
+function updateDriverPin(i) {
+    const zoneH = ZONE_SIZES[cfg.difficulty] || 28;
+    const zTop  = pinZoneTop(zoneH);
+    const driver = document.getElementById(`lp-driver-${i}`);
+    if (driver) {
+        driver.style.height = pins[i].set ? '0px' : `${zTop}px`;
+        driver.style.opacity = pins[i].set ? '0' : '1';
+    }
+}
+
+function renderPinPositions() {
+    pins.forEach((pin, i) => {
+        const mover = document.getElementById(`lp-mover-${i}`);
+        if (mover && !pin.set) {
+            mover.style.top = `${Math.round(pin.position)}px`;
+        }
+    });
+}
+
+function updatePinStates() {
+    pins.forEach((pin, i) => {
+        const col = document.getElementById(`lp-pin-col-${i}`);
+        const pip = document.getElementById(`lp-pip-${i}`);
+        if (!col) return;
+        col.classList.remove('active', 'set', 'failed');
+        if (pin.set) {
+            col.classList.add('set');
+            if (pip) { pip.classList.remove('active'); pip.classList.add('set'); }
+        } else if (i === gst.activePinIdx && gst.phase === 'active') {
+            col.classList.add('active');
+            if (pip) { pip.classList.remove('set'); pip.classList.add('active'); }
+        } else {
+            if (pip) { pip.classList.remove('set','active'); }
+        }
+    });
+    updateCylinder();
+}
+
+function updateCylinder() {
+    const pct  = cfg.numPins > 0 ? gst.pinsSet / cfg.numPins : 0;
+    const circ = 2 * Math.PI * 40;   // circumference of r=40 circle ≈ 251.2
+    const arc  = pct * circ;
+
+    const arcEl    = document.getElementById('lp-cyl-arc');
+    const needle   = document.getElementById('lp-cyl-needle');
+    const pctLabel = document.getElementById('lp-cyl-pct');
+    if (arcEl) arcEl.setAttribute('stroke-dasharray', `${arc.toFixed(1)} ${(circ - arc).toFixed(1)}`);
+    if (needle) needle.style.transform = `rotate(${pct * 90}deg)`;
+    if (pctLabel) pctLabel.textContent = Math.round(pct * 100) + '%';
+}
+
+// ── Heads-up display ─────────────────────────────────────────────
+function updateHUD() {
+    document.getElementById('lp-pins-stat').textContent = `${gst.pinsSet}/${cfg.numPins}`;
+    document.getElementById('lp-att-stat').textContent  = gst.attempts;
+
+    const timEl = document.getElementById('lp-time-stat');
+    if (cfg.timeLimit > 0 && gst.phase === 'active') {
+        const t = Math.max(0, gst.timeRemaining);
+        const m = Math.floor(t / 60);
+        const s = t % 60;
+        timEl.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        timEl.classList.toggle('danger', t <= 10);
+    } else {
+        timEl.textContent = cfg.timeLimit > 0 ? '—' : '∞';
+        timEl.classList.remove('danger');
+    }
+
+    const badge = document.getElementById('lp-phase-badge');
+    const labels = { idle:'STANDBY', active:'PICKING', won:'OPEN', lost:'FAILED' };
+    badge.textContent = labels[gst.phase] || gst.phase.toUpperCase();
+    badge.className = 'lp-phase-badge ' + (gst.phase === 'won' ? 'won' : gst.phase === 'lost' ? 'lost' : gst.phase === 'active' ? 'active' : '');
+}
+
+function updateLockInfo() {
+    document.getElementById('lp-lock-name').textContent = cfg.lockName;
+    document.getElementById('lp-lock-desc').textContent = cfg.lockDesc;
+}
+
+// ── Terminal logger ──────────────────────────────────────────────
+function termLog(msg, cls) {
+    const term = document.getElementById('lp-terminal');
+    // Remove cursor line if present
+    const cursor = term.querySelector('.lp-cursor');
+    if (cursor) cursor.closest('.lp-term-line')?.remove();
+
+    const line = document.createElement('div');
+    line.className = `lp-term-line ${cls || 'sys'}`;
+    line.textContent = '> ' + msg;
+    term.appendChild(line);
+
+    // Re-add cursor
+    const cur = document.createElement('div');
+    cur.className = 'lp-term-line info';
+    cur.innerHTML = '> <span class="lp-cursor"></span>';
+    term.appendChild(cur);
+
+    term.scrollTop = term.scrollHeight;
+    // Keep log short
+    while (term.children.length > 30) term.removeChild(term.firstChild);
+}
+
+// ── Game logic ───────────────────────────────────────────────────
+function startGame() {
+    gst.phase       = 'active';
+    gst.pinsSet     = 0;
+    gst.activePinIdx = 0;
+    gst.attempts    = 0;
+    gst.timeRemaining = cfg.timeLimit;
+
+    buildPins();
+    buildPinDOM();
+    updatePinStates();
+    updateHUD();
+    updateLockInfo();
+
+    document.getElementById('lp-idle-screen').style.display = 'none';
+    document.getElementById('lp-game').style.display = 'block';
+    document.getElementById('lp-pick-btn').disabled = false;
+
+    termLog(`Lock engaged: ${cfg.lockName}`, 'warn');
+    termLog(`Pins: ${cfg.numPins}  Difficulty: ${cfg.difficulty.toUpperCase()}  Speed: ${cfg.speedMult}×`, 'sys');
+    termLog('Begin picking. Active pin highlighted in cyan.', 'sys');
+
+    // Start animation
+    lastTs = null;
+    if (animId) cancelAnimationFrame(animId);
+    animId = requestAnimationFrame(animFrame);
+
+    // Start timer
+    clearInterval(timerInterval);
+    if (cfg.timeLimit > 0) {
+        timerInterval = setInterval(() => {
+            if (gst.phase !== 'active') { clearInterval(timerInterval); return; }
+            gst.timeRemaining--;
+            updateHUD();
+            if (gst.timeRemaining <= 0) {
+                clearInterval(timerInterval);
+                loseGame('TIME EXPIRED');
+            }
+        }, 1000);
+    }
+}
+
+function stopGame() {
+    if (animId) { cancelAnimationFrame(animId); animId = null; }
+    clearInterval(timerInterval);
+    lastTs = null;
+}
+
+function resetGame() {
+    stopGame();
+    gst.phase        = 'idle';
+    gst.pinsSet      = 0;
+    gst.activePinIdx = 0;
+    gst.attempts     = 0;
+
+    document.getElementById('lp-game').style.display = 'none';
+    document.getElementById('lp-idle-screen').style.display = 'flex';
+    updateHUD();
+    updateLockInfo();
+    termLog('Lock interface reset. Awaiting activation.', 'info');
+}
+
+function winGame() {
+    stopGame();
+    gst.phase = 'won';
+    updateHUD();
+    saveState({ phase:'won', pinsSet:gst.pinsSet, attempts:gst.attempts, startedBy: LuxorAuth.getSession()?.username });
+    termLog(`ALL PINS SET — CYLINDER ROTATING`, 'win');
+    termLog(`Lock breached in ${gst.attempts} attempt(s). ACCESS GRANTED.`, 'win');
+    document.getElementById('lp-pick-btn').disabled = true;
+
+    setTimeout(() => {
+        updateCylinder();
+    }, 400);
+}
+
+function loseGame(reason) {
+    stopGame();
+    gst.phase = 'lost';
+    updateHUD();
+    saveState({ phase:'lost', attempts:gst.attempts, startedBy: LuxorAuth.getSession()?.username });
+    termLog(`LOCK SEIZED — ${reason}`, 'err');
+    termLog('Pick sequence failed. Mechanical lockout engaged.', 'err');
+    document.getElementById('lp-pick-btn').disabled = true;
+}
+
+function findNextUnsetPin() {
+    for (let i = 0; i < pins.length; i++) {
+        if (!pins[i].set) return i;
+    }
+    return -1;
+}
+
+function flashFail() {
+    // Flash all non-set pin columns red briefly
+    pins.forEach((p, i) => {
+        if (p.set) return;
+        const col = document.getElementById(`lp-pin-col-${i}`);
+        if (col) {
+            col.classList.add('failed');
+            setTimeout(() => col.classList.remove('failed'), 400);
+        }
+    });
+}
+
+function attemptPin(idx) {
+    if (gst.phase !== 'active') return;
+    // Ignore if clicking non-active pin
+    if (idx !== gst.activePinIdx) {
+        termLog(`Pin ${idx + 1} is not binding. Focus on P${gst.activePinIdx + 1}.`, 'info');
+        return;
+    }
+
+    const pin = pins[idx];
+    if (!pin || pin.set) return;
+
+    gst.attempts++;
+
+    if (isPinInZone(pin)) {
+        // ── SUCCESS ──
+        pin.set = true;
+        gst.pinsSet++;
+
+        // Freeze mover at shear line center
+        pin.position = (CHAMBER_H - MOVER_H) / 2;
+        const mover = document.getElementById(`lp-mover-${idx}`);
+        if (mover) mover.style.top = `${Math.round(pin.position)}px`;
+        updateDriverPin(idx);
+
+        termLog(`Pin ${idx + 1} set. ` + (gst.pinsSet < cfg.numPins ? `${cfg.numPins - gst.pinsSet} remaining.` : ''), 'ok');
+
+        if (gst.pinsSet >= cfg.numPins) {
+            updatePinStates();
+            updateHUD();
+            winGame();
+            return;
+        }
+
+        gst.activePinIdx = findNextUnsetPin();
+        updatePinStates();
+        updateHUD();
+    } else {
+        // ── MISS ──
+        const closeness = (() => {
+            const zoneH = ZONE_SIZES[cfg.difficulty] || 28;
+            const zTop  = pinZoneTop(zoneH);
+            const center = pin.position + MOVER_H / 2;
+            const dist = Math.min(Math.abs(center - zTop), Math.abs(center - (zTop + zoneH)));
+            if (dist < 15) return 'CLOSE';
+            if (dist < 40) return 'OFF';
+            return 'WAY OFF';
+        })();
+
+        termLog(`Miss on P${idx + 1} — ${closeness}. ${cfg.failMode === 'reset' ? 'Tension lost, all pins reset.' : 'Partial slip.'}`, 'err');
+
+        if (cfg.failMode === 'reset') {
+            // Reset all set pins
+            pins.forEach(p => { if (p.set) { p.set = false; } });
+            gst.pinsSet = 0;
+            gst.activePinIdx = findNextUnsetPin();
+            pins.forEach((_, i) => updateDriverPin(i));
+            updateCylinder();
+            document.getElementById('lp-cyl-pips').querySelectorAll('.lp-cyl-pip').forEach(p => {
+                p.classList.remove('set', 'active');
+            });
+        }
+
+        flashFail();
+        updatePinStates();
+        updateHUD();
+    }
+}
+
+// ── Keyboard control ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.code === 'Space' && gst.phase === 'active') {
+        e.preventDefault();
+        attemptPin(gst.activePinIdx);
+    }
+});
+
+document.getElementById('lp-pick-btn').addEventListener('click', () => {
+    if (gst.phase === 'active') attemptPin(gst.activePinIdx);
+});
+
+document.getElementById('lp-restart-btn').addEventListener('click', () => {
+    if (cfg.active) {
+        startGame();
+    } else {
+        resetGame();
+    }
+});
+
+// ── Cross-tab sync (detect config changes from Overlord) ─────────
+window.addEventListener('storage', e => {
+    if (e.key === LP_CFG_KEY) {
+        const newCfg = loadCfg();
+        const wasActive = cfg.active;
+        cfg = newCfg;
+        updateLockInfo();
+
+        if (!wasActive && cfg.active) {
+            termLog('Overlord activated lock system.', 'warn');
+            startGame();
+        } else if (wasActive && !cfg.active) {
+            termLog('Overlord deactivated lock system.', 'info');
+            resetGame();
+        }
+    }
+});
+
+// ── Initial state sync ───────────────────────────────────────────
+function syncToConfig() {
+    cfg = loadCfg();
+    updateLockInfo();
+    if (cfg.active) {
+        termLog('Lock system online — pick initiated.', 'warn');
+        startGame();
+    } else {
+        updateHUD();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  OVERLORD ADMIN PANEL
+// ═══════════════════════════════════════════════════════════════════
+
+function initOverlordPanel() {
+    const toggle = document.getElementById('lp-ov-toggle');
+    const panel  = document.getElementById('lp-ov-panel');
+    toggle.style.display = 'block';
+
+    function refreshAdminStatus() {
+        const st   = loadState();
+        const bar  = document.getElementById('lp-cfg-status-bar');
+        const phase = { idle:'STANDBY', active:'BREACH ACTIVE', won:'LOCK OPEN', lost:'LOCKOUT' }[st.phase] || st.phase;
+        bar.textContent = `STATUS: ${phase} | PINS: ${st.pinsSet || 0}/${cfg.numPins} | ATTEMPTS: ${st.attempts || 0}` +
+                          (st.startedBy ? ` | OPR: ${st.startedBy}` : '');
+    }
+
+    function populateForm() {
+        document.getElementById('lp-cfg-name').value  = cfg.lockName;
+        document.getElementById('lp-cfg-desc').value  = cfg.lockDesc;
+        document.getElementById('lp-cfg-pins').value  = cfg.numPins;
+        document.getElementById('lp-cfg-diff').value  = cfg.difficulty;
+        document.getElementById('lp-cfg-speed').value = cfg.speedMult;
+        document.getElementById('lp-cfg-time').value  = cfg.timeLimit;
+        document.getElementById('lp-cfg-fail').value  = cfg.failMode;
+        refreshAdminStatus();
+    }
+
+    toggle.addEventListener('click', () => {
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) populateForm();
+    });
+
+    document.getElementById('lp-ov-close').addEventListener('click', () => {
+        panel.classList.add('hidden');
+    });
+
+    document.getElementById('lp-cfg-save').addEventListener('click', () => {
+        cfg.lockName   = document.getElementById('lp-cfg-name').value.trim() || 'UNKNOWN TARGET';
+        cfg.lockDesc   = document.getElementById('lp-cfg-desc').value.trim() || '';
+        cfg.numPins    = Math.min(8, Math.max(3, parseInt(document.getElementById('lp-cfg-pins').value) || 5));
+        cfg.difficulty = document.getElementById('lp-cfg-diff').value;
+        cfg.speedMult  = Math.min(3, Math.max(0.5, parseFloat(document.getElementById('lp-cfg-speed').value) || 1));
+        cfg.timeLimit  = Math.max(0, parseInt(document.getElementById('lp-cfg-time').value) || 0);
+        cfg.failMode   = document.getElementById('lp-cfg-fail').value;
+        saveCfg(cfg);
+        updateLockInfo();
+        refreshAdminStatus();
+        document.getElementById('lp-cfg-save').textContent = '✓ SAVED';
+        setTimeout(() => { document.getElementById('lp-cfg-save').textContent = 'SAVE CONFIG'; }, 1500);
+    });
+
+    document.getElementById('lp-cfg-activate').addEventListener('click', () => {
+        // Save current form values first
+        cfg.lockName   = document.getElementById('lp-cfg-name').value.trim() || 'UNKNOWN TARGET';
+        cfg.lockDesc   = document.getElementById('lp-cfg-desc').value.trim() || '';
+        cfg.numPins    = Math.min(8, Math.max(3, parseInt(document.getElementById('lp-cfg-pins').value) || 5));
+        cfg.difficulty = document.getElementById('lp-cfg-diff').value;
+        cfg.speedMult  = Math.min(3, Math.max(0.5, parseFloat(document.getElementById('lp-cfg-speed').value) || 1));
+        cfg.timeLimit  = Math.max(0, parseInt(document.getElementById('lp-cfg-time').value) || 0);
+        cfg.failMode   = document.getElementById('lp-cfg-fail').value;
+        cfg.active = true;
+        saveCfg(cfg);
+        saveState({ phase:'active', pinsSet:0, attempts:0, startedBy: LuxorAuth.getSession()?.username });
+        updateLockInfo();
+        termLog('Overlord activated lock system.', 'warn');
+        startGame();
+        refreshAdminStatus();
+        panel.classList.add('hidden');
+    });
+
+    document.getElementById('lp-cfg-deactivate').addEventListener('click', () => {
+        cfg.active = false;
+        saveCfg(cfg);
+        saveState({ phase:'idle', pinsSet:0, attempts:0, startedBy:null });
+        resetGame();
+        refreshAdminStatus();
+    });
+
+    document.getElementById('lp-cfg-reset-game').addEventListener('click', () => {
+        saveState({ phase: cfg.active ? 'active' : 'idle', pinsSet:0, attempts:0,
+                    startedBy: LuxorAuth.getSession()?.username });
+        if (cfg.active) startGame(); else resetGame();
+        refreshAdminStatus();
+    });
+}
+
+// ── Boot ─────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    syncToConfig();
+    if (window.LuxorAuth && LuxorAuth.isAdmin()) {
+        document.getElementById('admin-nav-link').style.display = 'block';
+        initOverlordPanel();
+    }
+});
+</script>
+</body>
+</html>
