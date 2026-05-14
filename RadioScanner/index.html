@@ -160,20 +160,7 @@
 </div><!-- /#sigint-panel -->
 
 <script src="../auth.js"></script>
-<script>
-    LuxorAuth.requireAuth('../login.html');
-    (function () {
-        const s = LuxorAuth.getSession();
-        if (s) {
-            const badge = document.getElementById('rs-user-badge');
-            if (badge) badge.textContent = '▸ ' + s.username;
-        }
-        const logoutBtn = document.getElementById('rs-logout-btn');
-        if (logoutBtn) logoutBtn.addEventListener('click', function () {
-            LuxorAuth.logout('../login.html');
-        });
-    })();
-</script>
+<script src="./radio-boot.js"></script>
 <script src="./sigint-panel.js"></script>
 </body>
 </html>

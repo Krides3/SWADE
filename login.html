@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -271,29 +271,6 @@
 </div>
 
 <script src="./auth.js"></script>
-<script>
-    // If already logged in, go straight to terminal
-    if (LuxorAuth.getSession()) {
-        window.location.replace('index.html');
-    }
-
-    document.getElementById('login-form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const username = document.getElementById('un').value;
-        const password = document.getElementById('pw').value;
-        const result   = LuxorAuth.login(username, password);
-        if (result.ok) {
-            window.location.replace('index.html');
-        } else {
-            const errEl = document.getElementById('err-msg');
-            document.getElementById('err-text').textContent = result.error;
-            errEl.classList.remove('visible');
-            void errEl.offsetWidth; // force reflow to re-trigger animation
-            errEl.classList.add('visible');
-            document.getElementById('pw').value = '';
-            document.getElementById('pw').focus();
-        }
-    });
-</script>
+<script src="./login.js"></script>
 </body>
 </html>

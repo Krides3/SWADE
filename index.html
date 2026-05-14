@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -168,20 +168,7 @@
 <div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
 
 <script src="./auth.js"></script>
-<script>
-    LuxorAuth.requireAuth('login.html');
-    (function () {
-        const s = LuxorAuth.getSession();
-        if (s) {
-            const nameEl = document.getElementById('welcome-name');
-            if (nameEl) nameEl.textContent = s.username;
-            if (LuxorAuth.isAdmin()) {
-                const adminLink = document.getElementById('admin-nav-link');
-                if (adminLink) adminLink.style.display = 'block';
-            }
-        }
-    })();
-</script>
+<script src="./index.js"></script>
 <script src="./nav.js"></script>
 <script src="./script.js"></script>
 </body>

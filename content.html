@@ -7,7 +7,7 @@
 </head>
 <body>
 <script src="./auth.js"></script>
-<script>LuxorAuth.requireAuth('login.html');</script>
+<script src="./page-boot.js"></script>
     <div>
       <ul class="navbar">
         <li><a class="title">SWADE</a></li>
@@ -29,10 +29,6 @@
         <iframe id="pdf-frame" src="./assets/PDF/core_rules.pdf" width="100%" height="750em" style="border: none;"></iframe>
       </div>
     </div>
-    <script>
-      document.getElementById('pdf-select').addEventListener('change', function() {
-        document.getElementById('pdf-frame').src = this.value;
-      });
-    </script>
+    <script src="./content.js"></script>
 </body>
 </html>

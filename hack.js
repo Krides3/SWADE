@@ -55,8 +55,25 @@
         successMsg:     'ACCESS GRANTED — WELCOME, OPERATOR',
         failMsg:        'TERMINAL LOCKED — SECURITY ALERT TRIGGERED',
         extractedData:  [...DEF_EXFIL],
-        revealNodeOnWin: ''
+        revealNodeOnWin: '',
+        skillRoll:      null
     };
+
+    function swadeMod(roll) {
+        if (roll === null || roll === undefined || roll === '') return 0;
+        const r = Math.max(0, parseInt(roll) || 0);
+        if (r >= 4) return Math.min(4, Math.floor((r - 4) / 4));
+        return r - 4;
+    }
+    function swadeLabel(mod) {
+        if (mod === 0) return '→ No roll / TN met — standard difficulty';
+        if (mod > 0) {
+            const words = ['','EASIER (+1 attempt)','MUCH EASIER (+2 attempts)','EVEN EASIER (+3 attempts)','MAX EASY (+4 attempts)'];
+            return '→ ' + mod + ' RAISE' + (mod > 1 ? 'S' : '') + ' — ' + (words[mod] || words[4]);
+        }
+        const words = ['','SLIGHTLY HARDER (−1 attempt)','HARDER (−2 attempts)','EVEN HARDER (−3 attempts)','HARDEST (−4 attempts)'];
+        return '→ BELOW TN BY ' + (-mod) + ' — ' + (words[-mod] || words[4]);
+    }
 
     function getAssetNodes() {
         const BUILTIN_IDS = [
@@ -215,12 +232,13 @@
             answer = entries[Math.floor(Math.random() * entries.length)].word;
         }
 
+        const mod = swadeMod(cfg.skillRoll);
         state = {
             ...blankState(),
             phase:         'active',
             answer,
             entries,
-            attemptsMax:   cfg.attempts,
+            attemptsMax:   Math.max(1, Math.min(10, cfg.attempts + mod)),
             startedBy:     username,
             startedAt:     Date.now(),
             extractedData: cfg.extractedData ? [...cfg.extractedData] : [...DEF_EXFIL],
@@ -385,6 +403,11 @@
         if (rawExfil.length > 0) cfg.extractedData = rawExfil;
 
         cfg.revealNodeOnWin = gv('adm-reveal-node');
+
+        const rawRoll = gv('adm-skill-roll').trim();
+        cfg.skillRoll = rawRoll === '' ? null : (parseInt(rawRoll) || null);
+        const lbl = document.getElementById('adm-skill-roll-lbl');
+        if (lbl) lbl.textContent = swadeLabel(swadeMod(cfg.skillRoll));
 
         saveCfg();
         showAdmMsg('✓ CONFIGURATION SAVED', false);
@@ -761,6 +784,9 @@
         sv('adm-success-msg', cfg.successMsg);
         sv('adm-fail-msg',    cfg.failMsg);
         sv('adm-exfil',       (cfg.extractedData || DEF_EXFIL).join('\n'));
+        sv('adm-skill-roll',  cfg.skillRoll !== null ? cfg.skillRoll : '');
+        const lbl = document.getElementById('adm-skill-roll-lbl');
+        if (lbl) lbl.textContent = swadeLabel(swadeMod(cfg.skillRoll));
         renderAdminStatus();
         const btn = document.getElementById('adm-toggle-btn');
         if (btn) btn.textContent = cfg.enabled ? 'DISABLE' : 'ENABLE';
