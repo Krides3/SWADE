@@ -477,13 +477,25 @@
 </div>
 
 <script src="./auth.js"></script>
+<script>
+    LuxorAuth.requireAuth('login.html');
+    (function () {
+        const s = LuxorAuth.getSession();
+        if (s && LuxorAuth.isAdmin()) {
+            const al = document.getElementById('admin-nav-link');
+            if (al) al.style.display = 'block';
+        }
+    })();
+    setTimeout(function () {
+        const l = document.getElementById('page-loader');
+        if (l) { l.classList.add('ml-out'); setTimeout(() => l.remove(), 420); }
+    }, 680);
+</script>
 <script src="./nav.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 //  LOCKPICK MINIGAME
 // ═══════════════════════════════════════════════════════════════════
-
-if (!LuxorAuth.requireAuth('login.html')) { /* nav.js handles redirect */ }
 
 // ── Config + state localStorage keys ────────────────────────────
 const LP_CFG_KEY   = 'luxorLockpickConfig';
