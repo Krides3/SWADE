@@ -273,7 +273,7 @@ function initOverlordPanel() {
     const toggle = document.getElementById('ev-ov-toggle');
     const panel  = document.getElementById('ev-ov-panel');
     const close  = document.getElementById('ev-ov-close');
-    if (toggle) { toggle.style.display = ''; toggle.addEventListener('click', () => panel.classList.toggle('hidden')); }
+    if (toggle) { toggle.style.display = 'block'; toggle.addEventListener('click', () => panel.classList.toggle('hidden')); }
     if (close)  close.addEventListener('click', () => panel.classList.add('hidden'));
 
     document.getElementById('ev-cfg-publish')?.addEventListener('click', () => {

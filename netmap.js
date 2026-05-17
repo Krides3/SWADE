@@ -322,7 +322,7 @@ function initOverlordPanel() {
     const toggle = document.getElementById('nm-ov-toggle');
     const panel  = document.getElementById('nm-ov-panel');
     const close  = document.getElementById('nm-ov-close');
-    if (toggle) { toggle.style.display = ''; toggle.addEventListener('click', () => panel.classList.toggle('hidden')); }
+    if (toggle) { toggle.style.display = 'block'; toggle.addEventListener('click', () => panel.classList.toggle('hidden')); }
     if (close)  close.addEventListener('click', () => panel.classList.add('hidden'));
 
     document.getElementById('nm-cfg-template')?.addEventListener('change', () => {

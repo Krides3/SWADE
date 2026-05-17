@@ -302,7 +302,7 @@ function initOverlordPanel() {
     const panel  = document.getElementById('se-ov-panel');
     const close  = document.getElementById('se-ov-close');
 
-    if (toggle) { toggle.style.display = ''; toggle.addEventListener('click', () => panel.classList.toggle('hidden')); }
+    if (toggle) { toggle.style.display = 'block'; toggle.addEventListener('click', () => panel.classList.toggle('hidden')); }
     if (close)  close.addEventListener('click', () => panel.classList.add('hidden'));
 
     document.getElementById('se-cfg-activate')?.addEventListener('click', () => {
