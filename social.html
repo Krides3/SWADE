@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR &ndash; Social Engineering</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           SOCIAL ENGINEERING — social.html styles
+           ══════════════════════════════════════════════════════════ */
+
+        .se-wrap { display:flex; flex-direction:column; gap:1rem; }
+
+        /* ── Status bar ─────────────────────────────────────────── */
+        .se-statusbar {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.65rem 1rem; display:flex; align-items:center;
+            justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+        }
+        .se-npc-block { display:flex; flex-direction:column; gap:2px; }
+        .se-npc-name  { font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--gold); letter-spacing:0.12em; }
+        .se-npc-role  { font-family:'Share Tech Mono',monospace; font-size:0.58rem; color:var(--text-dim); letter-spacing:0.14em; }
+        .se-stats     { display:flex; align-items:center; gap:1.5rem; }
+        .se-stat      { display:flex; flex-direction:column; align-items:center; gap:1px; }
+        .se-stat-val  { font-family:'Orbitron',monospace; font-size:0.9rem; color:var(--cyan); }
+        .se-stat-lbl  { font-size:0.52rem; letter-spacing:0.15em; color:var(--text-dim); }
+        .se-phase-badge {
+            font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+            letter-spacing:0.14em; padding:3px 9px;
+            border:1px solid var(--border); color:var(--text-dim);
+        }
+        .se-phase-badge.active { color:var(--cyan);  border-color:var(--cyan);  background:rgba(0,229,200,0.04); animation:se-blink 2s ease-in-out infinite; }
+        .se-phase-badge.won    { color:var(--gold);  border-color:var(--gold);  background:rgba(184,168,0,0.07); }
+        .se-phase-badge.lost   { color:#e74c3c;      border-color:#e74c3c;      background:rgba(192,57,43,0.07); }
+        @keyframes se-blink { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+        /* ── Resistance bar ─────────────────────────────────────── */
+        .se-res-wrap {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.65rem 1rem;
+        }
+        .se-res-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem; }
+        .se-res-label  { font-family:'Share Tech Mono',monospace; font-size:0.62rem; letter-spacing:0.18em; color:var(--text-dim); }
+        .se-res-value  { font-family:'Orbitron',monospace; font-size:0.8rem; color:var(--gold); }
+        .se-res-track  { height:10px; background:#0a0e1a; border:1px solid var(--border); overflow:hidden; }
+        .se-res-fill   {
+            height:100%; width:100%;
+            background:linear-gradient(90deg, #b8a800 0%, #e0cc00 100%);
+            transition:width 0.5s ease, background 0.5s ease;
+        }
+
+        /* ── Game layout ────────────────────────────────────────── */
+        .se-game-layout {
+            display:grid; grid-template-columns:1fr 1.5fr; gap:1rem;
+            position:relative;
+        }
+        @media (max-width:700px) { .se-game-layout { grid-template-columns:1fr; } }
+
+        /* ── Approach buttons ───────────────────────────────────── */
+        .se-approaches {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:1rem; display:flex; flex-direction:column; gap:0.5rem;
+        }
+        .se-approaches-hdr {
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+            letter-spacing:0.2em; color:var(--text-dim);
+            border-bottom:1px solid var(--border); padding-bottom:0.5rem; margin-bottom:0.25rem;
+        }
+        .se-btn {
+            background:transparent; border:1px solid var(--border);
+            color:var(--text-dim); font-family:'Share Tech Mono',monospace;
+            font-size:0.72rem; letter-spacing:0.1em; padding:10px 12px;
+            cursor:pointer; text-align:left; transition:all 0.15s;
+            display:flex; flex-direction:column; gap:3px;
+        }
+        .se-btn:hover:not(:disabled) { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.04); }
+        .se-btn:disabled              { opacity:0.2; cursor:not-allowed; }
+        .se-btn-name { font-size:0.72rem; letter-spacing:0.15em; }
+        .se-btn-desc { font-size:0.58rem; opacity:0.6; }
+        .se-btn.rapport   { border-color:rgba(0,229,200,0.25); }
+        .se-btn.rapport:hover:not(:disabled)   { border-color:var(--cyan);  background:rgba(0,229,200,0.05); color:var(--cyan); }
+        .se-btn.pressure  { border-color:rgba(192,57,43,0.25); }
+        .se-btn.pressure:hover:not(:disabled)  { border-color:#e74c3c;      background:rgba(192,57,43,0.05); color:#e74c3c; }
+        .se-btn.deception { border-color:rgba(160,32,200,0.25); }
+        .se-btn.deception:hover:not(:disabled) { border-color:#c060e8;      background:rgba(160,32,200,0.05); color:#c060e8; }
+        .se-btn.silence   { border-color:rgba(184,168,0,0.2); }
+        .se-btn.silence:hover:not(:disabled)   { border-color:var(--gold-dim); background:rgba(184,168,0,0.04); color:var(--gold); }
+
+        /* ── Transcript ─────────────────────────────────────────── */
+        .se-transcript {
+            background:#050508; border:1px solid var(--border);
+            display:flex; flex-direction:column; min-height:260px;
+        }
+        .se-tx-hdr {
+            padding:0.45rem 0.75rem; border-bottom:1px solid var(--border);
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+            letter-spacing:0.2em; color:var(--text-dim);
+            display:flex; justify-content:space-between;
+        }
+        .se-tx-body {
+            flex:1; overflow-y:auto; padding:0.75rem;
+            display:flex; flex-direction:column; gap:0.5rem;
+        }
+        .se-entry { display:flex; flex-direction:column; gap:2px; }
+        .se-who { font-family:'Share Tech Mono',monospace; font-size:0.57rem; letter-spacing:0.14em; }
+        .se-who.operator { color:var(--cyan); }
+        .se-who.npc      { color:var(--gold); }
+        .se-who.system   { color:var(--text-dim); }
+        .se-msg  { font-family:'Share Tech Mono',monospace; font-size:0.7rem; line-height:1.5; color:#a8aab8; }
+        .se-entry.success .se-msg { color:#5dbf72; }
+        .se-entry.fail    .se-msg { color:#e74c3c; }
+        .se-entry.warn    .se-msg { color:#b8a800; }
+
+        /* ── Idle screen ────────────────────────────────────────── */
+        .se-idle {
+            background:var(--bg-panel); border:1px solid var(--border);
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:3rem 1rem; gap:1rem; text-align:center;
+        }
+        .se-idle-icon { font-size:2.5rem; color:var(--text-dim); opacity:0.3; }
+        .se-idle-msg  { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); letter-spacing:0.18em; line-height:1.8; }
+
+        /* ── Win/Lose overlay ───────────────────────────────────── */
+        .se-overlay {
+            display:none; position:absolute; inset:0;
+            background:rgba(5,8,15,0.9); z-index:10;
+            flex-direction:column; align-items:center; justify-content:center; gap:1rem;
+        }
+        .se-overlay.show { display:flex; }
+        .se-ov-title       { font-family:'Orbitron',monospace; font-size:1.4rem; letter-spacing:0.25em; }
+        .se-ov-title.won   { color:var(--gold); text-shadow:0 0 24px rgba(184,168,0,0.6); }
+        .se-ov-title.lost  { color:#e74c3c; }
+        .se-ov-sub  {
+            font-family:'Share Tech Mono',monospace; font-size:0.72rem;
+            letter-spacing:0.12em; color:var(--text-dim);
+            max-width:360px; text-align:center; line-height:1.7;
+        }
+        .se-ov-btn {
+            background:transparent; border:1px solid var(--border); color:var(--text-dim);
+            font-family:'Share Tech Mono',monospace; font-size:0.72rem; letter-spacing:0.2em;
+            padding:8px 20px; cursor:pointer; transition:all 0.15s;
+        }
+        .se-ov-btn:hover { color:var(--cyan); border-color:var(--cyan); }
+
+        /* ── Overlord panel (shared lp-cfg-* classes) ───────────── */
+        #se-ov-toggle {
+            position:fixed; bottom:1.5em; right:1.5em; z-index:900;
+            background:rgba(8,8,18,0.95); border:1px solid var(--gold-dim);
+            color:var(--gold); font-family:'Share Tech Mono',monospace;
+            font-size:0.65rem; letter-spacing:0.2em; padding:6px 14px;
+            cursor:pointer; transition:background 0.15s; display:none;
+        }
+        #se-ov-toggle:hover { background:rgba(184,168,0,0.1); }
+        #se-ov-panel {
+            position:fixed; bottom:4em; right:1.5em; z-index:900;
+            width:330px; max-height:80vh; overflow-y:auto;
+            background:rgba(6,8,18,0.98); border:1px solid var(--gold-dim);
+            font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gold);
+            box-shadow:0 0 24px rgba(184,168,0,0.12);
+        }
+        #se-ov-panel.hidden { display:none; }
+        .se-ov-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid var(--gold-dim);
+            font-size:11px; letter-spacing:2px; font-weight:bold; background:rgba(184,168,0,0.04);
+        }
+        .se-ov-close { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; }
+        .se-cfg { padding:14px; display:flex; flex-direction:column; gap:10px; }
+        .se-cfg-row { display:flex; flex-direction:column; gap:3px; }
+        .se-cfg-lbl { font-size:9px; letter-spacing:1px; opacity:0.55; }
+        .se-cfg-inp, .se-cfg-sel, .se-cfg-ta {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.3);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:11px;
+            padding:5px 7px; outline:none; width:100%; resize:vertical;
+        }
+        .se-cfg-inp:focus, .se-cfg-sel:focus, .se-cfg-ta:focus { border-color:var(--gold); }
+        .se-cfg-sel option { background:#050d0d; }
+        .se-cfg-2col { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .se-cfg-div  { border-top:1px solid rgba(184,168,0,0.12); margin:4px 0; }
+        .se-cfg-btn {
+            padding:8px; background:rgba(184,168,0,0.07); border:1px solid rgba(184,168,0,0.5);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:10px;
+            letter-spacing:2px; cursor:pointer; transition:background 0.15s; width:100%;
+        }
+        .se-cfg-btn:hover    { background:rgba(184,168,0,0.18); }
+        .se-cfg-btn.activate { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.06); }
+        .se-cfg-btn.activate:hover   { background:rgba(0,229,200,0.15); }
+        .se-cfg-btn.deactivate       { border-color:#e74c3c; color:#e74c3c; background:rgba(192,57,43,0.06); }
+        .se-cfg-btn.deactivate:hover { background:rgba(192,57,43,0.15); }
+        .se-cfg-status {
+            font-size:9px; letter-spacing:1px; padding:5px 8px;
+            border:1px solid rgba(184,168,0,0.2); background:rgba(184,168,0,0.03);
+            opacity:0.7; line-height:1.5;
+        }
+        .se-check-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
+        .se-check-row label { display:flex; align-items:center; gap:4px; font-size:10px; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">SOCIAL.EXE</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">INITIALIZING SOCIAL ENGINEERING MODULE...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"               data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"   data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"               data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"               data-icon="04">Tools</a></li>
+            <li><a href="dice.html"                data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"               data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html"  data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"                data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"            data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"                data-icon="10">Hacking</a></li>
+            <li><a href="social.html"              data-icon="11">Social Eng.</a></li>
+            <li><a href="netmap.html"              data-icon="12">Network Map</a></li>
+            <li><a href="evidence.html"            data-icon="13">Evidence</a></li>
+            <li><a href="filesystem.html"          data-icon="14">File System</a></li>
+            <li><a href="dossier.html"             data-icon="15">Dossier</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">&#9672; OVERLORD PANEL</a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Social Engineering</h1>
+            <div class="tagline">// PSYCHOLOGICAL PRESSURE &mdash; PERSUASION INTERFACE //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="se-wrap" id="se-wrap">
+
+            <!-- Status bar -->
+            <div class="se-statusbar">
+                <div class="se-npc-block">
+                    <div class="se-npc-name" id="se-npc-name">UNKNOWN SUBJECT</div>
+                    <div class="se-npc-role" id="se-npc-role">Awaiting Overlord activation...</div>
+                </div>
+                <div class="se-stats">
+                    <div class="se-stat">
+                        <div class="se-stat-val" id="se-att-stat">0/0</div>
+                        <div class="se-stat-lbl">EXCHANGES</div>
+                    </div>
+                    <div class="se-stat">
+                        <div class="se-stat-val" id="se-res-stat">&#8212;</div>
+                        <div class="se-stat-lbl">RESISTANCE</div>
+                    </div>
+                </div>
+                <div class="se-phase-badge" id="se-phase-badge">STANDBY</div>
+            </div>
+
+            <!-- Resistance bar -->
+            <div class="se-res-wrap">
+                <div class="se-res-header">
+                    <div class="se-res-label">&#9656; PSYCHOLOGICAL RESISTANCE</div>
+                    <div class="se-res-value" id="se-res-pct">&#8212;</div>
+                </div>
+                <div class="se-res-track">
+                    <div class="se-res-fill" id="se-res-fill" style="width:100%"></div>
+                </div>
+            </div>
+
+            <!-- Idle screen -->
+            <div id="se-idle" class="se-idle">
+                <div class="se-idle-icon">&#9678;</div>
+                <div class="se-idle-msg">
+                    SOCIAL ENGINEERING MODULE OFFLINE<br>
+                    <span style="opacity:0.5">AWAITING OVERLORD ACTIVATION</span>
+                </div>
+            </div>
+
+            <!-- Game area -->
+            <div id="se-game" style="display:none;">
+                <div class="se-game-layout">
+
+                    <!-- Approach buttons -->
+                    <div class="se-approaches">
+                        <div class="se-approaches-hdr">&#9656; CHOOSE APPROACH</div>
+                        <button class="se-btn rapport"   id="se-btn-rapport"   onclick="seApproach('rapport')">
+                            <span class="se-btn-name">RAPPORT</span>
+                            <span class="se-btn-desc">Build trust &mdash; slow, steady pressure</span>
+                        </button>
+                        <button class="se-btn pressure"  id="se-btn-pressure"  onclick="seApproach('pressure')">
+                            <span class="se-btn-name">PRESSURE</span>
+                            <span class="se-btn-desc">Apply stress &mdash; high risk, high reward</span>
+                        </button>
+                        <button class="se-btn deception" id="se-btn-deception" onclick="seApproach('deception')">
+                            <span class="se-btn-name">DECEPTION</span>
+                            <span class="se-btn-desc">Bluff or misdirect &mdash; may backfire</span>
+                        </button>
+                        <button class="se-btn silence"   id="se-btn-silence"   onclick="seApproach('silence')">
+                            <span class="se-btn-name">SILENCE</span>
+                            <span class="se-btn-desc">Let them sweat &mdash; minimal, safe</span>
+                        </button>
+                    </div>
+
+                    <!-- Transcript -->
+                    <div class="se-transcript">
+                        <div class="se-tx-hdr">
+                            <span>&#9656; INTERROGATION TRANSCRIPT</span>
+                            <span id="se-tx-count">0 EXCHANGES</span>
+                        </div>
+                        <div class="se-tx-body" id="se-tx-body">
+                            <div class="se-entry">
+                                <span class="se-who system">SYSTEM</span>
+                                <span class="se-msg">Session initiated. Subject brought to interrogation room.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Win/Lose overlay -->
+                    <div class="se-overlay" id="se-overlay">
+                        <div class="se-ov-title" id="se-ov-result-title">TITLE</div>
+                        <div class="se-ov-sub"   id="se-ov-result-sub">subtitle</div>
+                        <button class="se-ov-btn" id="se-ov-result-btn">ACKNOWLEDGE</button>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Activity log -->
+            <div class="hack-log-panel">
+                <div class="hack-panel-hdr">&#9656; ACTIVITY LOG <span id="se-log-count">0 ENTRIES</span></div>
+                <div class="hack-log-entries" id="se-log-entries">
+                    <div class="hle"><span class="hle-m">Social Engineering module initialized.</span></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<!-- Overlord panel -->
+<button id="se-ov-toggle">&#9672; OVERLORD</button>
+<div id="se-ov-panel" class="hidden">
+    <div class="se-ov-ph">
+        <span>&#9672; SOCIAL ENG &mdash; OVERLORD CONFIG</span>
+        <button class="se-ov-close" id="se-ov-close">&#10005;</button>
+    </div>
+    <div class="se-cfg">
+
+        <div class="se-cfg-status" id="se-cfg-status-bar">STATUS: STANDBY</div>
+
+        <button class="se-cfg-btn activate"   id="se-cfg-activate">&#9654; ACTIVATE SESSION</button>
+        <button class="se-cfg-btn deactivate" id="se-cfg-deactivate">&#9632; DEACTIVATE</button>
+        <button class="se-cfg-btn" id="se-cfg-reset" style="border-color:#888;color:#888;">&#8635; FORCE RESET</button>
+
+        <div class="se-cfg-div"></div>
+
+        <div class="se-cfg-row">
+            <div class="se-cfg-lbl">SUBJECT NAME</div>
+            <input class="se-cfg-inp" id="se-cfg-name" type="text" value="UNKNOWN SUBJECT" maxlength="40">
+        </div>
+        <div class="se-cfg-row">
+            <div class="se-cfg-lbl">SUBJECT ROLE / DESCRIPTION</div>
+            <input class="se-cfg-inp" id="se-cfg-role" type="text" value="Corporate Security Guard" maxlength="60">
+        </div>
+
+        <div class="se-cfg-div"></div>
+
+        <div class="se-cfg-2col">
+            <div class="se-cfg-row">
+                <div class="se-cfg-lbl">RESISTANCE (10&ndash;200)</div>
+                <input class="se-cfg-inp" id="se-cfg-resistance" type="number" min="10" max="200" value="100">
+            </div>
+            <div class="se-cfg-row">
+                <div class="se-cfg-lbl">MAX EXCHANGES</div>
+                <input class="se-cfg-inp" id="se-cfg-maxatt" type="number" min="3" max="30" value="10">
+            </div>
+        </div>
+
+        <div class="se-cfg-row">
+            <div class="se-cfg-lbl">WIN MESSAGE (info revealed on break)</div>
+            <textarea class="se-cfg-ta" id="se-cfg-winmsg" rows="3">Subject has divulged classified information. Objective complete.</textarea>
+        </div>
+
+        <div class="se-cfg-div"></div>
+
+        <div class="se-cfg-row">
+            <div class="se-cfg-lbl">ENABLED APPROACHES</div>
+            <div class="se-check-row">
+                <label><input type="checkbox" id="se-en-rapport"   checked> Rapport</label>
+                <label><input type="checkbox" id="se-en-pressure"  checked> Pressure</label>
+                <label><input type="checkbox" id="se-en-deception" checked> Deception</label>
+                <label><input type="checkbox" id="se-en-silence"   checked> Silence</label>
+            </div>
+        </div>
+
+        <div class="se-cfg-div"></div>
+
+        <div class="se-cfg-row">
+            <div class="se-cfg-lbl">&#9656; PERSUASION SKILL ROLL &mdash; TN 4 &nbsp;|&nbsp; blank = standard</div>
+            <input class="se-cfg-inp" id="se-cfg-skillroll" type="number" min="0" max="20" placeholder="e.g. 8 = 1 raise &middot; 3 = below TN">
+            <div id="se-cfg-skill-lbl" style="font-size:9px;letter-spacing:0.5px;opacity:0.6;margin-top:2px;">&#8594; No roll entered &mdash; standard effectiveness</div>
+        </div>
+
+        <div class="se-cfg-div"></div>
+        <button class="se-cfg-btn" id="se-cfg-save" style="border-color:var(--cyan);color:var(--cyan);">SAVE CONFIG</button>
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script src="./page-boot.js"></script>
+<script src="./nav.js"></script>
+<script src="./social.js"></script>
+</body>
+</html>

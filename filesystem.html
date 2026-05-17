@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR &ndash; File System</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           FILE SYSTEM BROWSER — filesystem.html styles
+           ══════════════════════════════════════════════════════════ */
+
+        .fs-wrap { display:flex; flex-direction:column; gap:1rem; }
+
+        /* ── Status bar ─────────────────────────────────────────── */
+        .fs-statusbar {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.65rem 1rem; display:flex; align-items:center;
+            justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+        }
+        .fs-server-block { display:flex; flex-direction:column; gap:2px; }
+        .fs-server-name  { font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--gold); letter-spacing:0.12em; }
+        .fs-server-sub   { font-family:'Share Tech Mono',monospace; font-size:0.58rem; color:var(--text-dim); letter-spacing:0.14em; }
+        .fs-stats        { display:flex; align-items:center; gap:1.5rem; }
+        .fs-stat         { display:flex; flex-direction:column; align-items:center; gap:1px; }
+        .fs-stat-val     { font-family:'Orbitron',monospace; font-size:0.9rem; color:var(--cyan); }
+        .fs-stat-lbl     { font-size:0.52rem; letter-spacing:0.15em; color:var(--text-dim); }
+        .fs-phase-badge  {
+            font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+            letter-spacing:0.14em; padding:3px 9px;
+            border:1px solid var(--border); color:var(--text-dim);
+        }
+        .fs-phase-badge.active { color:var(--cyan); border-color:var(--cyan); background:rgba(0,229,200,0.04); }
+
+        /* ── Main layout ────────────────────────────────────────── */
+        .fs-layout {
+            display:grid; grid-template-columns:260px 1fr; gap:1rem; min-height:440px;
+        }
+        @media (max-width:680px) { .fs-layout { grid-template-columns:1fr; } }
+
+        /* ── File tree ──────────────────────────────────────────── */
+        .fs-tree {
+            background:#040810; border:1px solid var(--border);
+            font-family:'Share Tech Mono',monospace; font-size:0.68rem;
+            overflow-y:auto; position:relative;
+        }
+        .fs-tree::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+        }
+        .fs-tree-hdr {
+            padding:0.5rem 0.75rem; border-bottom:1px solid var(--border);
+            font-size:0.6rem; letter-spacing:0.2em; color:var(--text-dim);
+            background:rgba(0,229,200,0.02);
+        }
+        .fs-tree-body { padding:0.5rem 0; }
+        .fs-item {
+            display:flex; align-items:center; gap:5px;
+            padding:3px 0.75rem; cursor:pointer; transition:background 0.1s;
+            position:relative; z-index:1; white-space:nowrap;
+        }
+        .fs-item:hover        { background:rgba(0,229,200,0.05); }
+        .fs-item.selected     { background:rgba(0,229,200,0.1); color:var(--cyan); }
+        .fs-item.folder       { color:#6b7090; }
+        .fs-item.folder.open  { color:#8090b8; }
+        .fs-item-icon         { font-size:0.75rem; flex-shrink:0; }
+        .fs-item.folder .fs-item-icon  { color:#5a6080; }
+        .fs-item.plain    .fs-item-icon { color:var(--text-dim); }
+        .fs-item.encrypted .fs-item-icon { color:#e74c3c; }
+        .fs-item.redacted  .fs-item-icon { color:#d4890a; }
+        .fs-item.decrypted .fs-item-icon { color:#5dbf72; }
+        .fs-item-name { overflow:hidden; text-overflow:ellipsis; }
+        .fs-item.encrypted .fs-item-name { color:#e74c3c; }
+        .fs-item.redacted  .fs-item-name { color:#d4890a; }
+        .fs-item.decrypted .fs-item-name { color:#5dbf72; }
+        .fs-badge {
+            margin-left:auto; font-size:0.5rem; letter-spacing:0.1em; padding:1px 5px;
+            border:1px solid; flex-shrink:0;
+        }
+        .fs-badge.enc { border-color:rgba(192,57,43,0.5); color:#e74c3c; }
+        .fs-badge.red { border-color:rgba(212,137,10,0.5); color:#d4890a; }
+        .fs-badge.dec { border-color:rgba(93,191,114,0.5); color:#5dbf72; }
+
+        /* ── Viewer ─────────────────────────────────────────────── */
+        .fs-viewer {
+            background:#030609; border:1px solid var(--border);
+            display:flex; flex-direction:column;
+        }
+        .fs-viewer-hdr {
+            padding:0.5rem 0.75rem; border-bottom:1px solid var(--border);
+            display:flex; align-items:center; justify-content:space-between;
+            font-family:'Share Tech Mono',monospace; font-size:0.62rem; gap:0.75rem; flex-wrap:wrap;
+        }
+        .fs-viewer-path { color:var(--cyan); letter-spacing:0.1em; }
+        .fs-viewer-meta { color:var(--text-dim); font-size:0.57rem; }
+        .fs-decrypt-form { display:flex; align-items:center; gap:0.5rem; }
+        .fs-decrypt-inp {
+            background:rgba(192,57,43,0.05); border:1px solid rgba(192,57,43,0.4);
+            color:#e74c3c; font-family:'Orbitron',monospace; font-size:0.75rem;
+            padding:3px 8px; width:70px; text-align:center; outline:none;
+        }
+        .fs-decrypt-btn {
+            background:rgba(192,57,43,0.07); border:1px solid rgba(192,57,43,0.5);
+            color:#e74c3c; font-family:'Share Tech Mono',monospace; font-size:0.62rem;
+            letter-spacing:0.15em; padding:4px 10px; cursor:pointer; transition:background 0.15s;
+        }
+        .fs-decrypt-btn:hover { background:rgba(192,57,43,0.18); }
+        .fs-viewer-body {
+            flex:1; overflow-y:auto; padding:1rem;
+            font-family:'Share Tech Mono',monospace; font-size:0.68rem; line-height:1.9;
+            color:#a0a4b8; position:relative; min-height:300px;
+        }
+        /* Plain file */
+        .fs-viewer-body.plain    { color:#a0a4b8; }
+        /* Redacted */
+        .fs-redact { background:#a0a4b8; color:transparent; border-radius:1px; user-select:none; display:inline-block; letter-spacing:0.05em; }
+        /* Encrypted */
+        .fs-viewer-body.encrypted { color:#e74c3c; opacity:0.65; font-size:0.62rem; line-height:1.7; }
+        /* Decrypted */
+        .fs-viewer-body.decrypted { color:#5dbf72; }
+        /* Empty / idle */
+        .fs-viewer-empty {
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            height:100%; gap:0.75rem; color:var(--text-dim);
+        }
+        .fs-viewer-empty-icon { font-size:2rem; opacity:0.2; }
+        .fs-viewer-empty-msg  { font-family:'Share Tech Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; }
+
+        /* ── Idle ───────────────────────────────────────────────── */
+        .fs-idle {
+            background:var(--bg-panel); border:1px solid var(--border);
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:3rem 1rem; gap:1rem; text-align:center;
+        }
+        .fs-idle-icon { font-size:2.5rem; color:var(--text-dim); opacity:0.3; }
+        .fs-idle-msg  { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); letter-spacing:0.18em; line-height:1.8; }
+
+        /* ── Overlord panel ─────────────────────────────────────── */
+        #fs-ov-toggle {
+            position:fixed; bottom:1.5em; right:1.5em; z-index:900;
+            background:rgba(8,8,18,0.95); border:1px solid var(--gold-dim);
+            color:var(--gold); font-family:'Share Tech Mono',monospace;
+            font-size:0.65rem; letter-spacing:0.2em; padding:6px 14px;
+            cursor:pointer; transition:background 0.15s; display:none;
+        }
+        #fs-ov-toggle:hover { background:rgba(184,168,0,0.1); }
+        #fs-ov-panel {
+            position:fixed; bottom:4em; right:1.5em; z-index:900;
+            width:340px; max-height:80vh; overflow-y:auto;
+            background:rgba(6,8,18,0.98); border:1px solid var(--gold-dim);
+            font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gold);
+            box-shadow:0 0 24px rgba(184,168,0,0.12);
+        }
+        #fs-ov-panel.hidden { display:none; }
+        .fs-ov-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid var(--gold-dim);
+            font-size:11px; letter-spacing:2px; font-weight:bold; background:rgba(184,168,0,0.04);
+        }
+        .fs-ov-close { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; }
+        .fs-cfg { padding:14px; display:flex; flex-direction:column; gap:10px; }
+        .fs-cfg-row { display:flex; flex-direction:column; gap:3px; }
+        .fs-cfg-lbl { font-size:9px; letter-spacing:1px; opacity:0.55; }
+        .fs-cfg-inp, .fs-cfg-sel, .fs-cfg-ta {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.3);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:11px;
+            padding:5px 7px; outline:none; width:100%; resize:vertical;
+        }
+        .fs-cfg-inp:focus, .fs-cfg-sel:focus, .fs-cfg-ta:focus { border-color:var(--gold); }
+        .fs-cfg-sel option { background:#050d0d; }
+        .fs-cfg-div  { border-top:1px solid rgba(184,168,0,0.12); margin:4px 0; }
+        .fs-cfg-btn {
+            padding:8px; background:rgba(184,168,0,0.07); border:1px solid rgba(184,168,0,0.5);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:10px;
+            letter-spacing:2px; cursor:pointer; transition:background 0.15s; width:100%;
+        }
+        .fs-cfg-btn:hover    { background:rgba(184,168,0,0.18); }
+        .fs-cfg-btn.activate { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.06); }
+        .fs-cfg-btn.activate:hover { background:rgba(0,229,200,0.15); }
+        .fs-cfg-status {
+            font-size:9px; letter-spacing:1px; padding:5px 8px;
+            border:1px solid rgba(184,168,0,0.2); background:rgba(184,168,0,0.03); opacity:0.7;
+        }
+        .fs-file-list { display:flex; flex-direction:column; gap:4px; max-height:150px; overflow-y:auto; }
+        .fs-file-item {
+            display:flex; justify-content:space-between; align-items:center;
+            font-size:9px; padding:3px 6px; border:1px solid rgba(184,168,0,0.15);
+        }
+        .fs-file-del { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px; }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">FS.EXE</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">INITIALIZING REMOTE FILE SYSTEM...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"               data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"   data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"               data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"               data-icon="04">Tools</a></li>
+            <li><a href="dice.html"                data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"               data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html"  data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"                data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"            data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"                data-icon="10">Hacking</a></li>
+            <li><a href="social.html"              data-icon="11">Social Eng.</a></li>
+            <li><a href="netmap.html"              data-icon="12">Network Map</a></li>
+            <li><a href="evidence.html"            data-icon="13">Evidence</a></li>
+            <li><a href="filesystem.html"          data-icon="14">File System</a></li>
+            <li><a href="dossier.html"             data-icon="15">Dossier</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">&#9672; OVERLORD PANEL</a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>File System</h1>
+            <div class="tagline">// REMOTE ACCESS &mdash; ENEMY ARCHIVE BROWSER //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="fs-wrap">
+
+            <!-- Status bar -->
+            <div class="fs-statusbar">
+                <div class="fs-server-block">
+                    <div class="fs-server-name" id="fs-server-name">UNKNOWN SERVER</div>
+                    <div class="fs-server-sub"  id="fs-server-sub">Awaiting Overlord activation...</div>
+                </div>
+                <div class="fs-stats">
+                    <div class="fs-stat">
+                        <div class="fs-stat-val" id="fs-file-count">0</div>
+                        <div class="fs-stat-lbl">FILES</div>
+                    </div>
+                    <div class="fs-stat">
+                        <div class="fs-stat-val" id="fs-dec-count">0</div>
+                        <div class="fs-stat-lbl">DECRYPTED</div>
+                    </div>
+                </div>
+                <div class="fs-phase-badge" id="fs-phase-badge">STANDBY</div>
+            </div>
+
+            <!-- Idle screen -->
+            <div id="fs-idle" class="fs-idle">
+                <div class="fs-idle-icon">&#9635;</div>
+                <div class="fs-idle-msg">
+                    REMOTE FILE SYSTEM OFFLINE<br>
+                    <span style="opacity:0.5">AWAITING OVERLORD ACTIVATION</span>
+                </div>
+            </div>
+
+            <!-- Main layout -->
+            <div id="fs-game" style="display:none;">
+                <div class="fs-layout">
+
+                    <!-- File tree -->
+                    <div class="fs-tree">
+                        <div class="fs-tree-hdr">&#9656; REMOTE FILE SYSTEM</div>
+                        <div class="fs-tree-body" id="fs-tree-body"></div>
+                    </div>
+
+                    <!-- File viewer -->
+                    <div class="fs-viewer">
+                        <div class="fs-viewer-hdr">
+                            <span class="fs-viewer-path" id="fs-viewer-path">No file selected</span>
+                            <span class="fs-viewer-meta" id="fs-viewer-meta"></span>
+                            <div class="fs-decrypt-form" id="fs-decrypt-form" style="display:none;">
+                                <input class="fs-decrypt-inp" id="fs-decrypt-roll" type="number" min="1" max="40" placeholder="ROLL">
+                                <button class="fs-decrypt-btn" id="fs-decrypt-btn">DECRYPT</button>
+                            </div>
+                        </div>
+                        <div class="fs-viewer-body" id="fs-viewer-body">
+                            <div class="fs-viewer-empty">
+                                <div class="fs-viewer-empty-icon">&#9635;</div>
+                                <div class="fs-viewer-empty-msg">SELECT A FILE TO VIEW</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Activity log -->
+            <div class="hack-log-panel">
+                <div class="hack-panel-hdr">&#9656; ACCESS LOG <span id="fs-log-count">0 ENTRIES</span></div>
+                <div class="hack-log-entries" id="fs-log-entries">
+                    <div class="hle"><span class="hle-m">File System module initialized.</span></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<!-- Overlord panel -->
+<button id="fs-ov-toggle">&#9672; OVERLORD</button>
+<div id="fs-ov-panel" class="hidden">
+    <div class="fs-ov-ph">
+        <span>&#9672; FILE SYSTEM &mdash; OVERLORD CONFIG</span>
+        <button class="fs-ov-close" id="fs-ov-close">&#10005;</button>
+    </div>
+    <div class="fs-cfg">
+
+        <div class="fs-cfg-status" id="fs-cfg-status-bar">STATUS: STANDBY</div>
+
+        <button class="fs-cfg-btn activate" id="fs-cfg-activate">&#9654; MOUNT FILE SYSTEM</button>
+        <button class="fs-cfg-btn" id="fs-cfg-deactivate" style="border-color:#e74c3c;color:#e74c3c;background:rgba(192,57,43,0.06);">&#9632; UNMOUNT</button>
+        <button class="fs-cfg-btn" id="fs-cfg-clear" style="border-color:#888;color:#888;">&#8635; CLEAR ALL FILES</button>
+
+        <div class="fs-cfg-div"></div>
+
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">SERVER NAME</div>
+            <input class="fs-cfg-inp" id="fs-cfg-servername" type="text" value="ENEMY-SRV-01" maxlength="30">
+        </div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">DESCRIPTION</div>
+            <input class="fs-cfg-inp" id="fs-cfg-serverdesc" type="text" value="Internal document archive" maxlength="60">
+        </div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">DECRYPT TN (for encrypted files)</div>
+            <input class="fs-cfg-inp" id="fs-cfg-decryptTN" type="number" min="4" max="20" value="6">
+        </div>
+
+        <div class="fs-cfg-div"></div>
+
+        <div class="fs-cfg-lbl" style="margin-bottom:4px;">ADD FILE</div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">FOLDER PATH (e.g. /PERSONNEL)</div>
+            <input class="fs-cfg-inp" id="fs-new-folder" type="text" placeholder="/ROOT" value="/ROOT">
+        </div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">FILENAME</div>
+            <input class="fs-cfg-inp" id="fs-new-name" type="text" placeholder="REPORT.TXT" maxlength="30">
+        </div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">STATUS</div>
+            <select class="fs-cfg-sel" id="fs-new-status">
+                <option value="plain">PLAIN (readable)</option>
+                <option value="redacted">REDACTED (censored words)</option>
+                <option value="encrypted">ENCRYPTED (requires decrypt roll)</option>
+            </select>
+        </div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">CONTENT (use [[REDACTED]] for censored words)</div>
+            <textarea class="fs-cfg-ta" id="fs-new-content" rows="4" placeholder="File content goes here..."></textarea>
+        </div>
+        <button class="fs-cfg-btn" id="fs-cfg-add-file" style="border-color:var(--cyan);color:var(--cyan);">+ ADD FILE</button>
+
+        <div class="fs-cfg-div"></div>
+        <div class="fs-cfg-lbl" style="margin-bottom:4px;">CURRENT FILES</div>
+        <div class="fs-file-list" id="fs-file-list"></div>
+
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script src="./page-boot.js"></script>
+<script src="./nav.js"></script>
+<script src="./filesystem.js"></script>
+</body>
+</html>

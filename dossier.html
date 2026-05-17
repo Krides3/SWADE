@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR &ndash; Operator Dossier</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           OPERATOR DOSSIER — dossier.html styles
+           ══════════════════════════════════════════════════════════ */
+
+        .do-wrap { display:flex; flex-direction:column; gap:1rem; }
+
+        /* ── Idle ───────────────────────────────────────────────── */
+        .do-idle {
+            background:var(--bg-panel); border:1px solid var(--border);
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:3rem 1rem; gap:1rem; text-align:center;
+        }
+        .do-idle-icon { font-size:2.5rem; color:var(--text-dim); opacity:0.3; }
+        .do-idle-msg  { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); letter-spacing:0.18em; line-height:1.8; }
+
+        /* ── Dossier card ───────────────────────────────────────── */
+        .do-card {
+            background:var(--bg-panel); border:1px solid var(--border);
+            position:relative; overflow:hidden;
+        }
+        .do-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+            background:linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+        }
+
+        /* Header strip */
+        .do-card-header {
+            background:#0a0d1a; border-bottom:1px solid var(--border);
+            padding:1rem 1.25rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+        }
+        .do-id-block { display:flex; flex-direction:column; gap:4px; }
+        .do-callsign { font-family:'Orbitron',monospace; font-size:1.4rem; color:var(--gold); letter-spacing:0.2em; }
+        .do-realname { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:#a0a4b8; letter-spacing:0.12em; }
+        .do-role     { font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--text-dim); letter-spacing:0.2em; margin-top:2px; }
+        .do-header-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+        .do-status-row { display:flex; gap:1.25rem; align-items:center; }
+        .do-status-item { display:flex; flex-direction:column; align-items:center; gap:2px; }
+        .do-status-val  { font-family:'Orbitron',monospace; font-size:1rem; }
+        .do-status-lbl  { font-size:0.5rem; letter-spacing:0.18em; color:var(--text-dim); }
+        .do-wounds-val  { color:#e74c3c; }
+        .do-fatigue-val { color:#d4890a; }
+        .do-bennies-val { color:var(--cyan); }
+        .do-bennies-pips { display:flex; gap:4px; }
+        .do-benny-pip { width:10px; height:10px; border-radius:50%; border:1px solid var(--cyan); background:transparent; }
+        .do-benny-pip.filled { background:var(--cyan); }
+        .do-clearance {
+            font-family:'Share Tech Mono',monospace; font-size:0.58rem; letter-spacing:0.15em;
+            padding:2px 8px; border:1px solid var(--gold-dim); color:var(--gold-dim);
+        }
+
+        /* Main grid */
+        .do-card-body {
+            display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;
+        }
+        @media (max-width:680px) { .do-card-body { grid-template-columns:1fr; } }
+
+        .do-section {
+            padding:1rem 1.25rem; border-right:1px solid var(--border);
+        }
+        .do-section:last-child { border-right:none; }
+        .do-section-title {
+            font-family:'Share Tech Mono',monospace; font-size:0.58rem; letter-spacing:0.22em;
+            color:var(--text-dim); border-bottom:1px solid var(--border);
+            padding-bottom:0.4rem; margin-bottom:0.75rem;
+        }
+
+        /* Stats (core attributes) */
+        .do-stats-grid { display:flex; flex-direction:column; gap:0.5rem; }
+        .do-stat-row { display:flex; align-items:center; justify-content:space-between; }
+        .do-stat-name { font-family:'Share Tech Mono',monospace; font-size:0.65rem; letter-spacing:0.1em; color:#7a7e98; }
+        .do-stat-dice {
+            font-family:'Orbitron',monospace; font-size:0.8rem; color:var(--cyan);
+            background:rgba(0,229,200,0.06); border:1px solid rgba(0,229,200,0.25);
+            padding:1px 8px; min-width:44px; text-align:center;
+        }
+        .do-stat-dice.d12 { color:var(--gold); border-color:rgba(184,168,0,0.35); background:rgba(184,168,0,0.06); }
+        .do-stat-dice.d10 { color:#c060e8; border-color:rgba(160,32,200,0.35); background:rgba(160,32,200,0.06); }
+
+        /* Skills */
+        .do-skills-list { display:flex; flex-direction:column; gap:0.4rem; }
+        .do-skill-row { display:flex; align-items:center; justify-content:space-between; }
+        .do-skill-name { font-family:'Share Tech Mono',monospace; font-size:0.62rem; color:#7a7e98; }
+        .do-skill-dice {
+            font-family:'Orbitron',monospace; font-size:0.72rem; color:var(--cyan);
+            background:rgba(0,229,200,0.04); border:1px solid rgba(0,229,200,0.2);
+            padding:1px 6px; min-width:38px; text-align:center;
+        }
+        .do-skill-dice.high { color:var(--gold); border-color:rgba(184,168,0,0.3); background:rgba(184,168,0,0.04); }
+
+        /* Equipment + edges */
+        .do-list { display:flex; flex-direction:column; gap:3px; margin-bottom:0.75rem; }
+        .do-list-item {
+            font-family:'Share Tech Mono',monospace; font-size:0.62rem; color:#a0a4b8;
+            padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.03);
+            display:flex; align-items:flex-start; gap:6px;
+        }
+        .do-list-item::before { content:'▸'; color:var(--gold-dim); flex-shrink:0; font-size:0.6rem; }
+        .do-notes {
+            font-family:'Share Tech Mono',monospace; font-size:0.62rem; color:var(--text-dim);
+            line-height:1.7; margin-top:0.5rem;
+        }
+
+        /* Admin table (all operators) */
+        .do-admin-table {
+            background:var(--bg-panel); border:1px solid var(--border);
+            overflow-x:auto;
+        }
+        .do-admin-hdr {
+            padding:0.65rem 1rem; border-bottom:1px solid var(--border);
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem;
+            letter-spacing:0.2em; color:var(--text-dim);
+            display:flex; justify-content:space-between; align-items:center;
+        }
+        .do-admin-rows { }
+        .do-admin-row {
+            display:grid; grid-template-columns:1fr 1fr 1.5fr auto;
+            padding:0.5rem 1rem; border-bottom:1px solid rgba(255,255,255,0.04);
+            align-items:center; gap:0.5rem;
+        }
+        .do-admin-row:hover { background:rgba(0,229,200,0.03); }
+        .do-admin-row span { font-family:'Share Tech Mono',monospace; font-size:0.65rem; }
+        .do-admin-callsign { color:var(--gold); }
+        .do-admin-user     { color:var(--cyan); }
+        .do-admin-role     { color:var(--text-dim); }
+        .do-admin-edit-btn {
+            background:transparent; border:1px solid var(--border); color:var(--text-dim);
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem; letter-spacing:0.1em;
+            padding:3px 8px; cursor:pointer; transition:all 0.15s;
+        }
+        .do-admin-edit-btn:hover { color:var(--cyan); border-color:var(--cyan); }
+
+        /* ── Overlord panel ─────────────────────────────────────── */
+        #do-ov-toggle {
+            position:fixed; bottom:1.5em; right:1.5em; z-index:900;
+            background:rgba(8,8,18,0.95); border:1px solid var(--gold-dim);
+            color:var(--gold); font-family:'Share Tech Mono',monospace;
+            font-size:0.65rem; letter-spacing:0.2em; padding:6px 14px;
+            cursor:pointer; transition:background 0.15s; display:none;
+        }
+        #do-ov-toggle:hover { background:rgba(184,168,0,0.1); }
+        #do-ov-panel {
+            position:fixed; bottom:4em; right:1.5em; z-index:900;
+            width:360px; max-height:86vh; overflow-y:auto;
+            background:rgba(6,8,18,0.98); border:1px solid var(--gold-dim);
+            font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gold);
+            box-shadow:0 0 24px rgba(184,168,0,0.12);
+        }
+        #do-ov-panel.hidden { display:none; }
+        .do-ov-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid var(--gold-dim);
+            font-size:11px; letter-spacing:2px; font-weight:bold; background:rgba(184,168,0,0.04);
+        }
+        .do-ov-close { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; }
+        .do-cfg { padding:14px; display:flex; flex-direction:column; gap:8px; }
+        .do-cfg-row { display:flex; flex-direction:column; gap:2px; }
+        .do-cfg-lbl { font-size:9px; letter-spacing:1px; opacity:0.55; }
+        .do-cfg-inp, .do-cfg-sel, .do-cfg-ta {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.3);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:11px;
+            padding:4px 7px; outline:none; width:100%; resize:vertical;
+        }
+        .do-cfg-inp:focus, .do-cfg-sel:focus, .do-cfg-ta:focus { border-color:var(--gold); }
+        .do-cfg-sel option { background:#050d0d; }
+        .do-cfg-2col { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+        .do-cfg-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; }
+        .do-cfg-div  { border-top:1px solid rgba(184,168,0,0.12); margin:3px 0; }
+        .do-cfg-btn {
+            padding:7px; background:rgba(184,168,0,0.07); border:1px solid rgba(184,168,0,0.5);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:10px;
+            letter-spacing:2px; cursor:pointer; transition:background 0.15s; width:100%;
+        }
+        .do-cfg-btn:hover    { background:rgba(184,168,0,0.18); }
+        .do-cfg-btn.save     { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.06); }
+        .do-cfg-btn.save:hover { background:rgba(0,229,200,0.15); }
+        .do-cfg-btn.danger   { border-color:#e74c3c; color:#e74c3c; background:rgba(192,57,43,0.06); }
+        .do-cfg-btn.danger:hover { background:rgba(192,57,43,0.15); }
+        .do-cfg-status { font-size:9px; letter-spacing:1px; padding:5px 8px; border:1px solid rgba(184,168,0,0.2); background:rgba(184,168,0,0.03); opacity:0.7; }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">DOSSIER.EXE</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">LOADING PERSONNEL DATABASE...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"               data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"   data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"               data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"               data-icon="04">Tools</a></li>
+            <li><a href="dice.html"                data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"               data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html"  data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"                data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"            data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"                data-icon="10">Hacking</a></li>
+            <li><a href="social.html"              data-icon="11">Social Eng.</a></li>
+            <li><a href="netmap.html"              data-icon="12">Network Map</a></li>
+            <li><a href="evidence.html"            data-icon="13">Evidence</a></li>
+            <li><a href="filesystem.html"          data-icon="14">File System</a></li>
+            <li><a href="dossier.html"             data-icon="15">Dossier</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">&#9672; OVERLORD PANEL</a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Operator Dossier</h1>
+            <div class="tagline">// PERSONNEL FILE &mdash; SWADE OPERATOR PROFILE //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="do-wrap" id="do-wrap">
+
+            <!-- Idle screen (no dossier) -->
+            <div id="do-idle" class="do-idle">
+                <div class="do-idle-icon">&#9632;</div>
+                <div class="do-idle-msg">
+                    NO DOSSIER ON FILE<br>
+                    <span style="opacity:0.5">CONTACT YOUR OVERLORD TO REGISTER YOUR PROFILE</span>
+                </div>
+            </div>
+
+            <!-- Admin: operator list -->
+            <div id="do-admin-table" class="do-admin-table" style="display:none;">
+                <div class="do-admin-hdr">
+                    <span>&#9656; REGISTERED OPERATORS</span>
+                    <span id="do-admin-count">0 OPERATORS</span>
+                </div>
+                <div class="do-admin-rows" id="do-admin-rows"></div>
+            </div>
+
+            <!-- Dossier card -->
+            <div id="do-card" class="do-card" style="display:none;">
+                <div class="do-card-header">
+                    <div class="do-id-block">
+                        <div class="do-callsign" id="do-callsign">GHOST</div>
+                        <div class="do-realname" id="do-realname">Operator Name</div>
+                        <div class="do-role"     id="do-role">Infiltration Specialist</div>
+                    </div>
+                    <div class="do-header-right">
+                        <div class="do-clearance" id="do-clearance">CLEARANCE: ALPHA</div>
+                        <div class="do-status-row">
+                            <div class="do-status-item">
+                                <div class="do-status-val do-wounds-val"  id="do-wounds">0</div>
+                                <div class="do-status-lbl">WOUNDS</div>
+                            </div>
+                            <div class="do-status-item">
+                                <div class="do-status-val do-fatigue-val" id="do-fatigue">0</div>
+                                <div class="do-status-lbl">FATIGUE</div>
+                            </div>
+                            <div class="do-status-item">
+                                <div class="do-bennies-pips" id="do-bennies-pips"></div>
+                                <div class="do-status-lbl">BENNIES</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="do-card-body">
+
+                    <!-- Core attributes -->
+                    <div class="do-section">
+                        <div class="do-section-title">&#9656; CORE ATTRIBUTES</div>
+                        <div class="do-stats-grid" id="do-attrs"></div>
+                    </div>
+
+                    <!-- Skills -->
+                    <div class="do-section">
+                        <div class="do-section-title">&#9656; SKILLS</div>
+                        <div class="do-skills-list" id="do-skills"></div>
+                    </div>
+
+                    <!-- Equipment, Edges & Notes -->
+                    <div class="do-section" style="border-right:none;">
+                        <div class="do-section-title">&#9656; EDGES</div>
+                        <div class="do-list" id="do-edges"></div>
+                        <div class="do-section-title">&#9656; EQUIPMENT</div>
+                        <div class="do-list" id="do-equipment"></div>
+                        <div class="do-section-title">&#9656; FIELD NOTES</div>
+                        <div class="do-notes" id="do-notes"></div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<!-- Overlord panel -->
+<button id="do-ov-toggle">&#9672; OVERLORD</button>
+<div id="do-ov-panel" class="hidden">
+    <div class="do-ov-ph">
+        <span>&#9672; DOSSIER &mdash; OVERLORD CONFIG</span>
+        <button class="do-ov-close" id="do-ov-close">&#10005;</button>
+    </div>
+    <div class="do-cfg">
+
+        <div class="do-cfg-status" id="do-cfg-status">DOSSIERS: 0 ON FILE</div>
+
+        <div class="do-cfg-row">
+            <div class="do-cfg-lbl">EDIT OPERATOR (username)</div>
+            <select class="do-cfg-sel" id="do-cfg-user-sel">
+                <option value="">&#8212; New Operator &#8212;</option>
+            </select>
+        </div>
+
+        <div class="do-cfg-div"></div>
+
+        <div class="do-cfg-2col">
+            <div class="do-cfg-row">
+                <div class="do-cfg-lbl">USERNAME (login)</div>
+                <input class="do-cfg-inp" id="do-f-username" type="text" placeholder="operator1">
+            </div>
+            <div class="do-cfg-row">
+                <div class="do-cfg-lbl">CALLSIGN</div>
+                <input class="do-cfg-inp" id="do-f-callsign" type="text" placeholder="GHOST">
+            </div>
+        </div>
+        <div class="do-cfg-row">
+            <div class="do-cfg-lbl">REAL NAME</div>
+            <input class="do-cfg-inp" id="do-f-realname" type="text" placeholder="John Doe">
+        </div>
+        <div class="do-cfg-2col">
+            <div class="do-cfg-row">
+                <div class="do-cfg-lbl">ROLE</div>
+                <input class="do-cfg-inp" id="do-f-role" type="text" placeholder="Infiltration Specialist">
+            </div>
+            <div class="do-cfg-row">
+                <div class="do-cfg-lbl">CLEARANCE</div>
+                <select class="do-cfg-sel" id="do-f-clearance">
+                    <option>ALPHA</option><option>BETA</option><option>GAMMA</option><option>DELTA</option><option>OMEGA</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="do-cfg-div"></div>
+        <div class="do-cfg-lbl" style="margin-bottom:4px;">CORE ATTRIBUTES</div>
+        <div class="do-cfg-3col">
+            <div class="do-cfg-row"><div class="do-cfg-lbl">AGILITY</div><select class="do-cfg-sel" id="do-f-agility"><option>d4</option><option>d6</option><option selected>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">SMARTS</div><select class="do-cfg-sel" id="do-f-smarts"><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">SPIRIT</div><select class="do-cfg-sel" id="do-f-spirit"><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">STRENGTH</div><select class="do-cfg-sel" id="do-f-strength"><option selected>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">VIGOR</div><select class="do-cfg-sel" id="do-f-vigor"><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+        </div>
+
+        <div class="do-cfg-div"></div>
+        <div class="do-cfg-lbl" style="margin-bottom:4px;">SKILLS</div>
+        <div class="do-cfg-3col">
+            <div class="do-cfg-row"><div class="do-cfg-lbl">HACKING</div><select class="do-cfg-sel" id="do-f-hacking"><option>—</option><option>d4</option><option>d6</option><option selected>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">LOCKPICK</div><select class="do-cfg-sel" id="do-f-lockpicking"><option>—</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">NOTICE</div><select class="do-cfg-sel" id="do-f-notice"><option>—</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">PERSUASION</div><select class="do-cfg-sel" id="do-f-persuasion"><option>—</option><option selected>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">STEALTH</div><select class="do-cfg-sel" id="do-f-stealth"><option>—</option><option>d4</option><option>d6</option><option selected>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">SHOOTING</div><select class="do-cfg-sel" id="do-f-shooting"><option>—</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">ATHLETICS</div><select class="do-cfg-sel" id="do-f-athletics"><option>—</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">FIGHTING</div><select class="do-cfg-sel" id="do-f-fighting"><option>—</option><option selected>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">INTIMIDATION</div><select class="do-cfg-sel" id="do-f-intimidation"><option selected>—</option><option>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+        </div>
+
+        <div class="do-cfg-div"></div>
+        <div class="do-cfg-3col">
+            <div class="do-cfg-row"><div class="do-cfg-lbl">WOUNDS</div><input class="do-cfg-inp" id="do-f-wounds" type="number" min="0" max="4" value="0"></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">FATIGUE</div><input class="do-cfg-inp" id="do-f-fatigue" type="number" min="0" max="2" value="0"></div>
+            <div class="do-cfg-row"><div class="do-cfg-lbl">BENNIES</div><input class="do-cfg-inp" id="do-f-bennies" type="number" min="0" max="6" value="3"></div>
+        </div>
+
+        <div class="do-cfg-row">
+            <div class="do-cfg-lbl">EDGES (one per line)</div>
+            <textarea class="do-cfg-ta" id="do-f-edges" rows="2" placeholder="Hacker&#10;Thief"></textarea>
+        </div>
+        <div class="do-cfg-row">
+            <div class="do-cfg-lbl">EQUIPMENT (one per line)</div>
+            <textarea class="do-cfg-ta" id="do-f-equipment" rows="3" placeholder="Laptop&#10;Lockpick Set&#10;Silenced Pistol"></textarea>
+        </div>
+        <div class="do-cfg-row">
+            <div class="do-cfg-lbl">FIELD NOTES</div>
+            <textarea class="do-cfg-ta" id="do-f-notes" rows="2" placeholder="Operator notes..."></textarea>
+        </div>
+
+        <div class="do-cfg-div"></div>
+        <button class="do-cfg-btn save"   id="do-cfg-save">SAVE DOSSIER</button>
+        <button class="do-cfg-btn danger" id="do-cfg-delete">DELETE SELECTED</button>
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script src="./page-boot.js"></script>
+<script src="./nav.js"></script>
+<script src="./dossier.js"></script>
+</body>
+</html>

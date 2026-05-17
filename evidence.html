@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR &ndash; Evidence Board</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           EVIDENCE BOARD — evidence.html styles
+           ══════════════════════════════════════════════════════════ */
+
+        .ev-wrap { display:flex; flex-direction:column; gap:1rem; }
+
+        /* ── Control bar ────────────────────────────────────────── */
+        .ev-controls {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.65rem 1rem; display:flex; align-items:center;
+            justify-content:space-between; flex-wrap:wrap; gap:0.75rem;
+        }
+        .ev-case-block { display:flex; flex-direction:column; gap:2px; }
+        .ev-case-title { font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--gold); letter-spacing:0.12em; }
+        .ev-case-sub   { font-family:'Share Tech Mono',monospace; font-size:0.58rem; color:var(--text-dim); letter-spacing:0.14em; }
+        .ev-ctrl-group { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+        .ev-chip {
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem; letter-spacing:0.15em;
+            padding:3px 8px; border:1px solid var(--border); color:var(--text-dim); white-space:nowrap;
+        }
+        .ev-chip.clue     { border-color:rgba(0,229,200,0.4); color:var(--cyan); }
+        .ev-chip.suspect  { border-color:rgba(184,168,0,0.4); color:var(--gold); }
+        .ev-chip.location { border-color:rgba(160,32,200,0.4); color:#c060e8; }
+        .ev-chip.event    { border-color:rgba(192,57,43,0.35); color:#e74c3c; }
+        .ev-btn {
+            background:transparent; border:1px solid var(--border); color:var(--text-dim);
+            font-family:'Share Tech Mono',monospace; font-size:0.65rem; letter-spacing:0.15em;
+            padding:5px 12px; cursor:pointer; transition:all 0.15s; white-space:nowrap;
+        }
+        .ev-btn:hover              { color:var(--cyan); border-color:var(--cyan); background:rgba(0,229,200,0.04); }
+        .ev-btn.active             { color:var(--cyan); border-color:var(--cyan); background:rgba(0,229,200,0.08); }
+        .ev-btn.notice             { border-color:rgba(184,168,0,0.5); color:var(--gold); }
+        .ev-btn.notice:hover       { background:rgba(184,168,0,0.08); }
+        .ev-notice-roll {
+            display:flex; align-items:center; gap:0.5rem;
+        }
+        .ev-notice-inp {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.35);
+            color:var(--gold); font-family:'Orbitron',monospace; font-size:0.8rem;
+            padding:4px 8px; width:60px; text-align:center; outline:none;
+        }
+        .ev-notice-inp:focus { border-color:var(--gold); }
+
+        /* ── Board ──────────────────────────────────────────────── */
+        .ev-board-wrap {
+            position:relative;
+            background:#060912;
+            border:1px solid var(--border);
+            min-height:520px;
+            overflow:hidden;
+            user-select:none;
+        }
+        .ev-board-wrap::before {
+            content:''; position:absolute; inset:0; pointer-events:none;
+            background:
+                repeating-linear-gradient(0deg, transparent, transparent 49px, rgba(184,168,0,0.04) 49px, rgba(184,168,0,0.04) 50px),
+                repeating-linear-gradient(90deg, transparent, transparent 49px, rgba(184,168,0,0.04) 49px, rgba(184,168,0,0.04) 50px);
+        }
+        /* SVG connection layer */
+        #ev-svg {
+            position:absolute; inset:0; width:100%; height:100%;
+            pointer-events:none; z-index:1;
+        }
+        /* Cards */
+        .ev-card {
+            position:absolute; z-index:2;
+            width:170px; min-height:90px;
+            background:#0c0f1c; border:1px solid var(--border);
+            padding:0.6rem 0.7rem;
+            cursor:grab; transition:box-shadow 0.15s, border-color 0.15s;
+            display:flex; flex-direction:column; gap:4px;
+        }
+        .ev-card:hover       { box-shadow:0 0 12px rgba(0,229,200,0.1); border-color:rgba(0,229,200,0.3); }
+        .ev-card.dragging    { cursor:grabbing; box-shadow:0 0 20px rgba(0,229,200,0.2); z-index:10; }
+        .ev-card.connecting-src { border-color:var(--cyan); box-shadow:0 0 12px rgba(0,229,200,0.3); }
+        .ev-card.clue     { border-top:2px solid var(--cyan); }
+        .ev-card.suspect  { border-top:2px solid var(--gold); }
+        .ev-card.location { border-top:2px solid #c060e8; }
+        .ev-card.event    { border-top:2px solid #e74c3c; }
+        .ev-card-type  { font-size:0.52rem; letter-spacing:0.2em; color:var(--text-dim); font-family:'Share Tech Mono',monospace; }
+        .ev-card.clue     .ev-card-type { color:var(--cyan); }
+        .ev-card.suspect  .ev-card-type { color:var(--gold); }
+        .ev-card.location .ev-card-type { color:#c060e8; }
+        .ev-card.event    .ev-card-type { color:#e74c3c; }
+        .ev-card-title { font-family:'Orbitron',monospace; font-size:0.68rem; letter-spacing:0.1em; color:#c8cad8; line-height:1.3; }
+        .ev-card-body  { font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--text-dim); line-height:1.5; margin-top:2px; }
+
+        /* ── Idle screen ────────────────────────────────────────── */
+        .ev-idle {
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:3rem 1rem; gap:1rem; text-align:center;
+            background:var(--bg-panel); border:1px solid var(--border);
+        }
+        .ev-idle-icon { font-size:2.5rem; color:var(--text-dim); opacity:0.3; }
+        .ev-idle-msg  { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); letter-spacing:0.18em; line-height:1.8; }
+
+        /* ── Overlord panel ─────────────────────────────────────── */
+        #ev-ov-toggle {
+            position:fixed; bottom:1.5em; right:1.5em; z-index:900;
+            background:rgba(8,8,18,0.95); border:1px solid var(--gold-dim);
+            color:var(--gold); font-family:'Share Tech Mono',monospace;
+            font-size:0.65rem; letter-spacing:0.2em; padding:6px 14px;
+            cursor:pointer; transition:background 0.15s; display:none;
+        }
+        #ev-ov-toggle:hover { background:rgba(184,168,0,0.1); }
+        #ev-ov-panel {
+            position:fixed; bottom:4em; right:1.5em; z-index:900;
+            width:340px; max-height:80vh; overflow-y:auto;
+            background:rgba(6,8,18,0.98); border:1px solid var(--gold-dim);
+            font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gold);
+            box-shadow:0 0 24px rgba(184,168,0,0.12);
+        }
+        #ev-ov-panel.hidden { display:none; }
+        .ev-ov-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid var(--gold-dim);
+            font-size:11px; letter-spacing:2px; font-weight:bold; background:rgba(184,168,0,0.04);
+        }
+        .ev-ov-close { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; }
+        .ev-cfg { padding:14px; display:flex; flex-direction:column; gap:10px; }
+        .ev-cfg-row { display:flex; flex-direction:column; gap:3px; }
+        .ev-cfg-lbl { font-size:9px; letter-spacing:1px; opacity:0.55; }
+        .ev-cfg-inp, .ev-cfg-sel, .ev-cfg-ta {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.3);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:11px;
+            padding:5px 7px; outline:none; width:100%; resize:vertical;
+        }
+        .ev-cfg-inp:focus, .ev-cfg-sel:focus, .ev-cfg-ta:focus { border-color:var(--gold); }
+        .ev-cfg-sel option { background:#050d0d; }
+        .ev-cfg-div { border-top:1px solid rgba(184,168,0,0.12); margin:4px 0; }
+        .ev-cfg-btn {
+            padding:8px; background:rgba(184,168,0,0.07); border:1px solid rgba(184,168,0,0.5);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:10px;
+            letter-spacing:2px; cursor:pointer; transition:background 0.15s; width:100%;
+        }
+        .ev-cfg-btn:hover    { background:rgba(184,168,0,0.18); }
+        .ev-cfg-btn.activate { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.06); }
+        .ev-cfg-btn.activate:hover { background:rgba(0,229,200,0.15); }
+        .ev-cfg-status {
+            font-size:9px; letter-spacing:1px; padding:5px 8px;
+            border:1px solid rgba(184,168,0,0.2); background:rgba(184,168,0,0.03); opacity:0.7;
+        }
+        .ev-conn-list { display:flex; flex-direction:column; gap:4px; max-height:120px; overflow-y:auto; }
+        .ev-conn-item {
+            display:flex; justify-content:space-between; align-items:center;
+            font-size:9px; padding:3px 6px; border:1px solid rgba(184,168,0,0.15);
+        }
+        .ev-conn-del { background:none; border:none; color:#e74c3c; cursor:pointer; font-size:12px; }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">EVIDENCE.EXE</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">INITIALIZING EVIDENCE BOARD MODULE...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"               data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"   data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"               data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"               data-icon="04">Tools</a></li>
+            <li><a href="dice.html"                data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"               data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html"  data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"                data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"            data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"                data-icon="10">Hacking</a></li>
+            <li><a href="social.html"              data-icon="11">Social Eng.</a></li>
+            <li><a href="netmap.html"              data-icon="12">Network Map</a></li>
+            <li><a href="evidence.html"            data-icon="13">Evidence</a></li>
+            <li><a href="filesystem.html"          data-icon="14">File System</a></li>
+            <li><a href="dossier.html"             data-icon="15">Dossier</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">&#9672; OVERLORD PANEL</a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Evidence Board</h1>
+            <div class="tagline">// INVESTIGATION &mdash; PATTERN RECOGNITION INTERFACE //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="ev-wrap">
+
+            <!-- Control bar -->
+            <div class="ev-controls">
+                <div class="ev-case-block">
+                    <div class="ev-case-title" id="ev-case-title">CASE FILE</div>
+                    <div class="ev-case-sub"   id="ev-case-sub">Awaiting Overlord activation...</div>
+                </div>
+                <div class="ev-ctrl-group">
+                    <span class="ev-chip clue"     id="ev-chip-clue">0 CLUES</span>
+                    <span class="ev-chip suspect"  id="ev-chip-suspect">0 SUSPECTS</span>
+                    <span class="ev-chip location" id="ev-chip-location">0 LOCATIONS</span>
+                    <span class="ev-chip event"    id="ev-chip-event">0 EVENTS</span>
+                </div>
+                <div class="ev-ctrl-group">
+                    <button class="ev-btn" id="ev-connect-btn">&#9901; CONNECT MODE</button>
+                    <button class="ev-btn" id="ev-clear-conn-btn">CLEAR MY LINKS</button>
+                    <div class="ev-notice-roll">
+                        <input class="ev-notice-inp" id="ev-notice-roll" type="number" min="1" max="40" placeholder="ROLL">
+                        <button class="ev-btn notice" id="ev-notice-btn">&#9670; NOTICE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Idle screen -->
+            <div id="ev-idle" class="ev-idle">
+                <div class="ev-idle-icon">&#9903;</div>
+                <div class="ev-idle-msg">
+                    EVIDENCE BOARD OFFLINE<br>
+                    <span style="opacity:0.5">AWAITING OVERLORD CASE FILE</span>
+                </div>
+            </div>
+
+            <!-- Board -->
+            <div id="ev-board-wrap" class="ev-board-wrap" style="display:none;">
+                <svg id="ev-svg"></svg>
+                <div id="ev-board"></div>
+            </div>
+
+            <!-- Activity log -->
+            <div class="hack-log-panel">
+                <div class="hack-panel-hdr">&#9656; ACTIVITY LOG <span id="ev-log-count">0 ENTRIES</span></div>
+                <div class="hack-log-entries" id="ev-log-entries">
+                    <div class="hle"><span class="hle-m">Evidence Board module initialized.</span></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<!-- Overlord panel -->
+<button id="ev-ov-toggle">&#9672; OVERLORD</button>
+<div id="ev-ov-panel" class="hidden">
+    <div class="ev-ov-ph">
+        <span>&#9672; EVIDENCE &mdash; OVERLORD CONFIG</span>
+        <button class="ev-ov-close" id="ev-ov-close">&#10005;</button>
+    </div>
+    <div class="ev-cfg">
+
+        <div class="ev-cfg-status" id="ev-cfg-status-bar">STATUS: STANDBY</div>
+
+        <button class="ev-cfg-btn activate" id="ev-cfg-publish">&#9654; PUBLISH BOARD</button>
+        <button class="ev-cfg-btn" id="ev-cfg-clear-board" style="border-color:#888;color:#888;">&#8635; CLEAR ALL CARDS</button>
+
+        <div class="ev-cfg-div"></div>
+
+        <div class="ev-cfg-row">
+            <div class="ev-cfg-lbl">CASE TITLE</div>
+            <input class="ev-cfg-inp" id="ev-cfg-casetitle" type="text" value="OPERATION NIGHTFALL" maxlength="40">
+        </div>
+        <div class="ev-cfg-row">
+            <div class="ev-cfg-lbl">CASE DESCRIPTION</div>
+            <input class="ev-cfg-inp" id="ev-cfg-casedesc" type="text" value="Classified investigation — compartmentalized" maxlength="60">
+        </div>
+        <div class="ev-cfg-row">
+            <div class="ev-cfg-lbl">NOTICE TN (for hidden connections)</div>
+            <input class="ev-cfg-inp" id="ev-cfg-noticeTN" type="number" min="4" max="20" value="6">
+        </div>
+
+        <div class="ev-cfg-div"></div>
+        <div class="ev-cfg-lbl" style="margin-bottom:4px;">ADD CARD</div>
+        <div class="ev-cfg-row">
+            <div class="ev-cfg-lbl">TYPE</div>
+            <select class="ev-cfg-sel" id="ev-new-type">
+                <option value="clue">CLUE</option>
+                <option value="suspect">SUSPECT</option>
+                <option value="location">LOCATION</option>
+                <option value="event">EVENT</option>
+            </select>
+        </div>
+        <div class="ev-cfg-row">
+            <div class="ev-cfg-lbl">TITLE</div>
+            <input class="ev-cfg-inp" id="ev-new-title" type="text" maxlength="30" placeholder="Card title">
+        </div>
+        <div class="ev-cfg-row">
+            <div class="ev-cfg-lbl">BODY TEXT</div>
+            <textarea class="ev-cfg-ta" id="ev-new-body" rows="2" placeholder="Details, notes..."></textarea>
+        </div>
+        <button class="ev-cfg-btn" id="ev-cfg-add-card" style="border-color:var(--cyan);color:var(--cyan);">+ ADD CARD</button>
+
+        <div class="ev-cfg-div"></div>
+        <div class="ev-cfg-lbl" style="margin-bottom:4px;">HIDDEN CONNECTIONS (revealed by Notice roll)</div>
+        <div class="ev-cfg-row" style="flex-direction:row;gap:5px;">
+            <input class="ev-cfg-inp" id="ev-hconn-a" type="text" placeholder="Card title A" style="flex:1;">
+            <input class="ev-cfg-inp" id="ev-hconn-b" type="text" placeholder="Card title B" style="flex:1;">
+        </div>
+        <button class="ev-cfg-btn" id="ev-cfg-add-hconn">+ ADD HIDDEN LINK</button>
+        <div class="ev-conn-list" id="ev-hconn-list"></div>
+
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script src="./page-boot.js"></script>
+<script src="./nav.js"></script>
+<script src="./evidence.js"></script>
+</body>
+</html>

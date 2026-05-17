@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR &ndash; Network Map</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        /* ══════════════════════════════════════════════════════════
+           NETWORK MAP — netmap.html styles
+           ══════════════════════════════════════════════════════════ */
+
+        .nm-wrap { display:flex; flex-direction:column; gap:1rem; }
+
+        /* ── Status bar ─────────────────────────────────────────── */
+        .nm-statusbar {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.65rem 1rem; display:flex; align-items:center;
+            justify-content:space-between; flex-wrap:wrap; gap:0.5rem;
+        }
+        .nm-target-block { display:flex; flex-direction:column; gap:2px; }
+        .nm-target-name  { font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--gold); letter-spacing:0.12em; }
+        .nm-target-sub   { font-family:'Share Tech Mono',monospace; font-size:0.58rem; color:var(--text-dim); letter-spacing:0.14em; }
+        .nm-stats        { display:flex; align-items:center; gap:1.5rem; }
+        .nm-stat         { display:flex; flex-direction:column; align-items:center; gap:1px; }
+        .nm-stat-val     { font-family:'Orbitron',monospace; font-size:0.9rem; color:var(--cyan); }
+        .nm-stat-val.warn{ color:#e74c3c; }
+        .nm-stat-lbl     { font-size:0.52rem; letter-spacing:0.15em; color:var(--text-dim); }
+        .nm-phase-badge  {
+            font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+            letter-spacing:0.14em; padding:3px 9px;
+            border:1px solid var(--border); color:var(--text-dim);
+        }
+        .nm-phase-badge.active { color:var(--cyan);  border-color:var(--cyan);  background:rgba(0,229,200,0.04); animation:nm-blink 2s ease-in-out infinite; }
+        .nm-phase-badge.won    { color:var(--gold);  border-color:var(--gold);  background:rgba(184,168,0,0.07); }
+        .nm-phase-badge.lost   { color:#e74c3c;      border-color:#e74c3c;      background:rgba(192,57,43,0.07); }
+        @keyframes nm-blink { 0%,100%{opacity:1} 50%{opacity:0.55} }
+
+        /* ── Detection bar ──────────────────────────────────────── */
+        .nm-det-wrap {
+            background:var(--bg-panel); border:1px solid var(--border);
+            padding:0.5rem 1rem;
+        }
+        .nm-det-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem; }
+        .nm-det-label  { font-family:'Share Tech Mono',monospace; font-size:0.62rem; letter-spacing:0.18em; color:var(--text-dim); }
+        .nm-det-value  { font-family:'Orbitron',monospace; font-size:0.8rem; color:#e74c3c; }
+        .nm-det-track  { height:8px; background:#0a0e1a; border:1px solid var(--border); overflow:hidden; }
+        .nm-det-fill   { height:100%; width:0%; background:linear-gradient(90deg,#c0392b,#e74c3c); transition:width 0.4s ease; }
+
+        /* ── Map canvas ─────────────────────────────────────────── */
+        .nm-canvas-wrap {
+            background:#060810; border:1px solid var(--border);
+            position:relative; overflow:hidden;
+        }
+        .nm-canvas-wrap::before {
+            content:''; position:absolute; inset:0; pointer-events:none; z-index:1;
+            background:
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,229,200,0.015) 39px, rgba(0,229,200,0.015) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,229,200,0.015) 39px, rgba(0,229,200,0.015) 40px);
+        }
+        #nm-svg {
+            width:100%; display:block;
+            max-height:440px;
+        }
+
+        /* ── Node SVG styles ────────────────────────────────────── */
+        .nm-node { cursor:pointer; }
+        .nm-node.locked    { cursor:default; }
+        .nm-node.compromised { cursor:default; }
+        .nm-node-ring      { transition:all 0.3s; }
+        @keyframes nm-pulse { 0%,100%{r:32;opacity:0.5} 50%{r:36;opacity:0.15} }
+        .nm-pulse-ring     { animation:nm-pulse 1.8s ease-in-out infinite; }
+
+        /* ── Probe panel ────────────────────────────────────────── */
+        .nm-probe-panel {
+            background:var(--bg-panel); border:1px solid var(--cyan);
+            padding:1rem; display:none; gap:1rem; align-items:center; flex-wrap:wrap;
+        }
+        .nm-probe-panel.show { display:flex; }
+        .nm-probe-info { flex:1; min-width:180px; }
+        .nm-probe-name { font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--cyan); letter-spacing:0.12em; }
+        .nm-probe-meta { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--text-dim); margin-top:3px; }
+        .nm-probe-tn   { font-family:'Orbitron',monospace; font-size:1.1rem; color:var(--gold); margin-top:4px; }
+        .nm-probe-form { display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap; }
+        .nm-probe-input {
+            background:rgba(0,229,200,0.04); border:1px solid var(--cyan);
+            color:var(--cyan); font-family:'Orbitron',monospace; font-size:1rem;
+            padding:6px 10px; width:90px; outline:none; text-align:center;
+        }
+        .nm-probe-input::placeholder { color:rgba(0,229,200,0.3); font-size:0.7rem; }
+        .nm-probe-btn {
+            background:rgba(0,229,200,0.07); border:1px solid var(--cyan);
+            color:var(--cyan); font-family:'Share Tech Mono',monospace;
+            font-size:0.75rem; letter-spacing:0.2em; padding:8px 18px;
+            cursor:pointer; transition:background 0.15s;
+        }
+        .nm-probe-btn:hover { background:rgba(0,229,200,0.18); }
+        .nm-probe-cancel {
+            background:transparent; border:1px solid var(--border); color:var(--text-dim);
+            font-family:'Share Tech Mono',monospace; font-size:0.7rem; letter-spacing:0.15em;
+            padding:8px 14px; cursor:pointer; transition:all 0.15s;
+        }
+        .nm-probe-cancel:hover { color:var(--cyan); border-color:var(--cyan); }
+        .nm-probe-result {
+            font-family:'Share Tech Mono',monospace; font-size:0.75rem;
+            letter-spacing:0.1em; padding:5px 10px; border:1px solid var(--border);
+        }
+        .nm-probe-result.ok  { color:#5dbf72; border-color:#5dbf72; background:rgba(93,191,114,0.07); }
+        .nm-probe-result.bad { color:#e74c3c; border-color:#e74c3c; background:rgba(192,57,43,0.07); }
+
+        /* ── Idle screen ────────────────────────────────────────── */
+        .nm-idle {
+            background:var(--bg-panel); border:1px solid var(--border);
+            display:flex; flex-direction:column; align-items:center;
+            justify-content:center; padding:3rem 1rem; gap:1rem; text-align:center;
+        }
+        .nm-idle-icon { font-size:2.5rem; color:var(--text-dim); opacity:0.3; }
+        .nm-idle-msg  { font-family:'Share Tech Mono',monospace; font-size:0.72rem; color:var(--text-dim); letter-spacing:0.18em; line-height:1.8; }
+
+        /* ── Overlord panel ─────────────────────────────────────── */
+        #nm-ov-toggle {
+            position:fixed; bottom:1.5em; right:1.5em; z-index:900;
+            background:rgba(8,8,18,0.95); border:1px solid var(--gold-dim);
+            color:var(--gold); font-family:'Share Tech Mono',monospace;
+            font-size:0.65rem; letter-spacing:0.2em; padding:6px 14px;
+            cursor:pointer; transition:background 0.15s; display:none;
+        }
+        #nm-ov-toggle:hover { background:rgba(184,168,0,0.1); }
+        #nm-ov-panel {
+            position:fixed; bottom:4em; right:1.5em; z-index:900;
+            width:340px; max-height:80vh; overflow-y:auto;
+            background:rgba(6,8,18,0.98); border:1px solid var(--gold-dim);
+            font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--gold);
+            box-shadow:0 0 24px rgba(184,168,0,0.12);
+        }
+        #nm-ov-panel.hidden { display:none; }
+        .nm-ov-ph {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid var(--gold-dim);
+            font-size:11px; letter-spacing:2px; font-weight:bold; background:rgba(184,168,0,0.04);
+        }
+        .nm-ov-close { background:none; border:none; color:var(--gold); cursor:pointer; font-size:14px; }
+        .nm-cfg { padding:14px; display:flex; flex-direction:column; gap:10px; }
+        .nm-cfg-row { display:flex; flex-direction:column; gap:3px; }
+        .nm-cfg-lbl { font-size:9px; letter-spacing:1px; opacity:0.55; }
+        .nm-cfg-inp, .nm-cfg-sel {
+            background:rgba(184,168,0,0.04); border:1px solid rgba(184,168,0,0.3);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:11px;
+            padding:5px 7px; outline:none; width:100%;
+        }
+        .nm-cfg-inp:focus, .nm-cfg-sel:focus { border-color:var(--gold); }
+        .nm-cfg-sel option { background:#050d0d; }
+        .nm-cfg-2col { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .nm-cfg-3col { display:grid; grid-template-columns:2fr 1fr 1fr; gap:6px; }
+        .nm-cfg-div  { border-top:1px solid rgba(184,168,0,0.12); margin:4px 0; }
+        .nm-cfg-btn {
+            padding:8px; background:rgba(184,168,0,0.07); border:1px solid rgba(184,168,0,0.5);
+            color:var(--gold); font-family:'Share Tech Mono',monospace; font-size:10px;
+            letter-spacing:2px; cursor:pointer; transition:background 0.15s; width:100%;
+        }
+        .nm-cfg-btn:hover      { background:rgba(184,168,0,0.18); }
+        .nm-cfg-btn.activate   { border-color:var(--cyan); color:var(--cyan); background:rgba(0,229,200,0.06); }
+        .nm-cfg-btn.activate:hover   { background:rgba(0,229,200,0.15); }
+        .nm-cfg-btn.deactivate { border-color:#e74c3c; color:#e74c3c; background:rgba(192,57,43,0.06); }
+        .nm-cfg-btn.deactivate:hover { background:rgba(192,57,43,0.15); }
+        .nm-cfg-status {
+            font-size:9px; letter-spacing:1px; padding:5px 8px;
+            border:1px solid rgba(184,168,0,0.2); background:rgba(184,168,0,0.03); opacity:0.7; line-height:1.5;
+        }
+        .nm-node-rows { display:flex; flex-direction:column; gap:5px; }
+        .nm-node-row  { display:grid; grid-template-columns:2fr 2fr 1fr; gap:5px; align-items:center; }
+        .nm-node-row-lbl { font-size:9px; opacity:0.5; }
+    </style>
+</head>
+<body>
+
+<div id="page-loader" class="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">NETMAP.EXE</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">INITIALIZING NETWORK TOPOLOGY MODULE...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html"               data-icon="01">Dashboard</a></li>
+            <li><a href="AssetMap/AssetMap.html"   data-icon="02">Asset Map</a></li>
+            <li><a href="comms.html"               data-icon="03">HQ Comms</a></li>
+            <li><a href="tools.html"               data-icon="04">Tools</a></li>
+            <li><a href="dice.html"                data-icon="05">Dice Roller</a></li>
+            <li><a href="timer.html"               data-icon="06">Mission Timer</a></li>
+            <li><a href="RadioScanner/index.html"  data-icon="07">Radio</a></li>
+            <li><a href="bomb.html"                data-icon="08">Bomb Defusal</a></li>
+            <li><a href="lockpick.html"            data-icon="09">Lockpick</a></li>
+            <li><a href="hack.html"                data-icon="10">Hacking</a></li>
+            <li><a href="social.html"              data-icon="11">Social Eng.</a></li>
+            <li><a href="netmap.html"              data-icon="12">Network Map</a></li>
+            <li><a href="evidence.html"            data-icon="13">Evidence</a></li>
+            <li><a href="filesystem.html"          data-icon="14">File System</a></li>
+            <li><a href="dossier.html"             data-icon="15">Dossier</a></li>
+        </ul>
+        <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
+            <a href="admin.html" style="color:var(--gold);font-size:0.7rem;letter-spacing:0.2em;text-decoration:none;">&#9672; OVERLORD PANEL</a>
+        </div>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">&#8212;&#8212;&#8212;&#8212;&#8212;&#8212;</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Network Map</h1>
+            <div class="tagline">// INTRUSION PATHFINDING &mdash; NETWORK TOPOLOGY //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="nm-wrap">
+
+            <!-- Status bar -->
+            <div class="nm-statusbar">
+                <div class="nm-target-block">
+                    <div class="nm-target-name" id="nm-net-name">UNKNOWN NETWORK</div>
+                    <div class="nm-target-sub"  id="nm-net-desc">Awaiting Overlord activation...</div>
+                </div>
+                <div class="nm-stats">
+                    <div class="nm-stat">
+                        <div class="nm-stat-val" id="nm-comp-stat">0/0</div>
+                        <div class="nm-stat-lbl">COMPROMISED</div>
+                    </div>
+                    <div class="nm-stat">
+                        <div class="nm-stat-val" id="nm-probes-stat">0</div>
+                        <div class="nm-stat-lbl">PROBES</div>
+                    </div>
+                    <div class="nm-stat">
+                        <div class="nm-stat-val nm-stat-val" id="nm-fail-stat">0</div>
+                        <div class="nm-stat-lbl">FAILED</div>
+                    </div>
+                </div>
+                <div class="nm-phase-badge" id="nm-phase-badge">STANDBY</div>
+            </div>
+
+            <!-- Detection bar -->
+            <div class="nm-det-wrap">
+                <div class="nm-det-header">
+                    <div class="nm-det-label">&#9656; INTRUSION DETECTION LEVEL</div>
+                    <div class="nm-det-value" id="nm-det-pct">0%</div>
+                </div>
+                <div class="nm-det-track">
+                    <div class="nm-det-fill" id="nm-det-fill"></div>
+                </div>
+            </div>
+
+            <!-- Idle screen -->
+            <div id="nm-idle" class="nm-idle">
+                <div class="nm-idle-icon">&#9698;</div>
+                <div class="nm-idle-msg">
+                    NETWORK TOPOLOGY OFFLINE<br>
+                    <span style="opacity:0.5">AWAITING OVERLORD ACTIVATION</span>
+                </div>
+            </div>
+
+            <!-- Map canvas -->
+            <div id="nm-game" style="display:none;">
+                <div class="nm-canvas-wrap">
+                    <svg id="nm-svg" viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <filter id="nm-glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+                                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                            <filter id="nm-glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                                <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                            </filter>
+                        </defs>
+                        <g id="nm-edges"></g>
+                        <g id="nm-nodes"></g>
+                    </svg>
+                </div>
+
+                <!-- Probe panel -->
+                <div class="nm-probe-panel" id="nm-probe-panel">
+                    <div class="nm-probe-info">
+                        <div class="nm-probe-name" id="nm-probe-name">NODE NAME</div>
+                        <div class="nm-probe-meta" id="nm-probe-meta">Type &mdash; Defense 0</div>
+                        <div class="nm-probe-tn">TN: <span id="nm-probe-tn">4</span></div>
+                    </div>
+                    <div class="nm-probe-form">
+                        <input class="nm-probe-input" id="nm-probe-roll" type="number" min="1" max="40" placeholder="ROLL">
+                        <button class="nm-probe-btn" id="nm-probe-btn">&#9654; PROBE</button>
+                        <button class="nm-probe-cancel" id="nm-probe-cancel">CANCEL</button>
+                        <div class="nm-probe-result" id="nm-probe-result" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity log -->
+            <div class="hack-log-panel">
+                <div class="hack-panel-hdr">&#9656; ACTIVITY LOG <span id="nm-log-count">0 ENTRIES</span></div>
+                <div class="hack-log-entries" id="nm-log-entries">
+                    <div class="hle"><span class="hle-m">Network Map module initialized.</span></div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+<div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
+
+<!-- Overlord panel -->
+<button id="nm-ov-toggle">&#9672; OVERLORD</button>
+<div id="nm-ov-panel" class="hidden">
+    <div class="nm-ov-ph">
+        <span>&#9672; NETMAP &mdash; OVERLORD CONFIG</span>
+        <button class="nm-ov-close" id="nm-ov-close">&#10005;</button>
+    </div>
+    <div class="nm-cfg">
+
+        <div class="nm-cfg-status" id="nm-cfg-status-bar">STATUS: STANDBY</div>
+
+        <button class="nm-cfg-btn activate"   id="nm-cfg-activate">&#9654; ACTIVATE NETWORK</button>
+        <button class="nm-cfg-btn deactivate" id="nm-cfg-deactivate">&#9632; DEACTIVATE</button>
+        <button class="nm-cfg-btn" id="nm-cfg-reset" style="border-color:#888;color:#888;">&#8635; FORCE RESET</button>
+
+        <div class="nm-cfg-div"></div>
+
+        <div class="nm-cfg-row">
+            <div class="nm-cfg-lbl">NETWORK NAME</div>
+            <input class="nm-cfg-inp" id="nm-cfg-netname" type="text" value="CORPORATE INTRANET" maxlength="40">
+        </div>
+        <div class="nm-cfg-row">
+            <div class="nm-cfg-lbl">DESCRIPTION</div>
+            <input class="nm-cfg-inp" id="nm-cfg-netdesc" type="text" value="Internal network — floor 3" maxlength="60">
+        </div>
+
+        <div class="nm-cfg-div"></div>
+
+        <div class="nm-cfg-row">
+            <div class="nm-cfg-lbl">NETWORK TEMPLATE</div>
+            <select class="nm-cfg-sel" id="nm-cfg-template">
+                <option value="corridor">CORRIDOR (6 nodes, linear)</option>
+                <option value="splinter">SPLINTER (7 nodes, branching)</option>
+                <option value="mesh">MESH (9 nodes, complex)</option>
+            </select>
+        </div>
+
+        <div class="nm-cfg-2col">
+            <div class="nm-cfg-row">
+                <div class="nm-cfg-lbl">DETECTION LIMIT (%)</div>
+                <input class="nm-cfg-inp" id="nm-cfg-detlimit" type="number" min="20" max="100" value="80">
+            </div>
+            <div class="nm-cfg-row">
+                <div class="nm-cfg-lbl">DETECTION / FAIL</div>
+                <input class="nm-cfg-inp" id="nm-cfg-detgain" type="number" min="5" max="50" value="20">
+            </div>
+        </div>
+
+        <div class="nm-cfg-div"></div>
+
+        <div class="nm-cfg-lbl" style="margin-bottom:4px;">NODE LABELS &amp; DEFENSE (1&ndash;5)</div>
+        <div class="nm-node-rows" id="nm-node-editor">
+            <!-- Populated by JS -->
+        </div>
+
+        <div class="nm-cfg-div"></div>
+        <button class="nm-cfg-btn" id="nm-cfg-save" style="border-color:var(--cyan);color:var(--cyan);">SAVE CONFIG</button>
+    </div>
+</div>
+
+<script src="./auth.js"></script>
+<script src="./page-boot.js"></script>
+<script src="./nav.js"></script>
+<script src="./netmap.js"></script>
+</body>
+</html>
