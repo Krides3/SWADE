@@ -143,6 +143,45 @@
         }
         .se-ov-btn:hover { color:var(--cyan); border-color:var(--cyan); }
 
+        /* ── Roll input panel ───────────────────────────────────── */
+        .se-roll-panel {
+            background:var(--bg-panel); border:1px solid var(--cyan);
+            padding:0.85rem 1rem; display:none; align-items:center;
+            gap:1rem; flex-wrap:wrap; margin-top:0;
+        }
+        .se-roll-panel.show { display:flex; }
+        .se-roll-label { display:flex; flex-direction:column; gap:3px; }
+        .se-roll-approach-name {
+            font-family:'Orbitron',monospace; font-size:0.9rem;
+            color:var(--cyan); letter-spacing:0.15em;
+        }
+        .se-roll-sub { font-family:'Share Tech Mono',monospace; font-size:0.58rem; color:var(--text-dim); letter-spacing:0.15em; }
+        .se-roll-form { display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap; }
+        .se-roll-inp {
+            background:rgba(0,229,200,0.04); border:1px solid var(--cyan);
+            color:var(--cyan); font-family:'Orbitron',monospace; font-size:1rem;
+            padding:6px 10px; width:88px; outline:none; text-align:center;
+        }
+        .se-roll-inp::placeholder { color:rgba(0,229,200,0.3); font-size:0.7rem; }
+        .se-roll-confirm {
+            background:rgba(0,229,200,0.07); border:1px solid var(--cyan);
+            color:var(--cyan); font-family:'Share Tech Mono',monospace;
+            font-size:0.75rem; letter-spacing:0.2em; padding:8px 18px;
+            cursor:pointer; transition:background 0.15s;
+        }
+        .se-roll-confirm:hover { background:rgba(0,229,200,0.18); }
+        .se-roll-cancel-btn {
+            background:transparent; border:1px solid var(--border); color:var(--text-dim);
+            font-family:'Share Tech Mono',monospace; font-size:0.7rem; letter-spacing:0.15em;
+            padding:8px 14px; cursor:pointer; transition:all 0.15s;
+        }
+        .se-roll-cancel-btn:hover { color:#e74c3c; border-color:#e74c3c; }
+        .se-roll-ov-tn {
+            font-family:'Orbitron',monospace; font-size:0.85rem; color:var(--gold);
+            background:rgba(184,168,0,0.05); border:1px solid rgba(184,168,0,0.35);
+            padding:5px 12px; letter-spacing:0.1em;
+        }
+
         /* ── Overlord panel (shared lp-cfg-* classes) ───────────── */
         #se-ov-toggle {
             position:fixed; bottom:1.5em; right:1.5em; z-index:900;
@@ -338,6 +377,20 @@
                     </div>
 
                 </div>
+                <!-- Roll input panel -->
+                <div class="se-roll-panel" id="se-roll-panel">
+                    <div class="se-roll-label">
+                        <div class="se-roll-approach-name" id="se-roll-approach-name">APPROACH</div>
+                        <div class="se-roll-sub">ENTER PLAYER ROLL TO RESOLVE</div>
+                    </div>
+                    <div class="se-roll-form">
+                        <input class="se-roll-inp" id="se-roll-inp" type="number" min="1" max="40" placeholder="ROLL">
+                        <button class="se-roll-confirm" id="se-roll-confirm">&#9654; RESOLVE</button>
+                        <button class="se-roll-cancel-btn" id="se-roll-cancel">CANCEL</button>
+                    </div>
+                    <div class="se-roll-ov-tn" id="se-roll-ov-tn" style="display:none;">TN:&nbsp;<span id="se-roll-tn-val">?</span></div>
+                </div>
+
             </div>
 
             <!-- Activity log -->
@@ -413,12 +466,26 @@
         </div>
 
         <div class="se-cfg-div"></div>
-
-        <div class="se-cfg-row">
-            <div class="se-cfg-lbl">&#9656; PERSUASION SKILL ROLL &mdash; TN 4 &nbsp;|&nbsp; blank = standard</div>
-            <input class="se-cfg-inp" id="se-cfg-skillroll" type="number" min="0" max="20" placeholder="e.g. 8 = 1 raise &middot; 3 = below TN">
-            <div id="se-cfg-skill-lbl" style="font-size:9px;letter-spacing:0.5px;opacity:0.6;margin-top:2px;">&#8594; No roll entered &mdash; standard effectiveness</div>
+        <div class="se-cfg-lbl" style="margin-bottom:4px;">APPROACH DIFFICULTY (TN) &mdash; HIDDEN FROM PLAYERS</div>
+        <div class="se-cfg-2col">
+            <div class="se-cfg-row">
+                <div class="se-cfg-lbl">RAPPORT TN</div>
+                <input class="se-cfg-inp" id="se-tn-rapport" type="number" min="2" max="16" value="6">
+            </div>
+            <div class="se-cfg-row">
+                <div class="se-cfg-lbl">PRESSURE TN</div>
+                <input class="se-cfg-inp" id="se-tn-pressure" type="number" min="2" max="16" value="8">
+            </div>
+            <div class="se-cfg-row">
+                <div class="se-cfg-lbl">DECEPTION TN</div>
+                <input class="se-cfg-inp" id="se-tn-deception" type="number" min="2" max="16" value="8">
+            </div>
+            <div class="se-cfg-row">
+                <div class="se-cfg-lbl">SILENCE TN</div>
+                <input class="se-cfg-inp" id="se-tn-silence" type="number" min="2" max="16" value="4">
+            </div>
         </div>
+        <div style="font-size:9px;opacity:0.45;line-height:1.5;padding:2px 0;">Raises: each full 4 above TN = 1 raise = bonus damage.<br>Players discover difficulty by attempting approaches.</div>
 
         <div class="se-cfg-div"></div>
         <button class="se-cfg-btn" id="se-cfg-save" style="border-color:var(--cyan);color:var(--cyan);">SAVE CONFIG</button>

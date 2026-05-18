@@ -85,13 +85,26 @@
         .ev-card.suspect  { border-top:2px solid var(--gold); }
         .ev-card.location { border-top:2px solid #c060e8; }
         .ev-card.event    { border-top:2px solid #e74c3c; }
+        /* Card header row with collapse toggle */
+        .ev-card-hdr { display:flex; justify-content:space-between; align-items:flex-start; gap:4px; }
+        .ev-card-meta { flex:1; min-width:0; }
+        .ev-card-collapse {
+            background:none; border:none; color:var(--text-dim); cursor:pointer;
+            font-size:0.7rem; padding:0; line-height:1; flex-shrink:0; margin-top:1px;
+        }
+        .ev-card-collapse:hover { color:var(--cyan); }
+        .ev-card.collapsed { min-height:auto; }
+        .ev-card.collapsed .ev-card-body { display:none; }
         .ev-card-type  { font-size:0.52rem; letter-spacing:0.2em; color:var(--text-dim); font-family:'Share Tech Mono',monospace; }
         .ev-card.clue     .ev-card-type { color:var(--cyan); }
         .ev-card.suspect  .ev-card-type { color:var(--gold); }
         .ev-card.location .ev-card-type { color:#c060e8; }
         .ev-card.event    .ev-card-type { color:#e74c3c; }
         .ev-card-title { font-family:'Orbitron',monospace; font-size:0.68rem; letter-spacing:0.1em; color:#c8cad8; line-height:1.3; }
-        .ev-card-body  { font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--text-dim); line-height:1.5; margin-top:2px; }
+        .ev-card-body  {
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--text-dim);
+            line-height:1.5; margin-top:4px; max-height:120px; overflow-y:auto;
+        }
 
         /* ── Idle screen ────────────────────────────────────────── */
         .ev-idle {
@@ -317,9 +330,10 @@
         <div class="ev-cfg-div"></div>
         <div class="ev-cfg-lbl" style="margin-bottom:4px;">HIDDEN CONNECTIONS (revealed by Notice roll)</div>
         <div class="ev-cfg-row" style="flex-direction:row;gap:5px;">
-            <input class="ev-cfg-inp" id="ev-hconn-a" type="text" placeholder="Card title A" style="flex:1;">
-            <input class="ev-cfg-inp" id="ev-hconn-b" type="text" placeholder="Card title B" style="flex:1;">
+            <input class="ev-cfg-inp" id="ev-hconn-a" type="text" placeholder="Card title A" style="flex:1;" list="ev-card-titles" autocomplete="off">
+            <input class="ev-cfg-inp" id="ev-hconn-b" type="text" placeholder="Card title B" style="flex:1;" list="ev-card-titles" autocomplete="off">
         </div>
+        <datalist id="ev-card-titles"></datalist>
         <button class="ev-cfg-btn" id="ev-cfg-add-hconn">+ ADD HIDDEN LINK</button>
         <div class="ev-conn-list" id="ev-hconn-list"></div>
 

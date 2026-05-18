@@ -26,7 +26,7 @@ function loadState() {
 function saveState() { localStorage.setItem(EV_STATE_KEY, JSON.stringify(state)); }
 
 function blankState() {
-    return { active:false, positions:{}, playerConns:[], revealedConns:[], log:[] };
+    return { active:false, positions:{}, playerConns:[], revealedConns:[], log:[], collapsed:{} };
 }
 
 function addLog(type, msg) { state.log.push({ t:Date.now(), type, msg }); }
@@ -130,24 +130,54 @@ function renderSVG() {
     svg.innerHTML = `<defs><filter id="ev-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines.join('')}`;
 }
 
+// ── Collapse ───────────────────────────────────────────────────────────────
+
+function toggleCollapse(cardId) {
+    state.collapsed = state.collapsed || {};
+    state.collapsed[cardId] = !state.collapsed[cardId];
+    const el  = document.getElementById('evcard-' + cardId);
+    if (el) {
+        el.classList.toggle('collapsed', !!state.collapsed[cardId]);
+        const btn = el.querySelector('.ev-card-collapse');
+        if (btn) btn.textContent = state.collapsed[cardId] ? '▼' : '▲';
+    }
+    saveState();
+}
+window.toggleCollapse = toggleCollapse;
+
+// ── Card title datalist ────────────────────────────────────────────────────
+
+function updateCardTitleDatalist() {
+    const dl = document.getElementById('ev-card-titles');
+    if (!dl) return;
+    dl.innerHTML = cfg.cards.map(c => `<option value="${c.title.replace(/"/g, '&quot;')}">`).join('');
+}
+
 // ── Board rendering ────────────────────────────────────────────────────────
 
 function renderBoard() {
     const board = document.getElementById('ev-board');
     if (!board) return;
     board.innerHTML = '';
+    state.collapsed = state.collapsed || {};
 
     cfg.cards.forEach(card => {
-        const pos = getPos(card.id);
+        const pos        = getPos(card.id);
+        const isCollapsed = !!state.collapsed[card.id];
         const el  = document.createElement('div');
-        el.className = `ev-card ${card.type}`;
+        el.className = `ev-card ${card.type}${isCollapsed ? ' collapsed' : ''}`;
         el.id = 'evcard-' + card.id;
         el.style.left = pos.x + 'px';
         el.style.top  = pos.y + 'px';
         el.innerHTML  = `
-            <div class="ev-card-type">${card.type.toUpperCase()}</div>
-            <div class="ev-card-title">${card.title}</div>
-            <div class="ev-card-body">${card.body || ''}</div>
+            <div class="ev-card-hdr">
+                <div class="ev-card-meta">
+                    <div class="ev-card-type">${card.type.toUpperCase()}</div>
+                    <div class="ev-card-title">${card.title}</div>
+                </div>
+                <button class="ev-card-collapse" onclick="event.stopPropagation();toggleCollapse('${card.id}')">${isCollapsed ? '▼' : '▲'}</button>
+            </div>
+            <div class="ev-card-body">${(card.body || '').replace(/\n/g,'<br>')}</div>
         `;
 
         // Drag
@@ -171,6 +201,7 @@ function renderBoard() {
         board.appendChild(el);
     });
 
+    updateCardTitleDatalist();
     renderSVG();
 }
 
@@ -234,6 +265,7 @@ function render() {
 
     renderLog();
     renderHConnList();
+    updateCardTitleDatalist();
 
     if (isAdmin) {
         const sb = document.getElementById('ev-cfg-status-bar');

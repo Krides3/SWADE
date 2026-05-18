@@ -137,6 +137,50 @@
         }
         .do-admin-edit-btn:hover { color:var(--cyan); border-color:var(--cyan); }
 
+        /* ── Player self-edit panel ─────────────────────────────── */
+        .do-player-panel {
+            background:var(--bg-panel); border:1px solid var(--border);
+        }
+        .do-player-panel-hdr {
+            padding:0.65rem 1rem; border-bottom:1px solid var(--border);
+            display:flex; justify-content:space-between; align-items:center;
+            cursor:pointer; user-select:none;
+        }
+        .do-player-panel-hdr:hover { background:rgba(0,229,200,0.03); }
+        .do-player-panel-title {
+            font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+            letter-spacing:0.2em; color:var(--cyan);
+        }
+        .do-player-panel-toggle { font-size:0.65rem; color:var(--text-dim); }
+        .do-player-form {
+            padding:1rem 1.25rem; display:none;
+            flex-direction:column; gap:0.75rem;
+        }
+        .do-player-form.open { display:flex; }
+        .do-pf-row { display:flex; flex-direction:column; gap:3px; }
+        .do-pf-lbl { font-family:'Share Tech Mono',monospace; font-size:0.58rem; letter-spacing:0.15em; color:var(--text-dim); }
+        .do-pf-inp, .do-pf-sel, .do-pf-ta {
+            background:rgba(0,229,200,0.03); border:1px solid rgba(0,229,200,0.2);
+            color:#c8cad8; font-family:'Share Tech Mono',monospace; font-size:0.68rem;
+            padding:5px 8px; outline:none; width:100%; resize:vertical;
+        }
+        .do-pf-inp:focus, .do-pf-sel:focus, .do-pf-ta:focus { border-color:var(--cyan); }
+        .do-pf-sel option { background:#050d0d; }
+        .do-pf-2col { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; }
+        .do-pf-3col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0.5rem; }
+        .do-pf-div  { border-top:1px solid rgba(0,229,200,0.08); margin:2px 0; }
+        .do-pf-lbl-sec {
+            font-family:'Share Tech Mono',monospace; font-size:0.55rem; letter-spacing:0.2em;
+            color:var(--text-dim); margin-bottom:4px;
+        }
+        .do-pf-btn {
+            padding:8px; background:rgba(0,229,200,0.06); border:1px solid var(--cyan);
+            color:var(--cyan); font-family:'Share Tech Mono',monospace; font-size:0.65rem;
+            letter-spacing:0.18em; cursor:pointer; transition:background 0.15s;
+        }
+        .do-pf-btn:hover { background:rgba(0,229,200,0.16); }
+        .do-pf-status { font-family:'Share Tech Mono',monospace; font-size:0.6rem; letter-spacing:0.1em; color:var(--text-dim); }
+
         /* ── Overlord panel ─────────────────────────────────────── */
         #do-ov-toggle {
             position:fixed; bottom:1.5em; right:1.5em; z-index:900;
@@ -257,6 +301,80 @@
                     <span id="do-admin-count">0 OPERATORS</span>
                 </div>
                 <div class="do-admin-rows" id="do-admin-rows"></div>
+            </div>
+
+            <!-- Player self-edit panel (non-admin only) -->
+            <div id="do-player-panel" class="do-player-panel" style="display:none;">
+                <div class="do-player-panel-hdr" id="do-player-panel-hdr">
+                    <span class="do-player-panel-title">&#9656; EDIT MY OPERATOR DOSSIER</span>
+                    <span class="do-player-panel-toggle" id="do-player-toggle-icon">&#9660; EXPAND</span>
+                </div>
+                <div class="do-player-form" id="do-player-form">
+
+                    <div class="do-pf-2col">
+                        <div class="do-pf-row">
+                            <div class="do-pf-lbl">CALLSIGN</div>
+                            <input class="do-pf-inp" id="do-pf-callsign" type="text" placeholder="GHOST" maxlength="20">
+                        </div>
+                        <div class="do-pf-row">
+                            <div class="do-pf-lbl">REAL NAME</div>
+                            <input class="do-pf-inp" id="do-pf-realname" type="text" placeholder="John Doe" maxlength="40">
+                        </div>
+                    </div>
+                    <div class="do-pf-row">
+                        <div class="do-pf-lbl">ROLE / SPECIALIZATION</div>
+                        <input class="do-pf-inp" id="do-pf-role" type="text" placeholder="Infiltration Specialist" maxlength="60">
+                    </div>
+
+                    <div class="do-pf-div"></div>
+                    <div class="do-pf-lbl-sec">&#9656; CORE ATTRIBUTES</div>
+                    <div class="do-pf-3col">
+                        <div class="do-pf-row"><div class="do-pf-lbl">AGILITY</div><select class="do-pf-sel" id="do-pf-agility"><option>d4</option><option>d6</option><option selected>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">SMARTS</div><select class="do-pf-sel" id="do-pf-smarts"><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">SPIRIT</div><select class="do-pf-sel" id="do-pf-spirit"><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">STRENGTH</div><select class="do-pf-sel" id="do-pf-strength"><option selected>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">VIGOR</div><select class="do-pf-sel" id="do-pf-vigor"><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                    </div>
+
+                    <div class="do-pf-div"></div>
+                    <div class="do-pf-lbl-sec">&#9656; SKILLS</div>
+                    <div class="do-pf-3col">
+                        <div class="do-pf-row"><div class="do-pf-lbl">HACKING</div><select class="do-pf-sel" id="do-pf-hacking"><option>&#8212;</option><option>d4</option><option>d6</option><option selected>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">LOCKPICK</div><select class="do-pf-sel" id="do-pf-lockpicking"><option>&#8212;</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">NOTICE</div><select class="do-pf-sel" id="do-pf-notice"><option>&#8212;</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">PERSUASION</div><select class="do-pf-sel" id="do-pf-persuasion"><option>&#8212;</option><option selected>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">STEALTH</div><select class="do-pf-sel" id="do-pf-stealth"><option>&#8212;</option><option>d4</option><option>d6</option><option selected>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">SHOOTING</div><select class="do-pf-sel" id="do-pf-shooting"><option>&#8212;</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">ATHLETICS</div><select class="do-pf-sel" id="do-pf-athletics"><option>&#8212;</option><option>d4</option><option selected>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">FIGHTING</div><select class="do-pf-sel" id="do-pf-fighting"><option>&#8212;</option><option selected>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">INTIMIDATION</div><select class="do-pf-sel" id="do-pf-intimidation"><option selected>&#8212;</option><option>d4</option><option>d6</option><option>d8</option><option>d10</option><option>d12</option></select></div>
+                    </div>
+
+                    <div class="do-pf-div"></div>
+                    <div class="do-pf-3col">
+                        <div class="do-pf-row"><div class="do-pf-lbl">WOUNDS</div><input class="do-pf-inp" id="do-pf-wounds" type="number" min="0" max="4" value="0"></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">FATIGUE</div><input class="do-pf-inp" id="do-pf-fatigue" type="number" min="0" max="2" value="0"></div>
+                        <div class="do-pf-row"><div class="do-pf-lbl">BENNIES</div><input class="do-pf-inp" id="do-pf-bennies" type="number" min="0" max="6" value="3"></div>
+                    </div>
+
+                    <div class="do-pf-row">
+                        <div class="do-pf-lbl">EDGES (one per line)</div>
+                        <textarea class="do-pf-ta" id="do-pf-edges" rows="2" placeholder="Hacker&#10;Thief"></textarea>
+                    </div>
+                    <div class="do-pf-row">
+                        <div class="do-pf-lbl">EQUIPMENT (one per line)</div>
+                        <textarea class="do-pf-ta" id="do-pf-equipment" rows="3" placeholder="Laptop&#10;Lockpick Set"></textarea>
+                    </div>
+                    <div class="do-pf-row">
+                        <div class="do-pf-lbl">FIELD NOTES</div>
+                        <textarea class="do-pf-ta" id="do-pf-notes" rows="2" placeholder="Operator notes..."></textarea>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                        <button class="do-pf-btn" id="do-pf-save">&#9654; SAVE DOSSIER</button>
+                        <span class="do-pf-status" id="do-pf-status"></span>
+                    </div>
+                </div>
             </div>
 
             <!-- Dossier card -->

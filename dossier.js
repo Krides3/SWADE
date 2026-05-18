@@ -123,18 +123,83 @@ function renderAdminTable() {
     ).join('');
 }
 
+// ── Player self-edit panel ─────────────────────────────────────────────────
+
+let playerPanelOpen = false;
+
+function togglePlayerPanel() {
+    playerPanelOpen = !playerPanelOpen;
+    const form    = document.getElementById('do-player-form');
+    const icon    = document.getElementById('do-player-toggle-icon');
+    if (form) form.classList.toggle('open', playerPanelOpen);
+    if (icon) icon.textContent = playerPanelOpen ? '▲ COLLAPSE' : '▼ EXPAND';
+}
+
+function populatePlayerForm(d) {
+    const v  = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+    const vs = (id, val) => { const el = document.getElementById(id); if (!el) return; const opt = Array.from(el.options).find(o => o.value === val); if (opt) el.value = val; };
+    v('do-pf-callsign',  d?.callsign  || '');
+    v('do-pf-realname',  d?.realname  || '');
+    v('do-pf-role',      d?.role      || '');
+    v('do-pf-wounds',    d?.wounds    ?? 0);
+    v('do-pf-fatigue',   d?.fatigue   ?? 0);
+    v('do-pf-bennies',   d?.bennies   ?? 3);
+    v('do-pf-edges',     d?.edges     || '');
+    v('do-pf-equipment', d?.equipment || '');
+    v('do-pf-notes',     d?.notes     || '');
+    ATTRS.forEach(a  => vs(`do-pf-${a}`,  d?.attrs?.[a]  || 'd6'));
+    SKILLS.forEach(s => vs(`do-pf-${s}`,  d?.skills?.[s] || '—'));
+}
+
+function readPlayerForm(username) {
+    const g = id => document.getElementById(id)?.value ?? '';
+    const d = {
+        username,
+        callsign:  g('do-pf-callsign').trim().toUpperCase() || username.toUpperCase(),
+        realname:  g('do-pf-realname').trim(),
+        role:      g('do-pf-role').trim(),
+        clearance: getDossier(username)?.clearance || 'ALPHA',
+        wounds:    parseInt(g('do-pf-wounds'))  || 0,
+        fatigue:   parseInt(g('do-pf-fatigue')) || 0,
+        bennies:   parseInt(g('do-pf-bennies')) || 3,
+        edges:     g('do-pf-edges').trim(),
+        equipment: g('do-pf-equipment').trim(),
+        notes:     g('do-pf-notes').trim(),
+        attrs: {}, skills: {}
+    };
+    ATTRS.forEach(a  => { d.attrs[a]  = g(`do-pf-${a}`); });
+    SKILLS.forEach(s => { d.skills[s] = g(`do-pf-${s}`); });
+    return d;
+}
+
+function savePlayerDossier(username) {
+    const d   = readPlayerForm(username);
+    const idx = dossiers.findIndex(x => x.username === username);
+    if (idx >= 0) dossiers[idx] = d;
+    else dossiers.push(d);
+    saveDossiers();
+    const statusEl = document.getElementById('do-pf-status');
+    if (statusEl) {
+        statusEl.textContent = '&#10003; SAVED';
+        statusEl.style.color = 'var(--cyan)';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+    }
+    render();
+}
+
 // ── Main render ────────────────────────────────────────────────────────────
 
 function render() {
     const session  = window.LuxorAuth ? LuxorAuth.getSession() : null;
     const username = session?.username;
 
-    const idleEl  = document.getElementById('do-idle');
-    const cardEl  = document.getElementById('do-card');
+    const idleEl      = document.getElementById('do-idle');
+    const cardEl      = document.getElementById('do-card');
+    const playerPanel = document.getElementById('do-player-panel');
 
     if (isAdmin) {
+        if (playerPanel) playerPanel.style.display = 'none';
         renderAdminTable();
-        // Admin sees their own card if they have one, otherwise idle
         const d = username ? getDossier(username) : null;
         if (d) {
             if (idleEl) idleEl.style.display = 'none';
@@ -143,7 +208,6 @@ function render() {
             if (idleEl) idleEl.style.display = '';
             if (cardEl) cardEl.style.display = 'none';
         }
-        // Update status in admin panel
         const sb = document.getElementById('do-cfg-status');
         if (sb) sb.textContent = `DOSSIERS: ${dossiers.length} ON FILE`;
         return;
@@ -152,12 +216,24 @@ function render() {
     // Player view
     document.getElementById('do-admin-table').style.display = 'none';
     const d = username ? getDossier(username) : null;
+
     if (d) {
         if (idleEl) idleEl.style.display = 'none';
         if (cardEl) { cardEl.style.display = ''; renderCard(d); }
     } else {
-        if (idleEl) idleEl.style.display = '';
+        if (idleEl) {
+            idleEl.style.display = '';
+            idleEl.querySelector('.do-idle-msg').innerHTML =
+                'NO DOSSIER ON FILE<br><span style="opacity:0.5">CREATE YOUR OPERATOR PROFILE BELOW</span>';
+        }
         if (cardEl) cardEl.style.display = 'none';
+    }
+
+    // Show player edit panel
+    if (playerPanel && username) {
+        playerPanel.style.display = '';
+        // Pre-populate form with existing data (only if not already open to avoid overwriting edits)
+        if (!playerPanelOpen) populatePlayerForm(d);
     }
 }
 
@@ -285,6 +361,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window.LuxorAuth && LuxorAuth.isAdmin()) {
         isAdmin = true;
         initOverlordPanel();
+    } else {
+        // Player panel toggle
+        document.getElementById('do-player-panel-hdr')?.addEventListener('click', () => {
+            togglePlayerPanel();
+            const session  = window.LuxorAuth ? LuxorAuth.getSession() : null;
+            const username = session?.username;
+            if (playerPanelOpen && username) populatePlayerForm(getDossier(username));
+        });
+
+        // Player save
+        document.getElementById('do-pf-save')?.addEventListener('click', () => {
+            const session  = window.LuxorAuth ? LuxorAuth.getSession() : null;
+            const username = session?.username;
+            if (!username) return;
+            savePlayerDossier(username);
+        });
     }
 
     render();

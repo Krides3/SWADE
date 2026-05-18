@@ -9,8 +9,16 @@ const SE_DEF_CFG = {
     resistance: 100,
     maxAttempts: 10,
     winMessage: 'Subject has divulged classified information. Objective complete.',
-    skillRoll: null,
-    enabled: { rapport: true, pressure: true, deception: true, silence: true }
+    enabled: { rapport: true, pressure: true, deception: true, silence: true },
+    approachTN: { rapport: 6, pressure: 8, deception: 8, silence: 4 }
+};
+
+// Per-approach effect: base resistance reduction on success, bonus per raise, backfire on failure
+const SE_EFFECT = {
+    rapport:   { baseReduce: 12, raiseBonus: 5,  backfireChance: 0,    backfireGain: 0  },
+    pressure:  { baseReduce: 24, raiseBonus: 8,  backfireChance: 0.38, backfireGain: 12 },
+    deception: { baseReduce: 24, raiseBonus: 8,  backfireChance: 0.32, backfireGain: 15 },
+    silence:   { baseReduce:  6, raiseBonus: 3,  backfireChance: 0,    backfireGain: 0  }
 };
 
 const SE_APPROACHES = {
@@ -117,7 +125,7 @@ function loadState() {
 function saveState() { localStorage.setItem(SE_STATE_KEY, JSON.stringify(state)); }
 
 function blankState() {
-    return { phase:'idle', resistance:100, maxResistance:100, attempts:0, maxAttempts:10, transcript:[], log:[] };
+    return { phase:'idle', resistance:100, maxResistance:100, attempts:0, maxAttempts:10, transcript:[], log:[], pendingApproach:null };
 }
 
 function swadeMod(roll) {
@@ -139,34 +147,59 @@ function seApproach(type) {
     if (state.phase !== 'active') return;
     const ap = SE_APPROACHES[type];
     if (!ap || !cfg.enabled[type]) return;
+    state.pendingApproach = type;
+    saveState();
+    render();
+}
 
-    const mod      = swadeMod(cfg.skillRoll);
-    const mult     = effMult(mod);
-    const backfired = ap.backfire > 0 && Math.random() < ap.backfire;
+function seSubmitRoll() {
+    const rollEl = document.getElementById('se-roll-inp');
+    const roll   = parseInt(rollEl?.value);
+    if (isNaN(roll) || roll < 1) { rollEl?.focus(); return; }
+
+    const type = state.pendingApproach;
+    if (!type) return;
+
+    const ap  = SE_APPROACHES[type];
+    const eff = SE_EFFECT[type] || { baseReduce:10, raiseBonus:4, backfireChance:0, backfireGain:0 };
+    const tn  = ((cfg.approachTN || {}) [type]) || 4;
+
+    const success = roll >= tn;
+    const raises  = success ? Math.floor((roll - tn) / 4) : 0;
 
     state.attempts++;
+    state.pendingApproach = null;
 
-    let delta, cls;
-    if (!backfired) {
-        delta = -Math.round(rnd(ap.range[0], ap.range[1]) * mult);
+    let delta = 0, cls = '';
+
+    if (success) {
+        delta = -(eff.baseReduce + raises * eff.raiseBonus);
         cls   = 'success';
-        addLog('success', `[${ap.label}] Resistance reduced by ${Math.abs(delta)} pts.`);
+        const raiseStr = raises > 0 ? ` +${raises} raise${raises !== 1 ? 's' : ''}` : '';
+        addLog('success', `[${ap.label}] Success (roll ${roll} vs TN ${tn})${raiseStr} — resistance -${Math.abs(delta)}.`);
     } else {
-        delta = ap.backfireGain;
-        cls   = 'fail';
-        addLog('danger', `[${ap.label}] Backfired — resistance increased by ${delta} pts.`);
+        const backfired = eff.backfireChance > 0 && Math.random() < eff.backfireChance;
+        if (backfired) {
+            delta = eff.backfireGain;
+            cls   = 'fail';
+            addLog('danger', `[${ap.label}] Failed (roll ${roll} vs TN ${tn}) & backfired — resistance +${delta}.`);
+        } else {
+            cls = 'fail';
+            addLog('danger', `[${ap.label}] Failed (roll ${roll}) — no effect.`);
+        }
     }
 
-    state.resistance = Math.max(0, state.resistance + delta);
+    if (delta !== 0) state.resistance = Math.max(0, state.resistance + delta);
 
     addTx('OPERATOR', pick(ap.opLines), '');
-    addTx(cfg.npcName.split(' ')[0] || 'SUBJECT', backfired ? pick(ap.badResp) : pick(ap.goodResp), cls);
+    const isBackfire = !success && delta > 0;
+    const npcResp = isBackfire
+        ? pick(ap.badResp.length ? ap.badResp : ap.goodResp)
+        : (success ? pick(ap.goodResp) : pick(ap.badResp.length ? ap.badResp : ap.goodResp));
+    addTx(cfg.npcName.split(' ')[0] || 'SUBJECT', npcResp, cls);
 
-    if (mod !== 0 && !backfired) {
-        addTx('SYSTEM', mod > 0
-            ? `Skill advantage (+${mod} raise${mod > 1 ? 's' : ''}) applied to effectiveness.`
-            : `Skill penalty (below TN) applied — reduced effectiveness.`,
-            mod > 0 ? 'warn' : 'fail');
+    if (success && raises > 0) {
+        addTx('SYSTEM', `${raises} raise${raises !== 1 ? 's' : ''} — heightened effectiveness.`, 'warn');
     }
 
     if (state.resistance <= 0) {
@@ -179,9 +212,17 @@ function seApproach(type) {
         addLog('danger', 'MAX EXCHANGES REACHED — session failed.');
     }
 
+    if (rollEl) rollEl.value = '';
     saveState();
     render();
 }
+
+function seCancelRoll() {
+    state.pendingApproach = null;
+    saveState();
+    render();
+}
+window.seCancelRoll = seCancelRoll;
 
 function addTx(who, text, cls) {
     state.transcript.push({ who, text, cls });
@@ -231,12 +272,30 @@ function render() {
     if (idle) idle.style.display = state.phase === 'idle' ? 'flex' : 'none';
     if (game) game.style.display = state.phase === 'idle' ? 'none' : 'block';
 
+    const isPending = !!state.pendingApproach;
     ['rapport','pressure','deception','silence'].forEach(a => {
         const btn = document.getElementById('se-btn-' + a);
         if (!btn) return;
-        btn.disabled = state.phase !== 'active' || !cfg.enabled[a];
+        btn.disabled = state.phase !== 'active' || !cfg.enabled[a] || isPending;
         btn.style.display = cfg.enabled[a] === false ? 'none' : '';
     });
+
+    // Roll input panel
+    const rollPanel = document.getElementById('se-roll-panel');
+    if (rollPanel) {
+        rollPanel.classList.toggle('show', state.phase === 'active' && isPending);
+        if (isPending) {
+            const ap = SE_APPROACHES[state.pendingApproach];
+            const nameEl = document.getElementById('se-roll-approach-name');
+            if (nameEl) nameEl.textContent = ap ? ap.label : state.pendingApproach.toUpperCase();
+            const tnBox = document.getElementById('se-roll-ov-tn');
+            const tnVal = document.getElementById('se-roll-tn-val');
+            if (tnBox) tnBox.style.display = isAdmin ? '' : 'none';
+            if (tnVal && isAdmin) {
+                tnVal.textContent = ((cfg.approachTN || {})[state.pendingApproach]) || 4;
+            }
+        }
+    }
 
     // Overlay
     const overlay = document.getElementById('se-overlay');
@@ -332,19 +391,6 @@ function initOverlordPanel() {
         readCfg(); saveCfg(); render();
     });
 
-    const rollInput = document.getElementById('se-cfg-skillroll');
-    const rollLbl   = document.getElementById('se-cfg-skill-lbl');
-    if (rollInput && rollLbl) {
-        rollInput.addEventListener('input', () => {
-            const v = rollInput.value;
-            if (v === '') { rollLbl.textContent = '→ No roll entered — standard effectiveness'; return; }
-            const mod = swadeMod(v);
-            if (mod === 0) rollLbl.textContent = '→ TN met — no modifier';
-            else if (mod > 0) rollLbl.textContent = `→ +${mod} raise${mod > 1 ? 's' : ''} — ${Math.round((Math.pow(1.25,mod)-1)*100)}% more effective`;
-            else rollLbl.textContent = `→ Below TN (${mod}) — ${Math.round((1-Math.pow(0.8,-mod))*100)}% less effective`;
-        });
-    }
-
     populateAdminFields();
 }
 
@@ -356,12 +402,16 @@ function populateAdminFields() {
     v('se-cfg-resistance',cfg.resistance);
     v('se-cfg-maxatt',    cfg.maxAttempts);
     v('se-cfg-winmsg',    cfg.winMessage);
-    if (cfg.skillRoll !== null) v('se-cfg-skillroll', cfg.skillRoll);
     const en = cfg.enabled || SE_DEF_CFG.enabled;
     c('se-en-rapport',   en.rapport   !== false);
     c('se-en-pressure',  en.pressure  !== false);
     c('se-en-deception', en.deception !== false);
     c('se-en-silence',   en.silence   !== false);
+    const tn = cfg.approachTN || SE_DEF_CFG.approachTN;
+    v('se-tn-rapport',   tn.rapport   ?? 6);
+    v('se-tn-pressure',  tn.pressure  ?? 8);
+    v('se-tn-deception', tn.deception ?? 8);
+    v('se-tn-silence',   tn.silence   ?? 4);
 }
 
 function readCfg() {
@@ -371,13 +421,17 @@ function readCfg() {
     cfg.resistance  = parseInt(g('se-cfg-resistance')?.value) || 100;
     cfg.maxAttempts = parseInt(g('se-cfg-maxatt')?.value) || 10;
     cfg.winMessage  = g('se-cfg-winmsg')?.value.trim() || 'Information extracted.';
-    const roll = g('se-cfg-skillroll')?.value;
-    cfg.skillRoll = roll !== '' ? parseInt(roll) : null;
     cfg.enabled = {
         rapport:   g('se-en-rapport')?.checked  !== false,
         pressure:  g('se-en-pressure')?.checked !== false,
         deception: g('se-en-deception')?.checked !== false,
         silence:   g('se-en-silence')?.checked  !== false
+    };
+    cfg.approachTN = {
+        rapport:   parseInt(g('se-tn-rapport')?.value)   || 6,
+        pressure:  parseInt(g('se-tn-pressure')?.value)  || 8,
+        deception: parseInt(g('se-tn-deception')?.value) || 8,
+        silence:   parseInt(g('se-tn-silence')?.value)   || 4
     };
 }
 
@@ -387,8 +441,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('se-ov-result-btn')?.addEventListener('click', () => {
         state.phase = 'idle';
         state.transcript = [];
+        state.pendingApproach = null;
         saveState(); render();
     });
+
+    document.getElementById('se-roll-confirm')?.addEventListener('click', seSubmitRoll);
+    document.getElementById('se-roll-cancel')?.addEventListener('click', seCancelRoll);
+    document.getElementById('se-roll-inp')?.addEventListener('keydown', e => { if (e.key === 'Enter') seSubmitRoll(); });
 
     window.addEventListener('storage', e => {
         if (e.key === SE_CFG_KEY)   { cfg   = loadCfg();   render(); }

@@ -161,6 +161,20 @@ function doDecrypt() {
 // ── Main render ────────────────────────────────────────────────────────────
 
 function render() {
+    // WIP badge always visible
+    const wipBadge = document.getElementById('fs-wip-badge');
+    if (wipBadge) wipBadge.style.display = '';
+
+    // Non-admin players see locked WIP screen only
+    if (!isAdmin) {
+        document.getElementById('fs-wip-screen').style.display = 'flex';
+        document.getElementById('fs-idle').style.display = 'none';
+        document.getElementById('fs-game').style.display = 'none';
+        renderStats();
+        return;
+    }
+
+    document.getElementById('fs-wip-screen').style.display = 'none';
     const idle = document.getElementById('fs-idle');
     const game = document.getElementById('fs-game');
     if (idle) idle.style.display = state.active ? 'none' : 'flex';

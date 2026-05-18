@@ -237,7 +237,7 @@
 
     <main class="main">
         <div class="page-header">
-            <h1>File System</h1>
+            <h1>File System <span id="fs-wip-badge" style="display:none;font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:0.2em;color:#d4890a;border:1px solid rgba(212,137,10,0.5);padding:2px 8px;vertical-align:middle;">WIP</span></h1>
             <div class="tagline">// REMOTE ACCESS &mdash; ENEMY ARCHIVE BROWSER //</div>
             <div class="header-divider"></div>
         </div>
@@ -261,6 +261,15 @@
                     </div>
                 </div>
                 <div class="fs-phase-badge" id="fs-phase-badge">STANDBY</div>
+            </div>
+
+            <!-- WIP locked screen (players only) -->
+            <div id="fs-wip-screen" class="fs-idle" style="display:none;">
+                <div class="fs-idle-icon" style="color:#d4890a;opacity:0.5;">&#9888;</div>
+                <div class="fs-idle-msg">
+                    FILE SYSTEM &mdash; WORK IN PROGRESS<br>
+                    <span style="opacity:0.5">MODULE UNDER DEVELOPMENT &mdash; OVERLORD ACCESS ONLY</span>
+                </div>
             </div>
 
             <!-- Idle screen -->

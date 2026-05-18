@@ -113,8 +113,14 @@ function renderSVG() {
     const nodesEl = document.getElementById('nm-nodes');
     if (!edgesEl || !nodesEl) return;
 
-    // Draw edges
+    // Player fog-of-war: only show compromised + reachable nodes
+    const visibleIds = isAdmin
+        ? new Set(net.nodes.map(n => n.id))
+        : new Set(net.nodes.filter(n => state.compromised.includes(n.id) || isReachable(n.id)).map(n => n.id));
+
+    // Draw edges (only between visible nodes)
     edgesEl.innerHTML = net.edges.map(([a, b]) => {
+        if (!visibleIds.has(a) || !visibleIds.has(b)) return '';
         const na = net.nodes.find(n => n.id === a);
         const nb = net.nodes.find(n => n.id === b);
         if (!na || !nb) return '';
@@ -125,8 +131,9 @@ function renderSVG() {
         return `<line x1="${na.x}" y1="${na.y}" x2="${nb.x}" y2="${nb.y}" stroke="${stroke}" stroke-width="${width}" stroke-dasharray="${bothComp ? 'none' : oneComp ? '8,4' : '4,8'}"/>`;
     }).join('');
 
-    // Draw nodes
+    // Draw nodes (all for overlord, fog-of-war for players)
     nodesEl.innerHTML = net.nodes.map(node => {
+        if (!visibleIds.has(node.id)) return '';
         const ns     = nodeState(node);
         const stroke = NODE_STROKE[ns] || '#2a2f45';
         const fill   = NODE_FILL[ns]   || '#06090f';
@@ -137,8 +144,9 @@ function renderSVG() {
         const filter = isComp ? 'url(#nm-glow-gold)' : isReach ? 'url(#nm-glow-cyan)' : '';
         const cursor = (isReach && state.phase === 'active') ? 'pointer' : 'default';
         const pulse  = isReach ? `<circle r="33" fill="none" stroke="${stroke}" stroke-width="1" opacity="0" class="nm-pulse-ring"><animate attributeName="r" values="28;38;28" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0;0.5" dur="2s" repeatCount="indefinite"/></circle>` : '';
-        const tn     = !isComp ? `<text text-anchor="middle" y="50" fill="#3a3f55" font-size="9" font-family="Share Tech Mono,monospace">TN ${nodeTN(node)}</text>` : '';
-        const checkmark = isComp ? `<text text-anchor="middle" y="50" fill="#b8a800" font-size="9" font-family="Share Tech Mono,monospace">✓ OK</text>` : '';
+        // TN only shown to overlord on the map; players see ??? in the probe panel
+        const tnText = isAdmin && !isComp ? `<text text-anchor="middle" y="50" fill="#3a3f55" font-size="9" font-family="Share Tech Mono,monospace">TN ${nodeTN(node)}</text>` : '';
+        const checkmark = isComp ? `<text text-anchor="middle" y="50" fill="#b8a800" font-size="9" font-family="Share Tech Mono,monospace">&#10003; OK</text>` : '';
 
         return `<g class="nm-node ${ns}" id="nmnode-${node.id}" data-id="${node.id}"
                    transform="translate(${node.x},${node.y})" style="cursor:${cursor}" ${filter ? `filter="${filter}"` : ''}>
@@ -146,7 +154,7 @@ function renderSVG() {
             <circle r="26" fill="${fill}" stroke="${stroke}" stroke-width="${isComp || isReach ? 2 : 1.5}"/>
             <text text-anchor="middle" dominant-baseline="central" fill="${textCol}" font-size="15" font-family="Share Tech Mono,monospace">${icon}</text>
             <text text-anchor="middle" y="38" fill="${textCol}" font-size="9.5" letter-spacing="0.5" font-family="Share Tech Mono,monospace">${node.label}</text>
-            ${tn}${checkmark}
+            ${tnText}${checkmark}
         </g>`;
     }).join('');
 
@@ -170,7 +178,7 @@ function openProbePanel(node) {
     const rollEl = document.getElementById('nm-probe-roll');
     document.getElementById('nm-probe-name').textContent = node.label;
     document.getElementById('nm-probe-meta').textContent = `${node.type.toUpperCase()} — Defense level ${node.defense}`;
-    document.getElementById('nm-probe-tn').textContent = nodeTN(node);
+    document.getElementById('nm-probe-tn').textContent = isAdmin ? nodeTN(node) : '???';
     if (result) { result.style.display = 'none'; result.textContent = ''; }
     if (rollEl) rollEl.value = '';
     if (panel) panel.classList.add('show');
@@ -289,6 +297,43 @@ function renderLog() {
     }).join('');
 }
 
+// ── Export / Import config ─────────────────────────────────────────────────
+
+function exportConfig() {
+    readCfgFields(); readNodeOverrides();
+    const blob = new Blob([JSON.stringify(cfg, null, 2)], { type:'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'netmap-config.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function importConfig() {
+    document.getElementById('nm-import-file').click();
+}
+
+function handleImport(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const loaded = JSON.parse(ev.target.result);
+            Object.assign(cfg, loaded);
+            saveCfg();
+            populateAdminFields();
+            buildNodeEditor();
+            render();
+            const sb = document.getElementById('nm-cfg-status-bar');
+            if (sb) sb.textContent = 'CONFIG IMPORTED SUCCESSFULLY';
+        } catch {
+            const sb = document.getElementById('nm-cfg-status-bar');
+            if (sb) sb.textContent = 'IMPORT FAILED — INVALID JSON';
+        }
+    };
+    reader.readAsText(file);
+}
+
 // ── Admin panel ────────────────────────────────────────────────────────────
 
 function buildNodeEditor() {
@@ -355,6 +400,13 @@ function initOverlordPanel() {
 
     document.getElementById('nm-cfg-save')?.addEventListener('click', () => {
         readCfgFields(); readNodeOverrides(); saveCfg(); render();
+    });
+
+    document.getElementById('nm-cfg-export')?.addEventListener('click', exportConfig);
+    document.getElementById('nm-cfg-import')?.addEventListener('click', importConfig);
+    document.getElementById('nm-import-file')?.addEventListener('change', e => {
+        handleImport(e.target.files[0]);
+        e.target.value = '';
     });
 
     populateAdminFields();
