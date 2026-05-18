@@ -384,6 +384,28 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
     border-color: #e74c3c;
     color: #e74c3c;
 }
+/* ── Shared minigame activity log ─────────────────────────────────── */
+.hack-log-panel { background: var(--bg-card); border: 1px solid var(--border); }
+.hack-panel-hdr {
+    background: var(--bg-panel); border-bottom: 1px solid var(--border);
+    padding: 0.42rem 0.75rem;
+    font-family: 'Share Tech Mono', monospace; font-size: 0.58rem;
+    color: var(--gold-dim); letter-spacing: 0.2em;
+    display: flex; align-items: center; gap: 0.5rem;
+}
+.hack-log-entries {
+    padding: 0.4rem 0.75rem; max-height: 130px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 0.14rem;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.hle { font-family: 'Share Tech Mono', monospace; font-size: 0.57rem; color: var(--text-dim); letter-spacing: 0.03em; display: flex; gap: 0.4rem; }
+.hle-t { color: var(--gold-dim); flex-shrink: 0; }
+.hle-u { color: var(--purple-bright, #9b59b6); flex-shrink: 0; min-width: 66px; }
+.hle.success .hle-m { color: var(--cyan); }
+.hle.danger  .hle-m { color: var(--danger); }
+.hle.warn    .hle-m { color: var(--warn, #e67e22); }
+
+/* ── Admin-gated CLEAR button ─────────────────────────────────────── */
 .log-clear-btn {
     background: transparent;
     border: 1px solid rgba(231,76,60,0.3);
@@ -395,8 +417,14 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
     cursor: pointer;
     transition: all 0.15s;
     margin-left: auto;
+    display: none; /* hidden for players — JS adds body.is-admin to show */
 }
+body.is-admin .log-clear-btn { display: inline-block; }
 .log-clear-btn:hover { color: #e74c3c; border-color: #e74c3c; }
+
+/* Evidence board — Notice roll only visible to Overlord */
+.ev-notice-roll { display: none; }
+body.is-admin .ev-notice-roll { display: flex; align-items: center; gap: 0.5rem; }
 
 .status-dot {
     display: inline-block;

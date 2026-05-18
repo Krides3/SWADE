@@ -37,7 +37,13 @@ document.addEventListener('DOMContentLoaded', function () {
   const logoutBtn = document.getElementById('nav-logout');
 
   if (nameEl && session) {
-    nameEl.textContent = session.username;
+    try {
+      const dossiers = JSON.parse(localStorage.getItem('luxorDossiers') || '[]');
+      const dossier  = dossiers.find(d => d.username === session.username);
+      nameEl.textContent = (dossier && dossier.callsign) ? dossier.callsign : session.username;
+    } catch (e) {
+      nameEl.textContent = session.username;
+    }
   }
 
   if (logoutBtn) {

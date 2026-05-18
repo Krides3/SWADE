@@ -12,6 +12,12 @@ let connectMode = false;
 let connectSrc  = null;
 let dragging    = null;
 let dragOffset  = { x:0, y:0 };
+let zoom = 1.0;
+const ZOOM_STEP = 0.15;
+const ZOOM_MIN  = 0.3;
+const ZOOM_MAX  = 2.0;
+const BOARD_W   = 1600;
+const BOARD_H   = 900;
 
 function loadCfg() {
     try { return Object.assign({ caseTitle:'CASE FILE', caseDesc:'Awaiting data...', noticeTN:6, cards:[], hiddenConns:[] }, JSON.parse(localStorage.getItem(EV_CFG_KEY) || '{}')); }
@@ -102,13 +108,25 @@ function getCardCenter(cardId) {
     return { x: pos.x + 85, y: pos.y + 45 };
 }
 
+function applyZoom() {
+    const wrap   = document.getElementById('ev-board-wrap');
+    const canvas = document.getElementById('ev-board-canvas');
+    const val    = document.getElementById('ev-zoom-val');
+    if (wrap) {
+        wrap.style.transform = `scale(${zoom})`;
+        wrap.style.transformOrigin = '0 0';
+    }
+    if (canvas) {
+        canvas.style.width  = (BOARD_W * zoom) + 'px';
+        canvas.style.height = (BOARD_H * zoom) + 'px';
+    }
+    if (val) val.textContent = Math.round(zoom * 100) + '%';
+}
+
 function renderSVG() {
     const svg = document.getElementById('ev-svg');
     if (!svg) return;
-    const board = document.getElementById('ev-board-wrap');
-    const w = board?.clientWidth  || 800;
-    const h = board?.clientHeight || 520;
-    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    svg.setAttribute('viewBox', `0 0 ${BOARD_W} ${BOARD_H}`);
 
     const lines = [];
 
@@ -277,19 +295,22 @@ function renderBoard() {
 function startDrag(e, cardId, el) {
     if (connectMode) return;
     e.preventDefault();
-    dragging   = cardId;
+    dragging = cardId;
     const rect = el.getBoundingClientRect();
-    dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    dragOffset = { x: (e.clientX - rect.left) / zoom, y: (e.clientY - rect.top) / zoom };
     el.classList.add('dragging');
 }
 
 function onMouseMove(e) {
     if (!dragging) return;
-    const board = document.getElementById('ev-board-wrap');
-    if (!board) return;
-    const brect = board.getBoundingClientRect();
-    const x = Math.max(0, Math.min(brect.width  - 170, e.clientX - brect.left  - dragOffset.x));
-    const y = Math.max(0, Math.min(brect.height - 90,  e.clientY - brect.top   - dragOffset.y));
+    const outer  = document.getElementById('ev-board-outer');
+    const canvas = document.getElementById('ev-board-canvas');
+    if (!outer || !canvas) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const rawX = (e.clientX - canvasRect.left) / zoom - dragOffset.x;
+    const rawY = (e.clientY - canvasRect.top)  / zoom - dragOffset.y;
+    const x = Math.max(0, Math.min(BOARD_W - 170, rawX));
+    const y = Math.max(0, Math.min(BOARD_H - 90,  rawY));
     const el = document.getElementById('evcard-' + dragging);
     if (el) { el.style.left = x + 'px'; el.style.top = y + 'px'; }
     state.positions[dragging] = { x, y };
@@ -316,13 +337,13 @@ function render() {
     document.getElementById('ev-chip-location').textContent = counts.location + ' LOCATIONS';
     document.getElementById('ev-chip-event').textContent    = counts.event    + ' EVENTS';
 
-    const idle  = document.getElementById('ev-idle');
-    const board = document.getElementById('ev-board-wrap');
+    const idle    = document.getElementById('ev-idle');
+    const section = document.getElementById('ev-board-section');
     const hasCards = cfg.cards.length > 0;
-    if (idle)  idle.style.display  = (!state.active && !hasCards) ? 'flex' : 'none';
-    if (board) board.style.display = (state.active || hasCards)   ? 'block' : 'none';
+    if (idle)    idle.style.display    = (!state.active && !hasCards) ? 'flex' : 'none';
+    if (section) section.style.display = (state.active || hasCards)   ? 'block' : 'none';
 
-    if (state.active || hasCards) renderBoard();
+    if (state.active || hasCards) { renderBoard(); applyZoom(); }
 
     const connectBtn = document.getElementById('ev-connect-btn');
     if (connectBtn) {
@@ -449,6 +470,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('ev-notice-btn')?.addEventListener('click', doNotice);
     document.getElementById('ev-notice-roll')?.addEventListener('keydown', e => { if (e.key === 'Enter') doNotice(); });
 
+    document.getElementById('ev-zoom-in')?.addEventListener('click', () => {
+        zoom = Math.min(ZOOM_MAX, parseFloat((zoom + ZOOM_STEP).toFixed(2)));
+        applyZoom();
+    });
+    document.getElementById('ev-zoom-out')?.addEventListener('click', () => {
+        zoom = Math.max(ZOOM_MIN, parseFloat((zoom - ZOOM_STEP).toFixed(2)));
+        applyZoom();
+    });
+    document.getElementById('ev-zoom-reset')?.addEventListener('click', () => {
+        zoom = 1.0; applyZoom();
+    });
+
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup',   onMouseUp);
 
@@ -469,6 +502,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.LuxorAuth && LuxorAuth.isAdmin()) {
         isAdmin = true;
+        document.body.classList.add('is-admin');
         initOverlordPanel();
     }
 

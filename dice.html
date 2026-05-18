@@ -110,6 +110,13 @@
             color:var(--gold-dim); letter-spacing:0.2em;
             display:flex; justify-content:space-between; align-items:center;
         }
+        .dr-clear-btn {
+            background:transparent; border:1px solid var(--border);
+            color:var(--text-dim); font-family:'Share Tech Mono',monospace;
+            font-size:0.52rem; letter-spacing:0.12em;
+            padding:1px 6px; cursor:pointer; transition:all 0.15s; margin-left:auto;
+        }
+        .dr-clear-btn:hover { color:#e74c3c; border-color:#e74c3c; }
         .dr-history { max-height:220px; overflow-y:auto; padding:0.25rem 0; }
         .dr-hist-empty { font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--text-dim); opacity:0.35; padding:0.75rem; text-align:center; }
         .dr-hist-row {
@@ -239,19 +246,11 @@
                 <div class="dr-result-placeholder">READY — PRESS ROLL OR HIT [R]</div>
             </div>
 
-            <!-- Reference -->
-            <div class="dr-ref">
-                <div class="dr-ref-item">TN: <strong>4</strong></div>
-                <div class="dr-ref-item">RAISE: <strong>+4 per raise</strong></div>
-                <div class="dr-ref-item">ACING: <strong>reroll on max</strong></div>
-                <div class="dr-ref-item">WILD DIE: <strong>d6, take highest</strong></div>
-            </div>
-
             <!-- History -->
             <div class="dr-history-panel">
                 <div class="dr-history-hdr">
                     &#9656; ROLL HISTORY
-                    <button class="log-clear-btn" id="dr-clear-btn">CLEAR</button>
+                    <button class="dr-clear-btn" id="dr-clear-btn">CLEAR</button>
                 </div>
                 <div class="dr-history" id="dr-history">
                     <div class="dr-hist-empty">No rolls yet.</div>

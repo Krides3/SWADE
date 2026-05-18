@@ -244,15 +244,21 @@ function render() {
         badge.textContent = labels[state.phase] || state.phase.toUpperCase();
     }
 
+    // Hide statusbar and resistance bar completely when idle
+    const statusbar = document.getElementById('se-statusbar');
+    const resWrap   = document.getElementById('se-res-wrap');
+    if (statusbar) statusbar.style.display = state.phase === 'idle' ? 'none' : '';
+    if (resWrap)   resWrap.style.display   = state.phase === 'idle' ? 'none' : '';
+
     const nameEl = document.getElementById('se-npc-name');
     const roleEl = document.getElementById('se-npc-role');
     if (nameEl) nameEl.textContent = cfg.npcName;
-    if (roleEl) roleEl.textContent = state.phase === 'idle' ? 'Awaiting Overlord activation...' : cfg.npcRole;
+    if (roleEl) roleEl.textContent = cfg.npcRole;
 
     const attEl = document.getElementById('se-att-stat');
     const resEl = document.getElementById('se-res-stat');
-    if (attEl) attEl.textContent = state.phase === 'idle' ? '0/0' : `${state.attempts}/${state.maxAttempts}`;
-    if (resEl) resEl.textContent = state.phase === 'idle' ? '—' : Math.max(0, state.resistance);
+    if (attEl) attEl.textContent = `${state.attempts}/${state.maxAttempts}`;
+    if (resEl) resEl.textContent = Math.max(0, state.resistance);
 
     const fill = document.getElementById('se-res-fill');
     const pct  = document.getElementById('se-res-pct');
@@ -458,6 +464,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.LuxorAuth && LuxorAuth.isAdmin()) {
         isAdmin = true;
+        document.body.classList.add('is-admin');
         initOverlordPanel();
     }
 

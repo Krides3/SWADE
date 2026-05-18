@@ -446,6 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (window.LuxorAuth && LuxorAuth.isAdmin()) {
         isAdmin = true;
+        document.body.classList.add('is-admin');
         initOverlordPanel();
     }
 
