@@ -266,10 +266,15 @@ function render() {
     const fill = document.getElementById('nm-det-fill');
     if (fill) fill.style.width = det + '%';
 
-    const idle = document.getElementById('nm-idle');
-    const game = document.getElementById('nm-game');
-    if (idle) idle.style.display = state.phase === 'idle' ? 'flex' : 'none';
-    if (game) game.style.display = state.phase === 'idle' ? 'none' : 'block';
+    const idle      = document.getElementById('nm-idle');
+    const game      = document.getElementById('nm-game');
+    const statusbar = document.getElementById('nm-statusbar');
+    const detWrap   = document.getElementById('nm-det-wrap');
+    const isIdle    = state.phase === 'idle';
+    if (idle)      idle.style.display      = isIdle ? 'flex'  : 'none';
+    if (game)      game.style.display      = isIdle ? 'none'  : 'block';
+    if (statusbar) statusbar.style.display = isIdle ? 'none'  : '';
+    if (detWrap)   detWrap.style.display   = isIdle ? 'none'  : '';
 
     if (state.phase !== 'idle') renderSVG();
     renderLog();

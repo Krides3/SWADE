@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUXOR &ndash; File System</title>
+    <title>LUXOR &ndash; File Decryption</title>
     <link rel="stylesheet" href="./style.css">
     <style>
         /* ══════════════════════════════════════════════════════════
@@ -218,7 +218,7 @@
             <li><a href="social.html"              data-icon="11">Social Eng.</a></li>
             <li><a href="netmap.html"              data-icon="12">Network Map</a></li>
             <li><a href="evidence.html"            data-icon="13">Evidence</a></li>
-            <li><a href="filesystem.html"          data-icon="14">File System</a></li>
+            <li><a href="filesystem.html"          data-icon="14">File Decryption</a></li>
             <li><a href="dossier.html"             data-icon="15">Dossier</a></li>
         </ul>
         <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
@@ -237,15 +237,15 @@
 
     <main class="main">
         <div class="page-header">
-            <h1>File System <span id="fs-wip-badge" style="display:none;font-family:'Share Tech Mono',monospace;font-size:0.55rem;letter-spacing:0.2em;color:#d4890a;border:1px solid rgba(212,137,10,0.5);padding:2px 8px;vertical-align:middle;">WIP</span></h1>
-            <div class="tagline">// REMOTE ACCESS &mdash; ENEMY ARCHIVE BROWSER //</div>
+            <h1>File Decryption</h1>
+            <div class="tagline">// REMOTE ARCHIVE ACCESS &mdash; CIPHER DECRYPTION //</div>
             <div class="header-divider"></div>
         </div>
 
         <div class="fs-wrap">
 
             <!-- Status bar -->
-            <div class="fs-statusbar">
+            <div class="fs-statusbar" id="fs-statusbar">
                 <div class="fs-server-block">
                     <div class="fs-server-name" id="fs-server-name">UNKNOWN SERVER</div>
                     <div class="fs-server-sub"  id="fs-server-sub">Awaiting Overlord activation...</div>
@@ -263,20 +263,11 @@
                 <div class="fs-phase-badge" id="fs-phase-badge">STANDBY</div>
             </div>
 
-            <!-- WIP locked screen (players only) -->
-            <div id="fs-wip-screen" class="fs-idle" style="display:none;">
-                <div class="fs-idle-icon" style="color:#d4890a;opacity:0.5;">&#9888;</div>
-                <div class="fs-idle-msg">
-                    FILE SYSTEM &mdash; WORK IN PROGRESS<br>
-                    <span style="opacity:0.5">MODULE UNDER DEVELOPMENT &mdash; OVERLORD ACCESS ONLY</span>
-                </div>
-            </div>
-
             <!-- Idle screen -->
             <div id="fs-idle" class="fs-idle">
                 <div class="fs-idle-icon">&#9635;</div>
                 <div class="fs-idle-msg">
-                    REMOTE FILE SYSTEM OFFLINE<br>
+                    FILE DECRYPTION OFFLINE<br>
                     <span style="opacity:0.5">AWAITING OVERLORD ACTIVATION</span>
                 </div>
             </div>
@@ -287,7 +278,7 @@
 
                     <!-- File tree -->
                     <div class="fs-tree">
-                        <div class="fs-tree-hdr">&#9656; REMOTE FILE SYSTEM</div>
+                        <div class="fs-tree-hdr">&#9656; REMOTE FILE ARCHIVE</div>
                         <div class="fs-tree-body" id="fs-tree-body"></div>
                     </div>
 
@@ -316,7 +307,7 @@
             <div class="hack-log-panel">
                 <div class="hack-panel-hdr">&#9656; ACCESS LOG <span id="fs-log-count">0 ENTRIES</span><button class="log-clear-btn" onclick="clearLog()">CLEAR</button></div>
                 <div class="hack-log-entries" id="fs-log-entries">
-                    <div class="hle"><span class="hle-m">File System module initialized.</span></div>
+                    <div class="hle"><span class="hle-m">File Decryption module initialized.</span></div>
                 </div>
             </div>
 
@@ -332,14 +323,14 @@
 <button id="fs-ov-toggle">&#9672; OVERLORD</button>
 <div id="fs-ov-panel" class="hidden">
     <div class="fs-ov-ph">
-        <span>&#9672; FILE SYSTEM &mdash; OVERLORD CONFIG</span>
+        <span>&#9672; FILE DECRYPTION &mdash; OVERLORD CONFIG</span>
         <button class="fs-ov-close" id="fs-ov-close">&#10005;</button>
     </div>
     <div class="fs-cfg">
 
         <div class="fs-cfg-status" id="fs-cfg-status-bar">STATUS: STANDBY</div>
 
-        <button class="fs-cfg-btn activate" id="fs-cfg-activate">&#9654; MOUNT FILE SYSTEM</button>
+        <button class="fs-cfg-btn activate" id="fs-cfg-activate">&#9654; MOUNT FILE ARCHIVE</button>
         <button class="fs-cfg-btn" id="fs-cfg-deactivate" style="border-color:#e74c3c;color:#e74c3c;background:rgba(192,57,43,0.06);">&#9632; UNMOUNT</button>
         <button class="fs-cfg-btn" id="fs-cfg-clear" style="border-color:#888;color:#888;">&#8635; CLEAR ALL FILES</button>
 

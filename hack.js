@@ -540,20 +540,29 @@
     }
 
     function renderIdle(area) {
-        area.innerHTML = `
-            <div class="cipher-splash">
-                <div class="cipher-splash-icon">▣</div>
-                <div class="cipher-splash-title">CIPHER TERMINAL</div>
-                <div class="cipher-splash-meta">TARGET: ${esc(cfg.targetName)}</div>
-                <div class="cipher-splash-desc">
-                    Password bypass required for mainframe access.<br>
-                    ${cfg.wordCount} candidate passwords detected — ${cfg.attempts} attempt${cfg.attempts !== 1?'s':''} available.<br>
-                    Bracket pairs <span style="color:#55bb66">[ ]</span> <span style="color:#b8a800">&lt; &gt;</span> <span style="color:#00bba0">{ }</span> hidden in the junk — click them for bonuses.
-                </div>
-                <div class="cipher-actions" style="margin-top:0.4rem;">
-                    <button class="cipher-btn cipher-btn-primary" onclick="startGame()">⬡ ACTIVATE TERMINAL</button>
-                </div>
-            </div>`;
+        if (isAdmin) {
+            area.innerHTML = `
+                <div class="cipher-splash">
+                    <div class="cipher-splash-icon">▣</div>
+                    <div class="cipher-splash-title">CIPHER TERMINAL</div>
+                    <div class="cipher-splash-meta">TARGET: ${esc(cfg.targetName)}</div>
+                    <div class="cipher-splash-desc">
+                        Password bypass required for mainframe access.<br>
+                        ${cfg.wordCount} candidate passwords detected — ${cfg.attempts} attempt${cfg.attempts !== 1?'s':''} available.<br>
+                        Bracket pairs <span style="color:#55bb66">[ ]</span> <span style="color:#b8a800">&lt; &gt;</span> <span style="color:#00bba0">{ }</span> hidden in the junk — click them for bonuses.
+                    </div>
+                    <div class="cipher-actions" style="margin-top:0.4rem;">
+                        <button class="cipher-btn cipher-btn-primary" onclick="startGame()">⬡ ACTIVATE TERMINAL</button>
+                    </div>
+                </div>`;
+        } else {
+            area.innerHTML = `
+                <div class="cipher-splash">
+                    <div class="cipher-splash-icon" style="opacity:0.2">▣</div>
+                    <div class="cipher-splash-title" style="opacity:0.35">CIPHER TERMINAL OFFLINE</div>
+                    <div class="cipher-splash-meta" style="opacity:0.25">AWAITING OVERLORD ACTIVATION</div>
+                </div>`;
+        }
     }
 
     function renderLost(area) {
