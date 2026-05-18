@@ -348,16 +348,105 @@
 
             <!-- ── Minigame Control ─────────────────────────────── -->
             <div class="admin-section">
-                <div class="admin-section-title">▸ MINIGAME CONTROL</div>
-                <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
-                    Each minigame has an embedded Overlord panel. Open the terminal to configure sequences,
-                    difficulty, and game state. Changes persist for all connected operators.
-                </p>
-                <div id="minigame-status-grid" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <a href="hack.html"     class="admin-btn" style="text-decoration:none;display:inline-block;">▦ HACKING TERMINAL</a>
-                    <a href="bomb.html"     class="admin-btn" style="text-decoration:none;display:inline-block;opacity:0.45;pointer-events:none;">◉ BOMB DEFUSAL</a>
-                    <a href="lockpick.html" class="admin-btn" style="text-decoration:none;display:inline-block;">⌗ LOCKPICK</a>
+                <div class="admin-section-title">▸ MINIGAME CONTROL — ALL MODULES</div>
+                <div id="mg-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:4px;"></div>
+            </div>
+
+            <!-- ── Social Engineering Config ─────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ SOCIAL ENGINEERING — QUICK CONFIG</div>
+                <div class="admin-form" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-field">
+                        <label class="form-label">NPC NAME</label>
+                        <input class="form-input" type="text" id="se-adm-npcname" placeholder="UNKNOWN SUBJECT">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">NPC ROLE</label>
+                        <input class="form-input" type="text" id="se-adm-npcrole" placeholder="Corporate Security Guard">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">RESISTANCE (max)</label>
+                        <input class="form-input" type="number" id="se-adm-resistance" min="10" max="500" value="100">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">MAX ATTEMPTS</label>
+                        <input class="form-input" type="number" id="se-adm-maxattempts" min="1" max="30" value="10">
+                    </div>
+                    <div class="form-field full-row">
+                        <label class="form-label">WIN MESSAGE</label>
+                        <input class="form-input" type="text" id="se-adm-winmsg" placeholder="Subject has divulged classified information.">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">TN — RAPPORT</label>
+                        <input class="form-input" type="number" id="se-adm-tn-rapport" min="2" max="12" value="6">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">TN — PRESSURE</label>
+                        <input class="form-input" type="number" id="se-adm-tn-pressure" min="2" max="12" value="8">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">TN — DECEPTION</label>
+                        <input class="form-input" type="number" id="se-adm-tn-deception" min="2" max="12" value="8">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">TN — SILENCE</label>
+                        <input class="form-input" type="number" id="se-adm-tn-silence" min="2" max="12" value="4">
+                    </div>
+                    <div class="form-field full-row" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap;">
+                        <button class="admin-btn" id="se-adm-save">SAVE CONFIG</button>
+                        <button class="admin-btn" id="se-adm-reset" style="border-color:rgba(192,57,43,0.4);color:#e74c3c;">RESET STATE</button>
+                        <a href="social.html" class="admin-btn" style="text-decoration:none;">OPEN MODULE ↗</a>
+                        <span id="se-adm-msg" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--cyan);"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Network Map Config ─────────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ NETWORK MAP — STATUS &amp; CONTROL</div>
+                <div id="nm-adm-status" style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);margin-bottom:14px;line-height:1.8;"></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <button class="admin-btn" id="nm-adm-reset" style="border-color:rgba(192,57,43,0.4);color:#e74c3c;">RESET STATE</button>
+                    <button class="admin-btn" id="nm-adm-reset-cfg" style="border-color:rgba(192,57,43,0.4);color:#e74c3c;">CLEAR CONFIG</button>
+                    <a href="netmap.html" class="admin-btn" style="text-decoration:none;">OPEN MODULE ↗</a>
+                    <span id="nm-adm-msg" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--cyan);"></span>
+                </div>
+            </div>
+
+            <!-- ── Evidence Board Config ──────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ EVIDENCE BOARD — STATUS &amp; CONTROL</div>
+                <div id="ev-adm-status" style="font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--text-dim);margin-bottom:14px;line-height:1.8;"></div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                    <button class="admin-btn" id="ev-adm-reset" style="border-color:rgba(192,57,43,0.4);color:#e74c3c;">RESET STATE</button>
+                    <button class="admin-btn" id="ev-adm-reset-cfg" style="border-color:rgba(192,57,43,0.4);color:#e74c3c;">CLEAR ALL CARDS</button>
+                    <a href="evidence.html" class="admin-btn" style="text-decoration:none;">OPEN MODULE ↗</a>
+                    <span id="ev-adm-msg" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--cyan);"></span>
+                </div>
+            </div>
+
+            <!-- ── File System Config ─────────────────────────────── -->
+            <div class="admin-section">
+                <div class="admin-section-title">▸ FILE SYSTEM — QUICK CONFIG</div>
+                <div class="admin-form" style="grid-template-columns:1fr 1fr;">
+                    <div class="form-field">
+                        <label class="form-label">SERVER NAME</label>
+                        <input class="form-input" type="text" id="fs-adm-name" placeholder="ENEMY-SRV-01">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">DECRYPT TN</label>
+                        <input class="form-input" type="number" id="fs-adm-tn" min="2" max="12" value="6">
+                    </div>
+                    <div class="form-field full-row">
+                        <label class="form-label">SERVER DESCRIPTION</label>
+                        <input class="form-input" type="text" id="fs-adm-desc" placeholder="Internal document archive">
+                    </div>
+                    <div class="form-field full-row" style="flex-direction:row;gap:10px;align-items:center;flex-wrap:wrap;">
+                        <button class="admin-btn" id="fs-adm-save">SAVE CONFIG</button>
+                        <button class="admin-btn" id="fs-adm-reset" style="border-color:rgba(192,57,43,0.4);color:#e74c3c;">RESET STATE</button>
+                        <a href="filesystem.html" class="admin-btn" style="text-decoration:none;">OPEN MODULE ↗</a>
+                        <span id="fs-adm-msg" style="font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--cyan);"></span>
+                    </div>
                 </div>
             </div>
 

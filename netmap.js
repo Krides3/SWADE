@@ -283,6 +283,8 @@ function render() {
 function addLog(type, msg) {
     state.log.push({ t: Date.now(), type, msg });
 }
+function clearLog() { state.log = []; saveState(); renderLog(); }
+window.clearLog = clearLog;
 
 function renderLog() {
     const el  = document.getElementById('nm-log-entries');

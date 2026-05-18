@@ -86,16 +86,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el) el.textContent = text;
   }
 });
-// Boot overlay — only plays once per browser (persists in localStorage)
+// Boot overlay — plays once per login session (sessionStorage flag set by login.js)
 document.addEventListener('DOMContentLoaded', function() {
   const overlay = document.getElementById('boot-overlay');
   if (!overlay) return;
 
-  if (localStorage.getItem('swadeLaunchPlayed')) {
+  if (!sessionStorage.getItem('luxorShowBoot')) {
     overlay.style.display = 'none';
   } else {
-    // Mark as played immediately so navigating away mid-animation doesn't reset it
-    localStorage.setItem('swadeLaunchPlayed', 'true');
+    sessionStorage.removeItem('luxorShowBoot');
 
     setTimeout(() => {
       overlay.classList.add('fade-out');
@@ -103,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     setTimeout(() => {
       overlay.style.display = 'none';
-    }, 4400); // 3.2s + 1.2s fade-out
+    }, 4400);
   }
 });
 // Add this function to script.js

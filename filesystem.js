@@ -27,6 +27,8 @@ function blankState() {
 }
 
 function addLog(type, msg) { state.log.push({ t:Date.now(), type, msg }); }
+function clearLog() { state.log = []; saveState(); renderLog(); }
+window.clearLog = clearLog;
 
 // ── File tree ──────────────────────────────────────────────────────────────
 

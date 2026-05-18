@@ -384,6 +384,20 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
     border-color: #e74c3c;
     color: #e74c3c;
 }
+.log-clear-btn {
+    background: transparent;
+    border: 1px solid rgba(231,76,60,0.3);
+    color: rgba(231,76,60,0.5);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.52rem;
+    letter-spacing: 0.12em;
+    padding: 1px 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: auto;
+}
+.log-clear-btn:hover { color: #e74c3c; border-color: #e74c3c; }
+
 .status-dot {
     display: inline-block;
     width: 6px; height: 6px;

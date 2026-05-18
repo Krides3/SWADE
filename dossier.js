@@ -100,6 +100,14 @@ function renderCard(d) {
     if (notesEl) notesEl.textContent = d.notes || '—';
 }
 
+function deleteOperator(username) {
+    if (!confirm(`Delete dossier for "${username}"?`)) return;
+    dossiers = dossiers.filter(d => d.username !== username);
+    saveDossiers();
+    render();
+}
+window.deleteOperator = deleteOperator;
+
 function renderAdminTable() {
     const tableEl = document.getElementById('do-admin-table');
     const rowsEl  = document.getElementById('do-admin-rows');
@@ -119,6 +127,7 @@ function renderAdminTable() {
             <span class="do-admin-user">${d.username}</span>
             <span class="do-admin-role">${d.role || '—'}</span>
             <button class="do-admin-edit-btn" onclick="loadIntoForm('${d.username}')">EDIT</button>
+            <button class="do-admin-del-btn" onclick="deleteOperator('${d.username}')">DEL</button>
         </div>`
     ).join('');
 }

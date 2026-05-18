@@ -8,15 +8,20 @@
     const MV_KEY = 'luxorMultiviewLayout';
 
     const TOOLS = [
-        { id: '',          label: '— SELECT MODULE —',   url: null },
-        { id: 'hack',      label: 'HACKING TERMINAL',    url: 'hack.html' },
-        { id: 'radio',     label: 'RADIO SCRAMBLER',     url: 'RadioScanner/index.html' },
-        { id: 'map',       label: 'ASSET MAP',           url: 'AssetMap/AssetMap.html' },
-        { id: 'dice',      label: 'DICE ROLLER',         url: 'dice.html' },
-        { id: 'timer',     label: 'MISSION TIMER',       url: 'timer.html' },
-        { id: 'comms',     label: 'HQ COMMS',            url: 'comms.html' },
-        { id: 'bomb',      label: 'BOMB DEFUSAL',        url: 'bomb.html' },
-        { id: 'lockpick',  label: 'LOCKPICK INTERFACE',  url: 'lockpick.html' },
+        { id: '',           label: '— SELECT MODULE —',   url: null },
+        { id: 'hack',       label: 'HACKING TERMINAL',    url: 'hack.html' },
+        { id: 'radio',      label: 'RADIO SCRAMBLER',     url: 'RadioScanner/index.html' },
+        { id: 'map',        label: 'ASSET MAP',           url: 'AssetMap/AssetMap.html' },
+        { id: 'dice',       label: 'DICE ROLLER',         url: 'dice.html' },
+        { id: 'timer',      label: 'MISSION TIMER',       url: 'timer.html' },
+        { id: 'comms',      label: 'HQ COMMS',            url: 'comms.html' },
+        { id: 'bomb',       label: 'BOMB DEFUSAL',        url: 'bomb.html' },
+        { id: 'lockpick',   label: 'LOCKPICK INTERFACE',  url: 'lockpick.html' },
+        { id: 'social',     label: 'SOCIAL ENGINEERING',  url: 'social.html' },
+        { id: 'netmap',     label: 'NETWORK MAP',         url: 'netmap.html' },
+        { id: 'evidence',   label: 'EVIDENCE BOARD',      url: 'evidence.html' },
+        { id: 'filesystem', label: 'FILE SYSTEM',         url: 'filesystem.html' },
+        { id: 'dossier',    label: 'OPERATOR DOSSIER',    url: 'dossier.html' },
     ];
 
     const PANE_COUNT = { '1': 1, '2h': 2, '2v': 2, '4': 4 };

@@ -176,13 +176,13 @@ function seSubmitRoll() {
         delta = -(eff.baseReduce + raises * eff.raiseBonus);
         cls   = 'success';
         const raiseStr = raises > 0 ? ` +${raises} raise${raises !== 1 ? 's' : ''}` : '';
-        addLog('success', `[${ap.label}] Success (roll ${roll} vs TN ${tn})${raiseStr} — resistance -${Math.abs(delta)}.`);
+        addLog('success', `[${ap.label}] Success (roll ${roll})${raiseStr} — resistance -${Math.abs(delta)}.`);
     } else {
         const backfired = eff.backfireChance > 0 && Math.random() < eff.backfireChance;
         if (backfired) {
             delta = eff.backfireGain;
             cls   = 'fail';
-            addLog('danger', `[${ap.label}] Failed (roll ${roll} vs TN ${tn}) & backfired — resistance +${delta}.`);
+            addLog('danger', `[${ap.label}] Failed (roll ${roll}) & backfired — resistance +${delta}.`);
         } else {
             cls = 'fail';
             addLog('danger', `[${ap.label}] Failed (roll ${roll}) — no effect.`);
@@ -231,6 +231,8 @@ function addTx(who, text, cls) {
 function addLog(type, msg) {
     state.log.push({ t: Date.now(), type, msg });
 }
+function clearLog() { state.log = []; saveState(); renderLog(); }
+window.clearLog = clearLog;
 
 // ── Render ─────────────────────────────────────────────────────────────────
 

@@ -121,7 +121,7 @@
         }
         .do-admin-rows { }
         .do-admin-row {
-            display:grid; grid-template-columns:1fr 1fr 1.5fr auto;
+            display:grid; grid-template-columns:1fr 1fr 1.5fr auto auto;
             padding:0.5rem 1rem; border-bottom:1px solid rgba(255,255,255,0.04);
             align-items:center; gap:0.5rem;
         }
@@ -136,6 +136,12 @@
             padding:3px 8px; cursor:pointer; transition:all 0.15s;
         }
         .do-admin-edit-btn:hover { color:var(--cyan); border-color:var(--cyan); }
+        .do-admin-del-btn {
+            background:transparent; border:1px solid rgba(231,76,60,0.3); color:rgba(231,76,60,0.6);
+            font-family:'Share Tech Mono',monospace; font-size:0.6rem; letter-spacing:0.1em;
+            padding:3px 8px; cursor:pointer; transition:all 0.15s;
+        }
+        .do-admin-del-btn:hover { color:#e74c3c; border-color:#e74c3c; }
 
         /* ── Player self-edit panel ─────────────────────────────── */
         .do-player-panel {

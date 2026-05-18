@@ -30,6 +30,8 @@ function blankState() {
 }
 
 function addLog(type, msg) { state.log.push({ t:Date.now(), type, msg }); }
+function clearLog() { state.log = []; saveState(); renderLog(); }
+window.clearLog = clearLog;
 
 // ── Card positioning ───────────────────────────────────────────────────────
 
@@ -153,6 +155,47 @@ function updateCardTitleDatalist() {
     dl.innerHTML = cfg.cards.map(c => `<option value="${c.title.replace(/"/g, '&quot;')}">`).join('');
 }
 
+// ── Image functions ────────────────────────────────────────────────────────
+
+function handleImageUpload(cardId, input) {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    const card = cfg.cards.find(c => c.id === cardId);
+    if (!card) return;
+    if (!card.images) card.images = [];
+    let loaded = 0;
+    files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const imgId = 'img' + Date.now() + Math.random().toString(36).slice(2, 6);
+            const isCover = card.images.length === 0;
+            card.images.push({ id: imgId, dataUrl: e.target.result, isCover, caption: '' });
+            loaded++;
+            if (loaded === files.length) { saveCfg(); renderBoard(); }
+        };
+        reader.readAsDataURL(file);
+    });
+    input.value = '';
+}
+window.handleImageUpload = handleImageUpload;
+
+function setCoverImage(cardId, imgId) {
+    const card = cfg.cards.find(c => c.id === cardId);
+    if (!card || !card.images) return;
+    card.images.forEach(img => { img.isCover = img.id === imgId; });
+    saveCfg(); renderBoard();
+}
+window.setCoverImage = setCoverImage;
+
+function removeImage(cardId, imgId) {
+    const card = cfg.cards.find(c => c.id === cardId);
+    if (!card || !card.images) return;
+    card.images = card.images.filter(img => img.id !== imgId);
+    if (card.images.length && !card.images.some(img => img.isCover)) card.images[0].isCover = true;
+    saveCfg(); renderBoard();
+}
+window.removeImage = removeImage;
+
 // ── Board rendering ────────────────────────────────────────────────────────
 
 function renderBoard() {
@@ -162,8 +205,27 @@ function renderBoard() {
     state.collapsed = state.collapsed || {};
 
     cfg.cards.forEach(card => {
-        const pos        = getPos(card.id);
+        const pos         = getPos(card.id);
         const isCollapsed = !!state.collapsed[card.id];
+        const images      = card.images || [];
+        const coverImg    = images.find(img => img.isCover) || images[0] || null;
+
+        const coverHtml = coverImg
+            ? `<div class="ev-card-cover"><img src="${coverImg.dataUrl}" alt="cover"></div>`
+            : '';
+
+        const imgsHtml = images.map(img =>
+            `<div class="ev-img-item">
+                <img class="ev-img-thumb${img.isCover ? ' cover' : ''}" src="${img.dataUrl}" title="${img.isCover ? 'Cover' : 'Click ★ to set cover'}" onclick="event.stopPropagation()">
+                <div class="ev-img-actions">
+                    <button class="ev-img-btn" title="Set as cover" onclick="event.stopPropagation();setCoverImage('${card.id}','${img.id}')">&#9733;</button>
+                    <button class="ev-img-btn del" title="Remove" onclick="event.stopPropagation();removeImage('${card.id}','${img.id}')">&#10005;</button>
+                </div>
+            </div>`
+        ).join('');
+
+        const uploadHtml = `<label class="ev-img-upload-lbl" onclick="event.stopPropagation()">+ IMG<input type="file" accept="image/*" multiple style="display:none" onchange="handleImageUpload('${card.id}',this)"></label>`;
+
         const el  = document.createElement('div');
         el.className = `ev-card ${card.type}${isCollapsed ? ' collapsed' : ''}`;
         el.id = 'evcard-' + card.id;
@@ -177,7 +239,12 @@ function renderBoard() {
                 </div>
                 <button class="ev-card-collapse" onclick="event.stopPropagation();toggleCollapse('${card.id}')">${isCollapsed ? '▼' : '▲'}</button>
             </div>
-            <div class="ev-card-body">${(card.body || '').replace(/\n/g,'<br>')}</div>
+            ${coverHtml}
+            <div class="ev-card-body">
+                ${(card.body || '').replace(/\n/g,'<br>')}
+                ${images.length ? `<div class="ev-img-grid">${imgsHtml}</div>` : ''}
+                ${uploadHtml}
+            </div>
         `;
 
         // Drag

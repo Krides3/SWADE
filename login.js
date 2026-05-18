@@ -10,6 +10,7 @@
         var password = document.getElementById('pw').value;
         var result   = LuxorAuth.login(username, password);
         if (result.ok) {
+            sessionStorage.setItem('luxorShowBoot', '1');
             window.location.replace('index.html');
         } else {
             var errEl = document.getElementById('err-msg');
