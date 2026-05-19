@@ -223,6 +223,8 @@ function renderBoard() {
     state.collapsed = state.collapsed || {};
 
     cfg.cards.forEach(card => {
+        if (card.hidden && !isAdmin) return;
+
         const pos         = getPos(card.id);
         const isCollapsed = !!state.collapsed[card.id];
         const images      = card.images || [];
@@ -244,8 +246,13 @@ function renderBoard() {
 
         const uploadHtml = `<label class="ev-img-upload-lbl" onclick="event.stopPropagation()">+ IMG<input type="file" accept="image/*" multiple style="display:none" onchange="handleImageUpload('${card.id}',this)"></label>`;
 
+        const hiddenBadge = (card.hidden && isAdmin)
+            ? `<span style="background:rgba(180,40,40,0.4);color:#e74c3c;font-size:0.55rem;padding:1px 5px;border-radius:2px;letter-spacing:0.05em;">HIDDEN</span>
+               <button class="ev-img-btn" style="font-size:0.55rem;padding:1px 6px;" onclick="event.stopPropagation();evRevealCard('${card.id}')">REVEAL</button>`
+            : '';
+
         const el  = document.createElement('div');
-        el.className = `ev-card ${card.type}${isCollapsed ? ' collapsed' : ''}`;
+        el.className = `ev-card ${card.type}${isCollapsed ? ' collapsed' : ''}${card.hidden ? ' ev-card-hidden' : ''}`;
         el.id = 'evcard-' + card.id;
         el.style.left = pos.x + 'px';
         el.style.top  = pos.y + 'px';
@@ -255,7 +262,7 @@ function renderBoard() {
                     <div class="ev-card-type">${card.type.toUpperCase()}</div>
                     <div class="ev-card-title">${card.title}</div>
                 </div>
-                <button class="ev-card-collapse" onclick="event.stopPropagation();toggleCollapse('${card.id}')">${isCollapsed ? '▼' : '▲'}</button>
+                <div style="display:flex;align-items:center;gap:4px;">${hiddenBadge}<button class="ev-card-collapse" onclick="event.stopPropagation();toggleCollapse('${card.id}')">${isCollapsed ? '▼' : '▲'}</button></div>
             </div>
             ${coverHtml}
             <div class="ev-card-body">
@@ -331,7 +338,7 @@ function render() {
     document.getElementById('ev-case-sub').textContent   = state.active ? cfg.caseDesc : 'Awaiting Overlord activation...';
 
     const counts = { clue:0, suspect:0, location:0, event:0 };
-    cfg.cards.forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; });
+    cfg.cards.forEach(c => { if (!c.hidden && counts[c.type] !== undefined) counts[c.type]++; });
     document.getElementById('ev-chip-clue').textContent     = counts.clue     + ' CLUES';
     document.getElementById('ev-chip-suspect').textContent  = counts.suspect  + ' SUSPECTS';
     document.getElementById('ev-chip-location').textContent = counts.location + ' LOCATIONS';
@@ -387,6 +394,39 @@ function removeHConn(i) {
     saveCfg(); renderHConnList();
 }
 
+// ── Evidence card reveal (called by hacking minigame on win) ──────────────
+
+window.evRevealCard = function(cardId) {
+    const card = cfg.cards.find(c => c.id === cardId);
+    if (!card) return;
+    card.hidden = false;
+    addLog('success', `EVIDENCE REVEALED: [${card.type.toUpperCase()}] ${card.title}`);
+    saveCfg(); renderBoard(); renderLog();
+};
+
+// ── Player add card ────────────────────────────────────────────────────────
+
+window.togglePlayerAddForm = function() {
+    const form = document.getElementById('ev-player-add-form');
+    if (!form) return;
+    const visible = form.style.display !== 'none';
+    form.style.display = visible ? 'none' : 'flex';
+};
+
+window.playerAddCard = function() {
+    const type  = document.getElementById('ev-player-type')?.value  || 'clue';
+    const title = document.getElementById('ev-player-title')?.value.trim();
+    const body  = document.getElementById('ev-player-body')?.value.trim() || '';
+    if (!title) { document.getElementById('ev-player-title')?.focus(); return; }
+    const id = 'p' + Date.now();
+    cfg.cards.push({ id, type, title, body });
+    addLog('', `[PLAYER] Card added: [${type.toUpperCase()}] ${title}`);
+    document.getElementById('ev-player-title').value = '';
+    document.getElementById('ev-player-body').value  = '';
+    document.getElementById('ev-player-add-form').style.display = 'none';
+    saveCfg(); render();
+};
+
 // ── Overlord panel ─────────────────────────────────────────────────────────
 
 function initOverlordPanel() {
@@ -412,13 +452,14 @@ function initOverlordPanel() {
     });
 
     document.getElementById('ev-cfg-add-card')?.addEventListener('click', () => {
-        const type  = document.getElementById('ev-new-type')?.value  || 'clue';
-        const title = document.getElementById('ev-new-title')?.value.trim();
-        const body  = document.getElementById('ev-new-body')?.value.trim()  || '';
+        const type   = document.getElementById('ev-new-type')?.value  || 'clue';
+        const title  = document.getElementById('ev-new-title')?.value.trim();
+        const body   = document.getElementById('ev-new-body')?.value.trim()  || '';
+        const hidden = !!document.getElementById('ev-new-hidden')?.checked;
         if (!title) return;
         const id = 'c' + Date.now();
-        cfg.cards.push({ id, type, title, body });
-        addLog('', `Card added: [${type.toUpperCase()}] ${title}`);
+        cfg.cards.push({ id, type, title, body, hidden });
+        addLog('', `Card added: [${type.toUpperCase()}] ${title}${hidden ? ' [HIDDEN]' : ''}`);
         document.getElementById('ev-new-title').value = '';
         document.getElementById('ev-new-body').value  = '';
         saveCfg(); render();

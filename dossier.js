@@ -32,6 +32,45 @@ function skillClass(die) {
     return 'do-skill-dice';
 }
 
+// ── Custom skills helpers ───────────────────────────────────────────────────
+
+function customSkillRowHTML(name, die, inputCls, selCls) {
+    const opts = ['—','d4','d6','d8','d10','d12'].map(d =>
+        `<option${d === die ? ' selected' : ''}>${d}</option>`).join('');
+    return `<div class="do-custom-skill-row" style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.3rem;">
+        <input class="${inputCls}" placeholder="SKILL NAME" value="${name}" style="flex:1;min-width:0;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+        <select class="${selCls}" style="min-width:3.2rem;">${opts}</select>
+        <button type="button" onclick="removeCustomSkillRow(this)" style="background:rgba(180,40,40,0.7);color:#fff;border:none;padding:0.15rem 0.45rem;cursor:pointer;font-size:0.6rem;font-family:inherit;">&#10005;</button>
+    </div>`;
+}
+
+function renderCustomSkillRows(containerId, skills, inputCls, selCls) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    el.innerHTML = (skills || []).map(cs =>
+        customSkillRowHTML(cs.name || '', cs.die || '—', inputCls, selCls)
+    ).join('');
+}
+
+function readCustomSkillRows(containerId) {
+    const el = document.getElementById(containerId);
+    if (!el) return [];
+    return Array.from(el.querySelectorAll('.do-custom-skill-row')).map(row => ({
+        name: row.querySelector('input')?.value.trim().toUpperCase() || '',
+        die:  row.querySelector('select')?.value || '—'
+    })).filter(cs => cs.name && cs.die !== '—');
+}
+
+window.removeCustomSkillRow = btn => btn.closest('.do-custom-skill-row')?.remove();
+window.addPfCustomSkill  = () => {
+    const el = document.getElementById('do-pf-custom-skills');
+    if (el) el.insertAdjacentHTML('beforeend', customSkillRowHTML('', '—', 'do-pf-inp', 'do-pf-sel'));
+};
+window.addAdmCustomSkill = () => {
+    const el = document.getElementById('do-f-custom-skills');
+    if (el) el.insertAdjacentHTML('beforeend', customSkillRowHTML('', '—', 'do-cfg-inp', 'do-cfg-sel'));
+};
+
 // ── Card rendering ─────────────────────────────────────────────────────────
 
 function renderCard(d) {
@@ -67,14 +106,21 @@ function renderCard(d) {
     const skillsEl = document.getElementById('do-skills');
     if (skillsEl) {
         const relevant = SKILLS.filter(s => d.skills?.[s] && d.skills[s] !== '—');
-        skillsEl.innerHTML = (relevant.length ? relevant : SKILLS).map(s => {
+        const builtIn = (relevant.length ? relevant : SKILLS).map(s => {
             const die = d.skills?.[s] || '—';
             if (die === '—') return '';
             return `<div class="do-skill-row">
                 <span class="do-skill-name">${SKILL_LABELS[s]}</span>
                 <span class="${skillClass(die)}">${die}</span>
             </div>`;
-        }).join('') || '<div style="font-size:0.6rem;color:var(--text-dim);opacity:0.5;">No skills on file.</div>';
+        }).join('');
+        const custom = (d.customSkills || []).filter(cs => cs.name && cs.die && cs.die !== '—').map(cs =>
+            `<div class="do-skill-row">
+                <span class="do-skill-name">${cs.name}</span>
+                <span class="${skillClass(cs.die)}">${cs.die}</span>
+            </div>`
+        ).join('');
+        skillsEl.innerHTML = (builtIn + custom) || '<div style="font-size:0.6rem;color:var(--text-dim);opacity:0.5;">No skills on file.</div>';
     }
 
     // Edges
@@ -158,6 +204,7 @@ function populatePlayerForm(d) {
     v('do-pf-notes',     d?.notes     || '');
     ATTRS.forEach(a  => vs(`do-pf-${a}`,  d?.attrs?.[a]  || 'd6'));
     SKILLS.forEach(s => vs(`do-pf-${s}`,  d?.skills?.[s] || '—'));
+    renderCustomSkillRows('do-pf-custom-skills', d?.customSkills || [], 'do-pf-inp', 'do-pf-sel');
 }
 
 function readPlayerForm(username) {
@@ -178,6 +225,7 @@ function readPlayerForm(username) {
     };
     ATTRS.forEach(a  => { d.attrs[a]  = g(`do-pf-${a}`); });
     SKILLS.forEach(s => { d.skills[s] = g(`do-pf-${s}`); });
+    d.customSkills = readCustomSkillRows('do-pf-custom-skills');
     return d;
 }
 
@@ -270,6 +318,7 @@ function loadIntoForm(username) {
 
     ATTRS.forEach(a  => vs(`do-f-${a}`,  d.attrs?.[a]  || 'd6'));
     SKILLS.forEach(s => vs(`do-f-${s}`,  d.skills?.[s] || '—'));
+    renderCustomSkillRows('do-f-custom-skills', d?.customSkills || [], 'do-cfg-inp', 'do-cfg-sel');
 
     // Refresh select to show editing target
     const sel = document.getElementById('do-cfg-user-sel');
@@ -298,6 +347,7 @@ function readForm() {
     };
     ATTRS.forEach(a  => { d.attrs[a]  = g(`do-f-${a}`); });
     SKILLS.forEach(s => { d.skills[s] = g(`do-f-${s}`); });
+    d.customSkills = readCustomSkillRows('do-f-custom-skills');
     return d;
 }
 

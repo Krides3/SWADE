@@ -116,6 +116,7 @@
             font-size:0.7rem; padding:0; line-height:1; flex-shrink:0; margin-top:1px;
         }
         .ev-card-collapse:hover { color:var(--cyan); }
+        .ev-card.ev-card-hidden { opacity:0.5; border-style:dashed; filter:grayscale(0.4); }
         .ev-card.collapsed { min-height:auto; }
         .ev-card.collapsed .ev-card-body { display:none; }
         /* Cover image — shown when collapsed, hidden when expanded */
@@ -300,6 +301,21 @@
 
             <!-- Board -->
             <div id="ev-board-section" style="display:none;">
+                <div style="display:flex;align-items:center;gap:0.8rem;padding:0.4rem 0 0.2rem;">
+                    <button class="ev-btn" onclick="togglePlayerAddForm()">+ ADD CARD</button>
+                </div>
+                <div id="ev-player-add-form" style="display:none;flex-wrap:wrap;gap:0.5rem;align-items:flex-start;padding:0.5rem;background:var(--bg-panel);border:1px solid var(--border);margin-bottom:0.5rem;">
+                    <select id="ev-player-type" class="ev-cfg-sel" style="min-width:7rem;">
+                        <option value="clue">CLUE</option>
+                        <option value="suspect">SUSPECT</option>
+                        <option value="location">LOCATION</option>
+                        <option value="event">EVENT</option>
+                    </select>
+                    <input id="ev-player-title" class="ev-cfg-inp" type="text" maxlength="30" placeholder="Card title" style="flex:1;min-width:8rem;">
+                    <textarea id="ev-player-body" class="ev-cfg-ta" rows="2" placeholder="Details..." style="flex:1 1 100%;min-width:10rem;"></textarea>
+                    <button class="ev-cfg-btn" onclick="playerAddCard()" style="border-color:var(--cyan);color:var(--cyan);">ADD</button>
+                    <button class="ev-cfg-btn" onclick="togglePlayerAddForm()">CANCEL</button>
+                </div>
                 <div class="ev-zoom-bar">
                     ZOOM:
                     <button class="ev-zoom-btn" id="ev-zoom-out">&#8722;</button>
@@ -380,6 +396,10 @@
         <div class="ev-cfg-row">
             <div class="ev-cfg-lbl">BODY TEXT</div>
             <textarea class="ev-cfg-ta" id="ev-new-body" rows="2" placeholder="Details, notes..."></textarea>
+        </div>
+        <div class="ev-cfg-row" style="align-items:center;gap:0.5rem;">
+            <input type="checkbox" id="ev-new-hidden" style="margin:0;cursor:pointer;">
+            <label for="ev-new-hidden" class="ev-cfg-lbl" style="cursor:pointer;margin:0;">HIDDEN (not visible to players until revealed)</label>
         </div>
         <button class="ev-cfg-btn" id="ev-cfg-add-card" style="border-color:var(--cyan);color:var(--cyan);">+ ADD CARD</button>
 

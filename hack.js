@@ -43,8 +43,9 @@
         successMsg:      'SIGNAL LOCK BYPASSED — ACCESS GRANTED',
         failMsg:         'SIGNAL LOCK FAILED — SECURITY ALERT TRIGGERED',
         extractedData:   [...DEF_EXFIL],
-        revealNodeOnWin: '',
-        skillRoll:       null
+        revealNodeOnWin:      '',
+        revealEvidenceCardId: '',
+        skillRoll:            null
     };
 
     /* ── SWADE modifier ─────────────────────────────────────────── */
@@ -65,6 +66,13 @@
     }
 
     /* ── Asset node list ────────────────────────────────────────── */
+    function getHiddenEvidenceCards() {
+        try {
+            const evCfg = JSON.parse(localStorage.getItem('luxorEvidenceConfig') || '{}');
+            return (evCfg.cards || []).filter(c => c.hidden);
+        } catch(e) { return []; }
+    }
+
     function getAssetNodes() {
         const BUILTIN_IDS = [
             {id:'luxor-hq',name:'LUXOR HQ'},{id:'london-stn',name:'London Station'},
@@ -234,6 +242,16 @@
                     localStorage.setItem('luxorAssetRedacted', JSON.stringify(r));
                 } catch(e) {}
             }
+            if (cfg.revealEvidenceCardId) {
+                try {
+                    const evCfg = JSON.parse(localStorage.getItem('luxorEvidenceConfig') || '{}');
+                    const card = (evCfg.cards || []).find(c => c.id === cfg.revealEvidenceCardId);
+                    if (card) {
+                        card.hidden = false;
+                        localStorage.setItem('luxorEvidenceConfig', JSON.stringify(evCfg));
+                    }
+                } catch(e) {}
+            }
             setTimeout(startExfilReadout, 400);
         }
     }
@@ -287,7 +305,8 @@
         cfg.secretCode   = gv('adm-secret-code').trim().toUpperCase().replace(/[^0-9A-F]/g, '');
         cfg.successMsg   = gv('adm-success-msg').trim() || cfg.successMsg;
         cfg.failMsg      = gv('adm-fail-msg').trim()    || cfg.failMsg;
-        cfg.revealNodeOnWin = gv('adm-reveal-node');
+        cfg.revealNodeOnWin      = gv('adm-reveal-node');
+        cfg.revealEvidenceCardId = gv('adm-reveal-evidence');
 
         const rawExfil = gv('adm-exfil').split('\n');
         if (rawExfil.length > 0) cfg.extractedData = rawExfil;
@@ -637,6 +656,16 @@
                 opt.value = n.id; opt.textContent = n.name + ' [' + n.id + ']';
                 if (n.id === cfg.revealNodeOnWin) opt.selected = true;
                 revealSel.appendChild(opt);
+            });
+        }
+        const evRevealSel = document.getElementById('adm-reveal-evidence');
+        if (evRevealSel) {
+            evRevealSel.innerHTML = '<option value="">— NONE —</option>';
+            getHiddenEvidenceCards().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id; opt.textContent = '[' + c.type.toUpperCase() + '] ' + c.title;
+                if (c.id === cfg.revealEvidenceCardId) opt.selected = true;
+                evRevealSel.appendChild(opt);
             });
         }
     }

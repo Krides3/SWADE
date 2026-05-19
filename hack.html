@@ -560,6 +560,13 @@
                             <div class="adm-hint">Node must have its REDACTED flag set in the Asset Map for this to take effect. Cleared automatically on win.</div>
                         </div>
                         <div class="adm-field full" style="border-top:1px solid var(--border);padding-top:0.6rem;margin-top:0.2rem;">
+                            <label class="adm-label">REVEAL EVIDENCE CARD ON WIN â€" Unhides a hidden card on the Evidence Board when cracked</label>
+                            <select class="adm-input" id="adm-reveal-evidence" style="cursor:pointer;">
+                                <option value="">â€" NONE â€"</option>
+                            </select>
+                            <div class="adm-hint">Card must be marked HIDDEN in the Evidence Board. Revealed automatically on win. Reload list after adding hidden cards.</div>
+                        </div>
+                        <div class="adm-field full" style="border-top:1px solid var(--border);padding-top:0.6rem;margin-top:0.2rem;">
                             <label class="adm-label">â–¸ SKILL ROLL RESULT â€” TN 4 &nbsp;|&nbsp; +1 raise per 4 pts above TN &nbsp;|&nbsp; blank = standard</label>
                             <input class="adm-input" type="number" id="adm-skill-roll" min="0" max="20" placeholder="e.g. 8 = 1 raise easier Â· 3 = below TN harder">
                             <div class="adm-hint" id="adm-skill-roll-lbl" style="color:var(--text-dim);font-size:0.72rem;margin-top:3px;">â†’ No roll entered â€” standard difficulty</div>

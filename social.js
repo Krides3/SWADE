@@ -112,6 +112,16 @@ let cfg   = loadCfg();
 let state = loadState();
 let isAdmin = false;
 
+function getOperatorName() {
+    try {
+        const ses = window.LuxorAuth && LuxorAuth.getSession();
+        const uname = ses ? ses.username : null;
+        const dos = JSON.parse(localStorage.getItem('luxorDossiers') || '[]');
+        const d = dos.find(d => d.username === uname);
+        return (d && d.callsign) ? d.callsign : (uname || 'OPERATOR');
+    } catch { return 'OPERATOR'; }
+}
+
 function loadCfg() {
     try { return Object.assign({}, SE_DEF_CFG, JSON.parse(localStorage.getItem(SE_CFG_KEY) || '{}')); }
     catch { return Object.assign({}, SE_DEF_CFG); }
@@ -191,7 +201,7 @@ function seSubmitRoll() {
 
     if (delta !== 0) state.resistance = Math.max(0, state.resistance + delta);
 
-    addTx('OPERATOR', pick(ap.opLines), '');
+    addTx(getOperatorName(), pick(ap.opLines), '', true);
     const isBackfire = !success && delta > 0;
     const npcResp = isBackfire
         ? pick(ap.badResp.length ? ap.badResp : ap.goodResp)
@@ -224,8 +234,8 @@ function seCancelRoll() {
 }
 window.seCancelRoll = seCancelRoll;
 
-function addTx(who, text, cls) {
-    state.transcript.push({ who, text, cls });
+function addTx(who, text, cls, isOperator) {
+    state.transcript.push({ who, text, cls, isOperator: !!isOperator });
 }
 
 function addLog(type, msg) {
@@ -342,7 +352,7 @@ function renderTranscript() {
     entries.forEach(e => {
         const d = document.createElement('div');
         d.className = 'se-entry' + (e.cls ? ' ' + e.cls : '');
-        const whoClass = e.who === 'OPERATOR' ? 'operator' : e.who === 'SYSTEM' ? 'system' : 'npc';
+        const whoClass = e.isOperator ? 'operator' : e.who === 'SYSTEM' ? 'system' : 'npc';
         d.innerHTML = `<span class="se-who ${whoClass}">${e.who}</span><span class="se-msg">${e.text}</span>`;
         body.appendChild(d);
     });

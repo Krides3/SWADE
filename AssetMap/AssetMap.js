@@ -462,6 +462,34 @@ const DEPLOYMENTS = [
         lat: 30.0131, lng: 33.0458,
         clearance: 1, type: 'outpost', status: 'inactive',
         notes: 'Standby. Contract pending renewal. Equipment cached on-site.'
+    },
+    {
+        id: 'extract-nairobi',
+        name: 'Overwatch Team Kilo',
+        lat: -1.2921, lng: 36.8219,
+        clearance: 1, type: 'outpost', status: 'active',
+        notes: 'Armed escort contract. Client: regional logistics firm. 3-man team. Rotating 48h shifts.'
+    },
+    {
+        id: 'convoy-warsaw',
+        name: 'Convoy Detail Bravo',
+        lat: 52.2297, lng: 21.0122,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'High-value cargo escort. Eastern Europe route. Daily 0800-2000.'
+    },
+    {
+        id: 'perimeter-ras',
+        name: 'Site Security Delta',
+        lat: 25.2048, lng: 55.2708,
+        clearance: 1, type: 'outpost', status: 'active',
+        notes: 'Facility perimeter. Energy sector client. 6-post rotation. No incidents.'
+    },
+    {
+        id: 'close-prot-london',
+        name: 'Close Protection Alpha',
+        lat: 51.5074, lng: -0.1278,
+        clearance: 1, type: 'ground', status: 'active',
+        notes: 'Executive protection. Finance sector client. 2-man detail. London metro.'
     }
 ];
 
@@ -910,6 +938,7 @@ function vehicleTT(v) {
     <div class="tt-row">TYPE: <b>${typeLabel}</b></div>
     ${statusHtml}
     <div class="tt-row">SPEED: <b>${ok ? route.speedKmh + ' km/h' : '—'}</b></div>
+    ${ok && route.notes ? `<div class="tt-notes">${route.notes}</div>` : ''}
     <div class="tt-clr">CLR REQUIRED: ${route.clearance}</div>
   </div>`;
 }
@@ -1382,6 +1411,7 @@ function renderManageTab() {
                     </select>
                 </div>
                 <input class="lx-field-inp" data-field="speedKmh" type="number" placeholder="Speed km/h" value="${r.speedKmh||''}" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;box-sizing:border-box;">
+                <textarea class="lx-field-inp" data-field="notes" placeholder="Route notes" rows="2" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;resize:vertical;box-sizing:border-box;">${r.notes||''}</textarea>
                 <button class="lx-save-rte" data-id="${r.id}" style="background:rgba(0,255,231,0.08);border:1px solid #00ffe7;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;letter-spacing:1px;padding:5px;cursor:pointer;">SAVE CHANGES</button>
             </div>`;
         c.appendChild(row);
@@ -1630,7 +1660,7 @@ function injectAddUI() {
 
         /* ── Settings panel (time scale) ── */
         #lx-set-btn {
-            position:fixed; bottom:1em; left:1em; z-index:950;
+            position:fixed; bottom:9.5em; left:1em; z-index:950;
             width:42px; height:42px;
             background:rgba(8,8,18,0.95); border:1px solid #b8a80080;
             color:#b8a800; font-size:16px; cursor:pointer;
@@ -1639,7 +1669,7 @@ function injectAddUI() {
         }
         #lx-set-btn:hover { background:rgba(184,168,0,0.1); }
         #lx-set-panel {
-            position:fixed; bottom:4.5em; left:1em; z-index:950;
+            position:fixed; bottom:13.5em; left:1em; z-index:950;
             width:260px; padding:14px 16px;
             background:rgba(6,8,18,0.98); border:1px solid #b8a80060;
             font-family:'Consolas','Courier New',monospace; font-size:12px; color:#b8a800;
