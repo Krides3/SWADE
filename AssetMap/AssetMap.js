@@ -959,7 +959,7 @@ function buildDeployments() {
         if (!canSeeDeployment(d)) return;
         const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
             .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
-            .on('dblclick', () => showDeployDetail(d))
+            .on('dblclick', (e) => { L.DomEvent.stop(e); showDeployDetail(d, e.originalEvent); })
             .addTo(map);
         deployMarkers[d.id] = m;
     });
@@ -973,7 +973,7 @@ function updateDeployVisibility() {
         if (show && !marker) {
             const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
                 .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
-                .on('dblclick', () => showDeployDetail(d))
+                .on('dblclick', (e) => { L.DomEvent.stop(e); showDeployDetail(d, e.originalEvent); })
                 .addTo(map);
             deployMarkers[d.id] = m;
         } else if (show && marker) {
@@ -1547,13 +1547,12 @@ window.renderManageTab = renderManageTab;
 
 // ── Node detail popup (double-click) ───────────────────────────────────────
 
-function showDeployDetail(d) {
+function showDeployDetail(d, mouseEvt) {
     document.getElementById('lx-node-detail')?.remove();
     const admin   = window.LuxorAuth && LuxorAuth.isAdmin();
     const redMap  = getRedactedMap();
     const redacted = !!redMap[d.id];
     const canSee  = admin || PLAYER_CLEARANCE >= d.clearance;
-    const showFull = canSee && (!redacted || admin);
 
     const statusColor = { active:'#00e5c8', inactive:'#6b6860', compromised:'#c0392b', unknown:'#b8a800' }[d.status] || '#6b6860';
 
@@ -1587,6 +1586,21 @@ function showDeployDetail(d) {
         </div>
         <div class="nd-body">${bodyHtml}${editBtn}</div>
     `;
+
+    // Position at cursor, clamped to viewport
+    const PW = Math.min(420, window.innerWidth - 20);
+    const cx = mouseEvt ? mouseEvt.clientX : window.innerWidth / 2;
+    const cy = mouseEvt ? mouseEvt.clientY : window.innerHeight / 2;
+    let left = cx - PW / 2;
+    let top  = cy + 14;
+    left = Math.max(10, Math.min(window.innerWidth  - PW - 10, left));
+    top  = Math.max(10, Math.min(window.innerHeight - 200,     top));
+    panel.style.left  = left + 'px';
+    panel.style.top   = top  + 'px';
+    panel.style.width = PW   + 'px';
+    // Remove the transform centering
+    panel.style.transform = 'none';
+
     document.body.appendChild(panel);
 
     // Close on outside click
@@ -1755,8 +1769,7 @@ function injectAddUI() {
         #lx-set-panel.hidden { display:none; }
         /* ── Node detail panel ── */
         #lx-node-detail {
-            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-            z-index:9999; width:min(420px,90vw); max-height:80vh; overflow-y:auto;
+            position:fixed; z-index:9999; max-height:80vh; overflow-y:auto;
             background:rgba(4,6,16,0.98); border:1px solid #00ffe7;
             font-family:'Consolas','Courier New',monospace; font-size:12px; color:#00ffe7;
             box-shadow:0 0 40px rgba(0,255,231,0.2); padding:0;

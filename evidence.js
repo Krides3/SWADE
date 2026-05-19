@@ -203,29 +203,22 @@ function renderSVG() {
 
     const lines = [];
 
-    // Player connections — colored dashed, clickable
+    // Player connections — colored dashed
     state.playerConns.forEach(([a, b]) => {
         const ca = getCardCenter(a), cb = getCardCenter(b);
         const col = getConnColor(a, b);
-        const colRgba = col + (col.length === 7 ? 'bb' : '');
-        lines.push(`<g style="cursor:pointer" onclick="showConnMenu('${a}','${b}',event)">
-            <line x1="${ca.x}" y1="${ca.y}" x2="${cb.x}" y2="${cb.y}" stroke="transparent" stroke-width="14"/>
-            <line x1="${ca.x}" y1="${ca.y}" x2="${cb.x}" y2="${cb.y}" stroke="${col}" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.7"/>
-        </g>`);
+        lines.push(`<line x1="${ca.x}" y1="${ca.y}" x2="${cb.x}" y2="${cb.y}" stroke="${col}" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.7"/>`);
     });
 
-    // Revealed hidden connections — gold solid, admin-clickable
+    // Revealed hidden connections — gold solid
     state.revealedConns.forEach(([a, b]) => {
         const ca = cfg.cards.find(c => c.title === a || c.id === a);
         const cb = cfg.cards.find(c => c.title === b || c.id === b);
         if (!ca || !cb) return;
         const pa = getCardCenter(ca.id), pb = getCardCenter(cb.id);
         const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
-        lines.push(`<g style="cursor:${isAdmin?'pointer':'default'}" ${isAdmin?`onclick="showRevealedConnMenu('${a}','${b}',event)"`:''}>`);
-        lines.push(`<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="transparent" stroke-width="14"/>`);
         lines.push(`<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="rgba(184,168,0,0.7)" stroke-width="2" filter="url(#ev-glow)"/>`);
-        lines.push(`<text x="${mx}" y="${my - 6}" text-anchor="middle" fill="#b8a800" font-size="9" font-family="Share Tech Mono,monospace" pointer-events="none">LINKED</text>`);
-        lines.push(`</g>`);
+        lines.push(`<text x="${mx}" y="${my - 6}" text-anchor="middle" fill="#b8a800" font-size="9" font-family="Share Tech Mono,monospace">LINKED</text>`);
     });
 
     svg.innerHTML = `<defs><filter id="ev-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines.join('')}`;
@@ -295,6 +288,14 @@ function removeImage(cardId, imgId) {
 }
 window.removeImage = removeImage;
 
+function toggleCardCoverAlways(cardId) {
+    const card = cfg.cards.find(c => c.id === cardId);
+    if (!card) return;
+    card.coverAlwaysVisible = !card.coverAlwaysVisible;
+    saveCfg(); renderBoard();
+}
+window.toggleCardCoverAlways = toggleCardCoverAlways;
+
 // ── Board rendering ────────────────────────────────────────────────────────
 
 function renderBoard() {
@@ -312,7 +313,7 @@ function renderBoard() {
         const coverImg    = images.find(img => img.isCover) || images[0] || null;
 
         const coverHtml = coverImg
-            ? `<div class="ev-card-cover"><img src="${coverImg.dataUrl}" alt="cover"></div>`
+            ? `<div class="ev-card-cover${card.coverAlwaysVisible ? ' cover-always' : ''}"><img src="${coverImg.dataUrl}" alt="cover"></div>`
             : '';
 
         const imgsHtml = images.map(img =>
@@ -326,6 +327,10 @@ function renderBoard() {
         ).join('');
 
         const uploadHtml = `<label class="ev-img-upload-lbl" onclick="event.stopPropagation()">+ IMG<input type="file" accept="image/*" multiple style="display:none" onchange="handleImageUpload('${card.id}',this)"></label>`;
+
+        const coverToggleHtml = images.length > 0
+            ? `<button class="ev-img-btn" title="Toggle cover visibility" onclick="event.stopPropagation();toggleCardCoverAlways('${card.id}')" style="font-size:0.6rem;padding:2px 6px;">${card.coverAlwaysVisible ? '▣ Always' : '▢ On collapse'}</button>`
+            : '';
 
         const hiddenBadge = (card.hidden && isAdmin)
             ? `<span style="background:rgba(180,40,40,0.4);color:#e74c3c;font-size:0.55rem;padding:1px 5px;border-radius:2px;letter-spacing:0.05em;">HIDDEN</span>
@@ -349,7 +354,7 @@ function renderBoard() {
             <div class="ev-card-body">
                 ${(card.body || '').replace(/\n/g,'<br>')}
                 ${images.length ? `<div class="ev-img-grid">${imgsHtml}</div>` : ''}
-                ${uploadHtml}
+                <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">${uploadHtml}${coverToggleHtml}</div>
             </div>
         `;
 
@@ -486,23 +491,59 @@ window.evRevealCard = function(cardId) {
 
 // ── Player add card ────────────────────────────────────────────────────────
 
+let _pendingAddImage      = null;
+let _pendingAdminAddImage = null;
+
+window.handleAdminAddFormImage = function(input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        _pendingAdminAddImage = { id:'img'+Date.now(), dataUrl: e.target.result, isCover:true, caption:'' };
+        const prev = document.getElementById('ev-new-img-preview');
+        if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+};
+
+window.handleAddFormImage = function(input) {
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        _pendingAddImage = { id:'img'+Date.now(), dataUrl: e.target.result, isCover:true, caption:'' };
+        const prev = document.getElementById('ev-add-img-preview');
+        if (prev) { prev.src = e.target.result; prev.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+};
+
 window.togglePlayerAddForm = function() {
     const form = document.getElementById('ev-player-add-form');
     if (!form) return;
     const visible = form.style.display !== 'none';
     form.style.display = visible ? 'none' : 'flex';
+    if (visible) { _pendingAddImage = null; }
 };
 
 window.playerAddCard = function() {
-    const type  = document.getElementById('ev-player-type')?.value  || 'clue';
-    const title = document.getElementById('ev-player-title')?.value.trim();
-    const body  = document.getElementById('ev-player-body')?.value.trim() || '';
+    const type       = document.getElementById('ev-player-type')?.value  || 'clue';
+    const title      = document.getElementById('ev-player-title')?.value.trim();
+    const body       = document.getElementById('ev-player-body')?.value.trim() || '';
+    const coverAlways= !!document.getElementById('ev-add-cover-always')?.checked;
     if (!title) { document.getElementById('ev-player-title')?.focus(); return; }
     const id = 'p' + Date.now();
-    cfg.cards.push({ id, type, title, body });
+    const card = { id, type, title, body, coverAlwaysVisible: coverAlways };
+    if (_pendingAddImage) card.images = [_pendingAddImage];
+    cfg.cards.push(card);
     addLog('', `[PLAYER] Card added: [${type.toUpperCase()}] ${title}`);
     document.getElementById('ev-player-title').value = '';
     document.getElementById('ev-player-body').value  = '';
+    const imgInput = document.getElementById('ev-add-img-input');
+    if (imgInput) imgInput.value = '';
+    const imgPrev = document.getElementById('ev-add-img-preview');
+    if (imgPrev) { imgPrev.src=''; imgPrev.style.display='none'; }
+    _pendingAddImage = null;
     document.getElementById('ev-player-add-form').style.display = 'none';
     saveCfg(); render();
 };
@@ -531,16 +572,24 @@ function initOverlordPanel() {
     });
 
     document.getElementById('ev-cfg-add-card')?.addEventListener('click', () => {
-        const type   = document.getElementById('ev-new-type')?.value  || 'clue';
-        const title  = document.getElementById('ev-new-title')?.value.trim();
-        const body   = document.getElementById('ev-new-body')?.value.trim()  || '';
-        const hidden = !!document.getElementById('ev-new-hidden')?.checked;
+        const type       = document.getElementById('ev-new-type')?.value  || 'clue';
+        const title      = document.getElementById('ev-new-title')?.value.trim();
+        const body       = document.getElementById('ev-new-body')?.value.trim()  || '';
+        const hidden     = !!document.getElementById('ev-new-hidden')?.checked;
+        const coverAlways= !!document.getElementById('ev-new-cover-always')?.checked;
         if (!title) return;
         const id = 'c' + Date.now();
-        cfg.cards.push({ id, type, title, body, hidden });
+        const card = { id, type, title, body, hidden, coverAlwaysVisible: coverAlways };
+        if (_pendingAdminAddImage) card.images = [_pendingAdminAddImage];
+        cfg.cards.push(card);
         addLog('', `Card added: [${type.toUpperCase()}] ${title}${hidden ? ' [HIDDEN]' : ''}`);
         document.getElementById('ev-new-title').value = '';
         document.getElementById('ev-new-body').value  = '';
+        const ni = document.getElementById('ev-new-img-input');
+        if (ni) ni.value = '';
+        const np = document.getElementById('ev-new-img-preview');
+        if (np) { np.src=''; np.style.display='none'; }
+        _pendingAdminAddImage = null;
         saveCfg(); render();
     });
 
@@ -571,9 +620,55 @@ function readCfgFields() {
     cfg.noticeTN  = parseInt(document.getElementById('ev-cfg-noticeTN')?.value) || 6;
 }
 
+// ── Connection hit-testing (JS, since SVG has pointer-events:none) ──────────
+
+function distToSegment(px, py, x1, y1, x2, y2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const lenSq = dx*dx + dy*dy;
+    if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+    const t = Math.max(0, Math.min(1, ((px-x1)*dx + (py-y1)*dy) / lenSq));
+    return Math.hypot(px - (x1 + t*dx), py - (y1 + t*dy));
+}
+
+function setupConnClickHandler() {
+    const outer = document.getElementById('ev-board-outer');
+    if (!outer) return;
+    outer.addEventListener('click', function(evt) {
+        if (evt.target.closest?.('.ev-card')) return;
+        if (connectMode) return;
+        const canvas = document.getElementById('ev-board-canvas');
+        if (!canvas) return;
+        const rect = canvas.getBoundingClientRect();
+        const bx = (evt.clientX - rect.left) / zoom;
+        const by = (evt.clientY - rect.top)  / zoom;
+        const HIT = 10;
+        for (const [a, b] of (state.playerConns || [])) {
+            const ca = getCardCenter(a), cb = getCardCenter(b);
+            if (distToSegment(bx, by, ca.x, ca.y, cb.x, cb.y) < HIT) {
+                showConnMenu(a, b, evt);
+                return;
+            }
+        }
+        if (isAdmin) {
+            for (const [a, b] of (state.revealedConns || [])) {
+                const ca_card = cfg.cards.find(c => c.title === a || c.id === a);
+                const cb_card = cfg.cards.find(c => c.title === b || c.id === b);
+                if (!ca_card || !cb_card) continue;
+                const pa = getCardCenter(ca_card.id), pb = getCardCenter(cb_card.id);
+                if (distToSegment(bx, by, pa.x, pa.y, pb.x, pb.y) < HIT) {
+                    showRevealedConnMenu(a, b, evt);
+                    return;
+                }
+            }
+        }
+    });
+}
+
 // ── Init ───────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupConnClickHandler();
+
     document.getElementById('ev-connect-btn')?.addEventListener('click', () => {
         connectMode = !connectMode;
         connectSrc  = null;
