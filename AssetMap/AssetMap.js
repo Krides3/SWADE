@@ -1379,7 +1379,8 @@ function renderManageTab() {
                 <div class="lx-mgr-name">${d.name}</div>
                 <div class="lx-mgr-sub">${d.type} · ${d.status} · CLR${d.clearance}</div>
             </div>
-            <div style="display:flex;gap:5px;flex-shrink:0;">
+            <div style="display:flex;gap:5px;flex-shrink:0;align-items:center;">
+                <button class="lx-mgr-redact" data-id="${d.id}" style="background:none;border:1px solid ${isNodeRedacted(d.id)?'#c0392b':'#00ffe730'};color:${isNodeRedacted(d.id)?'#e74c3c':'#888'};cursor:pointer;font-size:9px;letter-spacing:1px;padding:3px 7px;font-family:Consolas,monospace;">${isNodeRedacted(d.id)?'UNREDACT':'REDACT'}</button>
                 <button class="lx-mgr-edit" style="background:none;border:1px solid #00ffe750;color:#00ffe7;cursor:pointer;font-size:9px;letter-spacing:1px;padding:3px 7px;font-family:Consolas,monospace;" data-type="dep" data-id="${d.id}">EDIT</button>
                 <button class="lx-mgr-del" data-type="dep" data-id="${d.id}">DELETE</button>
             </div>
@@ -1474,6 +1475,16 @@ function renderManageTab() {
                 const vi = vehicles.findIndex(v => v.route.id === btn.dataset.id);
                 if (vi >= 0) { const v = vehicles[vi]; if (v.marker) v.marker.remove(); if (v.pathLine) v.pathLine.remove(); vehicles.splice(vi, 1); }
             }
+            renderManageTab();
+        });
+    });
+
+    // Wire REDACT toggle
+    c.querySelectorAll('.lx-mgr-redact').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const cur = isNodeRedacted(btn.dataset.id);
+            setNodeRedacted(btn.dataset.id, !cur);
+            updateDeployVisibility();
             renderManageTab();
         });
     });
@@ -1625,6 +1636,7 @@ function showDeployDetail(d, mouseEvt) {
     panel.style.transform = 'none';
 
     document.body.appendChild(panel);
+    makeDraggable(panel, '.nd-hdr');
 
     // Close on outside click
     setTimeout(() => {
@@ -1682,6 +1694,7 @@ function showRouteDetail(v, mouseEvt) {
     top  = Math.max(10, Math.min(window.innerHeight - 220,     top));
     panel.style.cssText += `position:fixed;left:${left}px;top:${top}px;width:${PW}px;transform:none;`;
     document.body.appendChild(panel);
+    makeDraggable(panel, '.nd-hdr');
 
     setTimeout(() => {
         document.addEventListener('click', function outside(e) {
@@ -1695,6 +1708,38 @@ function showMsg(el, text, ok) {
     el.textContent = text;
     el.className   = 'lx-msg ' + (ok ? 'ok' : 'err');
     setTimeout(() => { el.textContent = ''; el.className = 'lx-msg'; }, 3000);
+}
+
+// ── Drag helper — makes any fixed panel draggable by its header ─────────────
+function makeDraggable(panel, handleSel) {
+    const handle = handleSel ? panel.querySelector(handleSel) : panel;
+    if (!handle) return;
+    handle.style.cursor = 'move';
+    let ox = 0, oy = 0, sx = 0, sy = 0;
+    handle.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return;
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT' ||
+            e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+        e.preventDefault();
+        const rect = panel.getBoundingClientRect();
+        // Snap to top/left so dragging works regardless of how it was originally positioned
+        panel.style.bottom = 'auto';
+        panel.style.right  = 'auto';
+        panel.style.top    = rect.top  + 'px';
+        panel.style.left   = rect.left + 'px';
+        sx = e.clientX; sy = e.clientY;
+        ox = rect.left;  oy = rect.top;
+        function onMove(me) {
+            panel.style.left = Math.max(0, ox + me.clientX - sx) + 'px';
+            panel.style.top  = Math.max(0, oy + me.clientY - sy) + 'px';
+        }
+        function onUp() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup',   onUp);
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+    });
 }
 
 function injectAddUI() {
@@ -1723,6 +1768,7 @@ function injectAddUI() {
             display:flex; justify-content:space-between; align-items:center;
             padding:8px 12px; border-bottom:1px solid #00ffe730;
             font-size:13px; letter-spacing:2px; font-weight:bold; flex-shrink:0;
+            cursor:move; user-select:none;
         }
         .lx-ph-close { background:none; border:none; color:#00ffe7; cursor:pointer; font-size:15px; padding:0; }
         .lx-tabs { display:flex; border-bottom:1px solid #00ffe730; flex-shrink:0; }
@@ -1856,6 +1902,7 @@ function injectAddUI() {
         #lx-node-detail .nd-hdr {
             display:flex; justify-content:space-between; align-items:center;
             padding:10px 14px; border-bottom:1px solid #00ffe730; background:rgba(0,255,231,0.04);
+            cursor:move; user-select:none;
         }
         #lx-node-detail .nd-title { font-size:13px; letter-spacing:2px; font-weight:bold; }
         #lx-node-detail .nd-close {
@@ -2047,6 +2094,9 @@ function injectAddUI() {
         </div><!-- end tab-body -->
     </div>`;
     document.body.appendChild(wrap);
+
+    // Make + panel draggable by its header bar
+    makeDraggable(document.getElementById('lx-add-panel'), '.lx-ph');
 
     // ---- Tab switching ----
     const panel = document.getElementById('lx-add-panel');

@@ -360,9 +360,11 @@ function renderBoard() {
             ? `<button class="ev-img-btn" title="Toggle cover visibility" onclick="event.stopPropagation();toggleCardCoverAlways('${card.id}')" style="font-size:0.6rem;padding:2px 6px;">${card.coverAlwaysVisible ? '▣ Always' : '▢ On collapse'}</button>`
             : '';
 
-        const hiddenBadge = (card.hidden && isAdmin)
-            ? `<span style="background:rgba(180,40,40,0.4);color:#e74c3c;font-size:0.55rem;padding:1px 5px;border-radius:2px;letter-spacing:0.05em;">HIDDEN</span>
-               <button class="ev-img-btn" style="font-size:0.55rem;padding:1px 6px;" onclick="event.stopPropagation();evRevealCard('${card.id}')">REVEAL</button>`
+        const hiddenBadge = isAdmin
+            ? (card.hidden
+                ? `<span style="background:rgba(180,40,40,0.4);color:#e74c3c;font-size:0.55rem;padding:1px 5px;border-radius:2px;letter-spacing:0.05em;">HIDDEN</span>
+                   <button class="ev-img-btn" style="font-size:0.55rem;padding:1px 6px;color:#2ecc71;border-color:rgba(46,204,113,0.4);" onclick="event.stopPropagation();toggleCardHidden('${card.id}')">SHOW</button>`
+                : `<button class="ev-img-btn" style="font-size:0.55rem;padding:1px 6px;color:#888;border-color:rgba(255,255,255,0.12);" onclick="event.stopPropagation();toggleCardHidden('${card.id}')">HIDE</button>`)
             : '';
 
         const el  = document.createElement('div');
@@ -507,15 +509,27 @@ function removeHConn(i) {
     saveCfg(); renderHConnList();
 }
 
-// ── Evidence card reveal (called by hacking minigame on win) ──────────────
+// ── Evidence card visibility ───────────────────────────────────────────────
 
 window.evRevealCard = function(cardId) {
     const card = cfg.cards.find(c => c.id === cardId);
     if (!card) return;
     card.hidden = false;
     addLog('success', `EVIDENCE REVEALED: [${card.type.toUpperCase()}] ${card.title}`);
-    saveCfg(); renderBoard(); renderLog();
+    saveCfg(); render();
 };
+
+function toggleCardHidden(cardId) {
+    if (!isAdmin) return;
+    const card = cfg.cards.find(c => c.id === cardId);
+    if (!card) return;
+    card.hidden = !card.hidden;
+    addLog('', card.hidden
+        ? `[OVERLORD] Card hidden: ${card.title}`
+        : `[OVERLORD] Card shown: ${card.title}`);
+    saveCfg(); render();
+}
+window.toggleCardHidden = toggleCardHidden;
 
 // ── Player add card ────────────────────────────────────────────────────────
 
