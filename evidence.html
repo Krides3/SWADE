@@ -312,6 +312,7 @@
                             <input id="ev-add-img-input" type="file" accept="image/*" style="display:none" onchange="handleAddFormImage(this)">
                         </label>
                         <img id="ev-add-img-preview" src="" alt="" style="display:none;height:40px;width:60px;object-fit:cover;border:1px solid var(--border);">
+                        <button id="ev-add-img-clear" class="ev-cfg-btn" onclick="clearAddFormImage()" style="display:none;padding:0.2rem 0.5rem;font-size:0.6rem;color:#e74c3c;border-color:rgba(192,57,43,0.4);">✕ REMOVE</button>
                         <label style="display:flex;align-items:center;gap:0.4rem;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);cursor:pointer;">
                             <input type="checkbox" id="ev-add-cover-always" style="margin:0;cursor:pointer;">
                             Show image with title (always visible)
@@ -407,6 +408,7 @@
                 <input id="ev-new-img-input" type="file" accept="image/*" style="display:none" onchange="handleAdminAddFormImage(this)">
             </label>
             <img id="ev-new-img-preview" src="" alt="" style="display:none;height:34px;width:50px;object-fit:cover;border:1px solid var(--border);">
+            <button id="ev-new-img-clear" class="ev-cfg-btn" onclick="clearAdminAddFormImage()" style="display:none;padding:0.2rem 0.5rem;font-size:0.6rem;color:#e74c3c;border-color:rgba(192,57,43,0.4);">✕ REMOVE</button>
             <label style="display:flex;align-items:center;gap:0.4rem;font-family:'Share Tech Mono',monospace;font-size:0.6rem;color:var(--text-dim);cursor:pointer;margin-top:0.2rem;width:100%;">
                 <input type="checkbox" id="ev-new-cover-always" style="margin:0;cursor:pointer;">
                 Show image with title (always visible)

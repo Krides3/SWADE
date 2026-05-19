@@ -989,6 +989,25 @@ function updateDeployVisibility() {
 
 const vehicles = [];
 
+// ---- Vehicle state persistence ----
+function loadVehicleState() {
+    try { return JSON.parse(localStorage.getItem(LS_VSTATE)) || {}; } catch { return {}; }
+}
+function saveVehicleState() {
+    const snap = {};
+    vehicles.forEach(v => {
+        if (!v.done) snap[v.route.id] = {
+            segIdx: v.segIdx, progress: v.progress,
+            direction: v.direction, dwelling: v.dwelling,
+            dwellRemaining: v.dwellRemaining, dwellingAtWpIdx: v.dwellingAtWpIdx
+        };
+    });
+    localStorage.setItem(LS_VSTATE, JSON.stringify(snap));
+}
+// Save positions every 10 seconds and on page unload
+setInterval(saveVehicleState, 10000);
+window.addEventListener('beforeunload', saveVehicleState);
+
 class Vehicle {
     constructor(route) {
         this.route = route;
@@ -1000,13 +1019,15 @@ class Vehicle {
 
         this.numSegs  = this.wps.length - 1;
         this.loopMode = normalizeLoop(route.loop);
-        this.direction = 1;
-        this.segIdx    = this.numSegs > 1 ? Math.floor(Math.random() * this.numSegs) : 0;
-        this.progress  = Math.random();
 
-        this.dwelling       = false;
-        this.dwellRemaining = 0;
-        this.dwellingAtWpIdx = -1;
+        // Restore saved position, or start at a random point on first load
+        const _saved = loadVehicleState()[route.id];
+        this.direction       = _saved ? _saved.direction       : 1;
+        this.segIdx          = _saved ? Math.min(_saved.segIdx, this.numSegs - 1) : (this.numSegs > 1 ? Math.floor(Math.random() * this.numSegs) : 0);
+        this.progress        = _saved ? _saved.progress        : Math.random();
+        this.dwelling        = _saved ? !!_saved.dwelling      : false;
+        this.dwellRemaining  = _saved ? (_saved.dwellRemaining || 0) : 0;
+        this.dwellingAtWpIdx = _saved ? (_saved.dwellingAtWpIdx ?? -1) : -1;
         this.lastTooltipUpdate = 0;
         this.lastTs  = null;
         this.done    = false;
@@ -1031,6 +1052,7 @@ class Vehicle {
 
         this.marker = L.marker(initPos, { icon: makeVehicleIcon(route.type, initBrng), zIndexOffset: 500 })
             .bindTooltip(vehicleTT(this), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
+            .on('dblclick', (e) => { L.DomEvent.stop(e); showRouteDetail(this, e.originalEvent); })
             .addTo(map);
     }
 
@@ -1204,6 +1226,7 @@ const LS_DEP_OVERRIDES = 'luxor_dep_overrides';  // { id: { name, lat, lng, type
 const LS_RTE_OVERRIDES = 'luxor_rte_overrides';  // { id: { name, clearance, speedKmh, loop } }
 const LS_DEP_HIDDEN    = 'luxor_dep_hidden';      // [id, ...]
 const LS_RTE_HIDDEN    = 'luxor_rte_hidden';      // [id, ...]
+const LS_VSTATE        = 'luxor_vehicle_state';   // { routeId: { segIdx, progress, direction, dwelling, dwellRemaining, dwellingAtWpIdx } }
 
 function getStoredDeps()     { try { return JSON.parse(localStorage.getItem(LS_DEPS)          || '[]'); } catch { return []; } }
 function getStoredRtes()     { try { return JSON.parse(localStorage.getItem(LS_RTES)          || '[]'); } catch { return []; } }
@@ -1604,6 +1627,62 @@ function showDeployDetail(d, mouseEvt) {
     document.body.appendChild(panel);
 
     // Close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', function outside(e) {
+            const p = document.getElementById('lx-node-detail');
+            if (p && !p.contains(e.target)) { p.remove(); document.removeEventListener('click', outside); }
+        });
+    }, 100);
+}
+
+function showRouteDetail(v, mouseEvt) {
+    document.getElementById('lx-node-detail')?.remove();
+    const admin  = window.LuxorAuth && LuxorAuth.isAdmin();
+    const r      = v.route;
+    const canSee = admin || PLAYER_CLEARANCE >= r.clearance;
+
+    let bodyHtml = '';
+    if (!canSee) {
+        bodyHtml = `<div class="nd-row"><div class="nd-val nd-redact">████████████████████████████████<br>████████ CLEARANCE REQUIRED ████████<br>████████████████████████████████</div></div>`;
+    } else {
+        const wpList = (v.wps || []).map((wp, i) => wp.label || `WP${i+1}`).join(' → ');
+        const segPct = Math.round(v.progress * 100);
+        const status = v.dwelling ? `DOCKED at ${v.wps[v.dwellingAtWpIdx]?.label || 'waypoint'}` : `En route · seg ${v.segIdx + 1}/${v.numSegs} · ${segPct}%`;
+        bodyHtml = `
+            <div class="nd-row"><div class="nd-label">CALLSIGN</div><div class="nd-val">${r.name}</div></div>
+            <div class="nd-row"><div class="nd-label">TYPE</div><div class="nd-val">${(r.type || 'vehicle').toUpperCase()}</div></div>
+            <div class="nd-row"><div class="nd-label">SPEED</div><div class="nd-val">${r.speedKmh} km/h</div></div>
+            <div class="nd-row"><div class="nd-label">CLR REQ.</div><div class="nd-val">${r.clearance}</div></div>
+            <div class="nd-row"><div class="nd-label">ROUTE</div><div class="nd-val" style="font-size:10px;opacity:0.8;">${wpList}</div></div>
+            <div class="nd-row"><div class="nd-label">STATUS</div><div class="nd-val" style="color:#00e5c8;">${status}</div></div>
+            ${admin ? `<div style="color:rgba(0,229,200,0.4);font-size:10px;opacity:0.7;padding-top:4px;">[ADMIN] ID: ${r.id}</div>` : ''}
+        `;
+    }
+
+    const editBtn = admin
+        ? `<button class="nd-edit-btn" onclick="document.getElementById('lx-node-detail').remove();document.getElementById('lx-add-btn').click();setTimeout(()=>{document.querySelector('[data-tab=mgr]').click();setTimeout(()=>{const s=document.getElementById('lx-mgr-search');if(s){s.value='${r.id}';renderManageTab();}},100);},100);">EDIT IN MANAGE TAB &#9656;</button>`
+        : '';
+
+    const panel = document.createElement('div');
+    panel.id = 'lx-node-detail';
+    panel.innerHTML = `
+        <div class="nd-hdr">
+            <span class="nd-title">&#9670; ROUTE DETAIL</span>
+            <button class="nd-close" onclick="document.getElementById('lx-node-detail').remove()">&#10005;</button>
+        </div>
+        <div class="nd-body">${bodyHtml}${editBtn}</div>
+    `;
+
+    const PW = Math.min(380, window.innerWidth - 20);
+    const cx = mouseEvt ? mouseEvt.clientX : window.innerWidth / 2;
+    const cy = mouseEvt ? mouseEvt.clientY : window.innerHeight / 2;
+    let left = cx - PW / 2;
+    let top  = cy + 14;
+    left = Math.max(10, Math.min(window.innerWidth  - PW - 10, left));
+    top  = Math.max(10, Math.min(window.innerHeight - 220,     top));
+    panel.style.cssText += `position:fixed;left:${left}px;top:${top}px;width:${PW}px;transform:none;`;
+    document.body.appendChild(panel);
+
     setTimeout(() => {
         document.addEventListener('click', function outside(e) {
             const p = document.getElementById('lx-node-detail');
