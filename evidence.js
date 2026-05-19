@@ -26,13 +26,18 @@ function loadCfg() {
 function saveCfg() { localStorage.setItem(EV_CFG_KEY, JSON.stringify(cfg)); }
 
 function loadState() {
-    try { return JSON.parse(localStorage.getItem(EV_STATE_KEY)) || blankState(); }
+    try {
+        const s = JSON.parse(localStorage.getItem(EV_STATE_KEY)) || blankState();
+        s.active = true;
+        s.connColors = s.connColors || {};
+        return s;
+    }
     catch { return blankState(); }
 }
 function saveState() { localStorage.setItem(EV_STATE_KEY, JSON.stringify(state)); }
 
 function blankState() {
-    return { active:false, positions:{}, playerConns:[], revealedConns:[], log:[], collapsed:{} };
+    return { active:true, positions:{}, playerConns:[], revealedConns:[], log:[], collapsed:{}, connColors:{} };
 }
 
 function addLog(type, msg) { state.log.push({ t:Date.now(), type, msg }); }
@@ -55,15 +60,83 @@ function hasConnection(a, b, list) {
     return list.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
 }
 
+function connKey(a, b) { return [a, b].sort().join('||'); }
+function getConnColor(a, b) { return (state.connColors && state.connColors[connKey(a,b)]) || '#00e5c8'; }
+
 function togglePlayerConn(a, b) {
     if (hasConnection(a, b, state.playerConns)) {
         state.playerConns = state.playerConns.filter(([x, y]) => !((x===a&&y===b)||(x===b&&y===a)));
+        if (state.connColors) delete state.connColors[connKey(a, b)];
         addLog('', `Connection removed: ${cardLabel(a)} ↔ ${cardLabel(b)}`);
     } else {
         state.playerConns.push([a, b]);
         addLog('', `Connection added: ${cardLabel(a)} ↔ ${cardLabel(b)}`);
     }
 }
+
+let _activeConnMenu = null;
+function closeConnMenu() { if (_activeConnMenu) { _activeConnMenu.remove(); _activeConnMenu = null; } }
+
+window.showConnMenu = function(from, to, evt) {
+    evt.stopPropagation();
+    closeConnMenu();
+    const menu = document.createElement('div');
+    menu.style.cssText = `position:fixed;z-index:9999;left:${evt.clientX}px;top:${Math.min(evt.clientY, window.innerHeight-140)}px;background:rgba(6,8,18,0.97);border:1px solid var(--border,#1a2a2a);padding:0.6rem;display:flex;flex-direction:column;gap:0.5rem;font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:#ccc;min-width:170px;box-shadow:0 4px 20px rgba(0,0,0,0.6);`;
+    const curColor = getConnColor(from, to);
+    menu.innerHTML = `
+        <div style="opacity:0.45;font-size:0.55rem;letter-spacing:0.1em;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.35rem;">LINK: ${cardLabel(from)} ↔ ${cardLabel(to)}</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+            <span style="opacity:0.7;">COLOR</span>
+            <input type="color" value="${curColor}" style="flex:1;height:24px;border:none;background:none;cursor:pointer;padding:0;" id="_ev_cc_inp">
+        </div>
+        <button style="background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.35);color:#e74c3c;cursor:pointer;padding:0.3rem;font-family:inherit;font-size:0.65rem;letter-spacing:0.1em;" id="_ev_cc_del">DELETE LINK</button>
+    `;
+    document.body.appendChild(menu);
+    _activeConnMenu = menu;
+
+    menu.querySelector('#_ev_cc_inp').addEventListener('input', e => {
+        state.connColors = state.connColors || {};
+        state.connColors[connKey(from, to)] = e.target.value;
+        saveState(); renderSVG();
+    });
+    menu.querySelector('#_ev_cc_del').addEventListener('click', () => {
+        state.playerConns = state.playerConns.filter(([x,y]) => !((x===from&&y===to)||(x===to&&y===from)));
+        if (state.connColors) delete state.connColors[connKey(from, to)];
+        addLog('', `Connection removed: ${cardLabel(from)} ↔ ${cardLabel(to)}`);
+        saveState(); renderSVG(); renderLog(); closeConnMenu();
+    });
+
+    setTimeout(() => {
+        document.addEventListener('click', function outside(e) {
+            if (_activeConnMenu && !_activeConnMenu.contains(e.target)) { closeConnMenu(); document.removeEventListener('click', outside); }
+        });
+    }, 80);
+};
+
+window.showRevealedConnMenu = function(a, b, evt) {
+    if (!isAdmin) return;
+    evt.stopPropagation();
+    closeConnMenu();
+    const menu = document.createElement('div');
+    menu.style.cssText = `position:fixed;z-index:9999;left:${evt.clientX}px;top:${Math.min(evt.clientY, window.innerHeight-100)}px;background:rgba(6,8,18,0.97);border:1px solid rgba(184,168,0,0.4);padding:0.6rem;display:flex;flex-direction:column;gap:0.5rem;font-family:'Share Tech Mono',monospace;font-size:0.68rem;color:#b8a800;min-width:170px;box-shadow:0 4px 20px rgba(0,0,0,0.6);`;
+    menu.innerHTML = `
+        <div style="opacity:0.6;font-size:0.55rem;letter-spacing:0.1em;border-bottom:1px solid rgba(184,168,0,0.2);padding-bottom:0.35rem;">REVEALED: ${a} ↔ ${b}</div>
+        <button style="background:rgba(192,57,43,0.12);border:1px solid rgba(192,57,43,0.35);color:#e74c3c;cursor:pointer;padding:0.3rem;font-family:inherit;font-size:0.65rem;letter-spacing:0.1em;" id="_ev_rc_del">REMOVE LINK</button>
+    `;
+    document.body.appendChild(menu);
+    _activeConnMenu = menu;
+
+    menu.querySelector('#_ev_rc_del').addEventListener('click', () => {
+        state.revealedConns = state.revealedConns.filter(([x,y]) => !((x===a&&y===b)||(x===b&&y===a)));
+        saveState(); renderSVG(); closeConnMenu();
+    });
+
+    setTimeout(() => {
+        document.addEventListener('click', function outside(e) {
+            if (_activeConnMenu && !_activeConnMenu.contains(e.target)) { closeConnMenu(); document.removeEventListener('click', outside); }
+        });
+    }, 80);
+};
 
 function cardLabel(id) {
     const c = cfg.cards.find(c => c.id === id);
@@ -130,21 +203,29 @@ function renderSVG() {
 
     const lines = [];
 
-    // Player connections — cyan dashed
+    // Player connections — colored dashed, clickable
     state.playerConns.forEach(([a, b]) => {
         const ca = getCardCenter(a), cb = getCardCenter(b);
-        lines.push(`<line x1="${ca.x}" y1="${ca.y}" x2="${cb.x}" y2="${cb.y}" stroke="rgba(0,229,200,0.45)" stroke-width="1.5" stroke-dasharray="6,4"/>`);
+        const col = getConnColor(a, b);
+        const colRgba = col + (col.length === 7 ? 'bb' : '');
+        lines.push(`<g style="cursor:pointer" onclick="showConnMenu('${a}','${b}',event)">
+            <line x1="${ca.x}" y1="${ca.y}" x2="${cb.x}" y2="${cb.y}" stroke="transparent" stroke-width="14"/>
+            <line x1="${ca.x}" y1="${ca.y}" x2="${cb.x}" y2="${cb.y}" stroke="${col}" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.7"/>
+        </g>`);
     });
 
-    // Revealed hidden connections — gold solid
+    // Revealed hidden connections — gold solid, admin-clickable
     state.revealedConns.forEach(([a, b]) => {
         const ca = cfg.cards.find(c => c.title === a || c.id === a);
         const cb = cfg.cards.find(c => c.title === b || c.id === b);
         if (!ca || !cb) return;
         const pa = getCardCenter(ca.id), pb = getCardCenter(cb.id);
-        lines.push(`<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="rgba(184,168,0,0.7)" stroke-width="2" filter="url(#ev-glow)"/>`);
         const mx = (pa.x + pb.x) / 2, my = (pa.y + pb.y) / 2;
-        lines.push(`<text x="${mx}" y="${my - 6}" text-anchor="middle" fill="#b8a800" font-size="9" font-family="Share Tech Mono,monospace">LINKED</text>`);
+        lines.push(`<g style="cursor:${isAdmin?'pointer':'default'}" ${isAdmin?`onclick="showRevealedConnMenu('${a}','${b}',event)"`:''}>`);
+        lines.push(`<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="transparent" stroke-width="14"/>`);
+        lines.push(`<line x1="${pa.x}" y1="${pa.y}" x2="${pb.x}" y2="${pb.y}" stroke="rgba(184,168,0,0.7)" stroke-width="2" filter="url(#ev-glow)"/>`);
+        lines.push(`<text x="${mx}" y="${my - 6}" text-anchor="middle" fill="#b8a800" font-size="9" font-family="Share Tech Mono,monospace" pointer-events="none">LINKED</text>`);
+        lines.push(`</g>`);
     });
 
     svg.innerHTML = `<defs><filter id="ev-glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>${lines.join('')}`;
@@ -335,7 +416,7 @@ function onMouseUp() {
 
 function render() {
     document.getElementById('ev-case-title').textContent = cfg.caseTitle;
-    document.getElementById('ev-case-sub').textContent   = state.active ? cfg.caseDesc : 'Awaiting Overlord activation...';
+    document.getElementById('ev-case-sub').textContent   = cfg.caseDesc || '';
 
     const counts = { clue:0, suspect:0, location:0, event:0 };
     cfg.cards.forEach(c => { if (!c.hidden && counts[c.type] !== undefined) counts[c.type]++; });
@@ -346,11 +427,10 @@ function render() {
 
     const idle    = document.getElementById('ev-idle');
     const section = document.getElementById('ev-board-section');
-    const hasCards = cfg.cards.length > 0;
-    if (idle)    idle.style.display    = (!state.active && !hasCards) ? 'flex' : 'none';
-    if (section) section.style.display = (state.active || hasCards)   ? 'block' : 'none';
+    if (idle)    idle.style.display    = 'none';
+    if (section) section.style.display = 'block';
 
-    if (state.active || hasCards) { renderBoard(); applyZoom(); }
+    renderBoard(); applyZoom();
 
     const connectBtn = document.getElementById('ev-connect-btn');
     if (connectBtn) {
@@ -438,9 +518,8 @@ function initOverlordPanel() {
 
     document.getElementById('ev-cfg-publish')?.addEventListener('click', () => {
         readCfgFields();
-        state.active = true;
-        addLog('', 'Evidence board published by Overlord.');
-        saveCfg(); saveState(); render();
+        addLog('', 'Case settings applied by Overlord.');
+        saveCfg(); render();
     });
 
     document.getElementById('ev-cfg-clear-board')?.addEventListener('click', () => {

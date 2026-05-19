@@ -959,6 +959,7 @@ function buildDeployments() {
         if (!canSeeDeployment(d)) return;
         const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
             .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
+            .on('dblclick', () => showDeployDetail(d))
             .addTo(map);
         deployMarkers[d.id] = m;
     });
@@ -972,6 +973,7 @@ function updateDeployVisibility() {
         if (show && !marker) {
             const m = L.marker([d.lat, d.lng], { icon: makeDeployIcon(d) })
                 .bindTooltip(deployTT(d), { className: 'lx-tt', direction: 'top', offset: [0, -4] })
+                .on('dblclick', () => showDeployDetail(d))
                 .addTo(map);
             deployMarkers[d.id] = m;
         } else if (show && marker) {
@@ -1328,8 +1330,12 @@ function renderManageTab() {
     const c = document.getElementById('lx-mgr-list');
     if (!c) return;
 
-    if (DEPLOYMENTS.length === 0 && ROUTES.length === 0) {
-        c.innerHTML = '<div class="lx-mgr-empty">No entries on the map yet.</div>';
+    const query = (document.getElementById('lx-mgr-search')?.value || '').toLowerCase().trim();
+    const matchDeps = DEPLOYMENTS.filter(d => !query || d.name.toLowerCase().includes(query) || d.id.toLowerCase().includes(query) || (d.notes||'').toLowerCase().includes(query));
+    const matchRtes = ROUTES.filter(r => !query || r.name.toLowerCase().includes(query) || r.id.toLowerCase().includes(query));
+
+    if (matchDeps.length === 0 && matchRtes.length === 0) {
+        c.innerHTML = query ? '<div class="lx-mgr-empty">No matches.</div>' : '<div class="lx-mgr-empty">No entries on the map yet.</div>';
         return;
     }
 
@@ -1341,7 +1347,7 @@ function renderManageTab() {
     depHdr.textContent = 'DEPLOYMENTS';
     c.appendChild(depHdr);
 
-    DEPLOYMENTS.forEach(d => {
+    matchDeps.forEach(d => {
         const row = document.createElement('div');
         row.className = 'lx-mgr-row';
         row.style.flexWrap = 'wrap';
@@ -1383,7 +1389,7 @@ function renderManageTab() {
     rteHdr.textContent = 'ROUTES';
     c.appendChild(rteHdr);
 
-    ROUTES.forEach(r => {
+    matchRtes.forEach(r => {
         const stops = (r.waypoints || []).length;
         const row   = document.createElement('div');
         row.className = 'lx-mgr-row';
@@ -1494,7 +1500,23 @@ function renderManageTab() {
                     saveRteOverride(btn.dataset.id, patch);
                 }
                 const vi = vehicles.findIndex(v => v.route.id === r.id);
-                if (vi >= 0) { const v = vehicles.splice(vi, 1)[0]; if (v.marker) v.marker.remove(); if (v.pathLine) v.pathLine.remove(); vehicles.push(new Vehicle(r)); }
+                if (vi >= 0) {
+                    const v = vehicles[vi];
+                    Object.assign(v.route, patch);
+                    v.loopMode = normalizeLoop(v.route.loop);
+                    v.segHours = v.wps.slice(0, -1).map((wp, i) => {
+                        const dist = haversineKm(wp.pos, v.wps[i + 1].pos);
+                        return Math.max(dist, 0.001) / v.route.speedKmh;
+                    });
+                    if (v.pathLine) { v.pathLine.remove(); v.pathLine = null; }
+                    if (v.route.showPath) {
+                        v.pathLine = L.polyline(v.wps.map(w => w.pos), {
+                            color:'#00ffe7', weight:1, opacity:0.18, className:'lx-route'
+                        }).addTo(map);
+                    }
+                    v.refreshTooltip();
+                    v.updateVisibility();
+                }
                 renderManageTab();
             }
         });
@@ -1521,6 +1543,61 @@ function renderManageTab() {
     });
 }
 
+window.renderManageTab = renderManageTab;
+
+// ── Node detail popup (double-click) ───────────────────────────────────────
+
+function showDeployDetail(d) {
+    document.getElementById('lx-node-detail')?.remove();
+    const admin   = window.LuxorAuth && LuxorAuth.isAdmin();
+    const redMap  = getRedactedMap();
+    const redacted = !!redMap[d.id];
+    const canSee  = admin || PLAYER_CLEARANCE >= d.clearance;
+    const showFull = canSee && (!redacted || admin);
+
+    const statusColor = { active:'#00e5c8', inactive:'#6b6860', compromised:'#c0392b', unknown:'#b8a800' }[d.status] || '#6b6860';
+
+    let bodyHtml = '';
+    if (!canSee) {
+        bodyHtml = `<div class="nd-row"><div class="nd-val nd-redact">████████████████████████████████<br>████████ CLEARANCE REQUIRED ████████<br>████████████████████████████████</div></div>`;
+    } else {
+        const name = (redacted && !admin) ? '████ REDACTED ████' : d.name;
+        const notes = (redacted && !admin) ? '████████████████████████████████<br>████████████████████████████████' : (d.notes || '—');
+        bodyHtml = `
+            <div class="nd-row"><div class="nd-label">NAME</div><div class="nd-val" style="${redacted&&!admin?'filter:blur(4px);color:#c0392b':''}">${name}</div></div>
+            <div class="nd-row"><div class="nd-label">TYPE</div><div class="nd-val">${d.type.toUpperCase()}</div></div>
+            <div class="nd-row"><div class="nd-label">STATUS</div><div class="nd-val" style="color:${statusColor}">${d.status.toUpperCase()}</div></div>
+            <div class="nd-row"><div class="nd-label">CLR REQ.</div><div class="nd-val">${d.clearance}</div></div>
+            <div class="nd-row"><div class="nd-label">ID</div><div class="nd-val" style="opacity:0.4;font-size:10px;">${d.id}</div></div>
+            <div class="nd-notes">${redacted&&!admin?'<span style="filter:blur(4px);color:#c0392b;">'+notes+'</span>':notes}</div>
+            ${admin && redacted ? `<div style="color:#c0392b;font-size:10px;opacity:0.7;padding-top:4px;">[ADMIN VIEW — NAME REDACTED FOR PLAYERS]</div>` : ''}
+        `;
+    }
+
+    const editBtn = admin
+        ? `<button class="nd-edit-btn" onclick="document.getElementById('lx-node-detail').remove();document.getElementById('lx-add-btn').click();setTimeout(()=>{document.querySelector('[data-tab=mgr]').click();setTimeout(()=>{const s=document.getElementById('lx-mgr-search');if(s){s.value='${d.id}';renderManageTab();}},100);},100);">EDIT IN MANAGE TAB &#9656;</button>`
+        : '';
+
+    const panel = document.createElement('div');
+    panel.id = 'lx-node-detail';
+    panel.innerHTML = `
+        <div class="nd-hdr">
+            <span class="nd-title">&#9670; NODE DETAIL</span>
+            <button class="nd-close" onclick="document.getElementById('lx-node-detail').remove()">&#10005;</button>
+        </div>
+        <div class="nd-body">${bodyHtml}${editBtn}</div>
+    `;
+    document.body.appendChild(panel);
+
+    // Close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', function outside(e) {
+            const p = document.getElementById('lx-node-detail');
+            if (p && !p.contains(e.target)) { p.remove(); document.removeEventListener('click', outside); }
+        });
+    }, 100);
+}
+
 function showMsg(el, text, ok) {
     el.textContent = text;
     el.className   = 'lx-msg ' + (ok ? 'ok' : 'err');
@@ -1542,7 +1619,7 @@ function injectAddUI() {
         }
         #lx-add-btn:hover { background:rgba(0,255,231,0.12); }
         #lx-add-panel {
-            position:fixed; bottom:9em; left:1em; z-index:950;
+            position:fixed; bottom:15em; left:1em; z-index:950;
             width:min(340px, calc(100vw - 1.5em)); max-height:78vh; display:flex; flex-direction:column;
             background:rgba(6,8,18,0.98); border:1px solid #00ffe7;
             font-family:'Consolas','Courier New',monospace; font-size:12px;
@@ -1660,7 +1737,7 @@ function injectAddUI() {
 
         /* ── Settings panel (time scale) ── */
         #lx-set-btn {
-            position:fixed; bottom:9.5em; left:1em; z-index:950;
+            position:fixed; bottom:10.5em; left:1em; z-index:950;
             width:42px; height:42px;
             background:rgba(8,8,18,0.95); border:1px solid #b8a80080;
             color:#b8a800; font-size:16px; cursor:pointer;
@@ -1669,13 +1746,41 @@ function injectAddUI() {
         }
         #lx-set-btn:hover { background:rgba(184,168,0,0.1); }
         #lx-set-panel {
-            position:fixed; bottom:13.5em; left:1em; z-index:950;
+            position:fixed; bottom:15em; left:1em; z-index:950;
             width:260px; padding:14px 16px;
             background:rgba(6,8,18,0.98); border:1px solid #b8a80060;
             font-family:'Consolas','Courier New',monospace; font-size:12px; color:#b8a800;
             box-shadow:0 0 20px rgba(184,168,0,0.12);
         }
         #lx-set-panel.hidden { display:none; }
+        /* ── Node detail panel ── */
+        #lx-node-detail {
+            position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+            z-index:9999; width:min(420px,90vw); max-height:80vh; overflow-y:auto;
+            background:rgba(4,6,16,0.98); border:1px solid #00ffe7;
+            font-family:'Consolas','Courier New',monospace; font-size:12px; color:#00ffe7;
+            box-shadow:0 0 40px rgba(0,255,231,0.2); padding:0;
+        }
+        #lx-node-detail .nd-hdr {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:10px 14px; border-bottom:1px solid #00ffe730; background:rgba(0,255,231,0.04);
+        }
+        #lx-node-detail .nd-title { font-size:13px; letter-spacing:2px; font-weight:bold; }
+        #lx-node-detail .nd-close {
+            background:none; border:none; color:#00ffe7; cursor:pointer; font-size:16px; padding:0; line-height:1;
+        }
+        #lx-node-detail .nd-body { padding:14px; display:flex; flex-direction:column; gap:8px; }
+        #lx-node-detail .nd-row { display:flex; gap:10px; }
+        #lx-node-detail .nd-label { opacity:0.45; min-width:80px; font-size:10px; letter-spacing:1px; text-transform:uppercase; padding-top:1px; }
+        #lx-node-detail .nd-val { flex:1; line-height:1.5; }
+        #lx-node-detail .nd-notes { font-size:11px; opacity:0.75; line-height:1.6; border-top:1px solid #00ffe715; padding-top:8px; white-space:pre-wrap; }
+        #lx-node-detail .nd-redact { font-family:monospace; color:#c0392b; letter-spacing:0.1em; filter:blur(3px); user-select:none; }
+        #lx-node-detail .nd-edit-btn {
+            margin-top:4px; width:100%; padding:7px; background:rgba(0,255,231,0.06);
+            border:1px solid #00ffe7; color:#00ffe7; font-family:'Consolas',monospace;
+            font-size:10px; letter-spacing:2px; cursor:pointer; transition:background 0.15s;
+        }
+        #lx-node-detail .nd-edit-btn:hover { background:rgba(0,255,231,0.14); }
         .lx-set-title {
             font-size:10px; letter-spacing:2px; font-weight:bold;
             border-bottom:1px solid #b8a80030; padding-bottom:7px; margin-bottom:12px;
@@ -1835,7 +1940,8 @@ function injectAddUI() {
 
         <!-- ── MANAGE TAB ── -->
         <div class="lx-tc hidden" id="lx-tc-mgr">
-            <div class="lx-note">Custom entries only. Built-in data must be edited in AssetMap.js.</div>
+            <div class="lx-note">Edit any deployment or route. Changes persist automatically.</div>
+            <input id="lx-mgr-search" type="text" placeholder="&#128269; Search nodes &amp; routes..." oninput="renderManageTab()" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:5px 8px;outline:none;box-sizing:border-box;margin-bottom:6px;">
             <div id="lx-mgr-list"></div>
             <button class="lx-export" id="lx-export">⬇ EXPORT CUSTOM JSON TO CLIPBOARD</button>
         </div>
