@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>LUXOR â€” Cipher Terminal</title>
+    <title>LUXOR &ndash; Codebreaker</title>
     <link rel="stylesheet" href="./style.css">
     <style>
         /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -336,19 +336,84 @@
         }
 
         @media (max-width: 768px) {
-            .cipher-body { grid-template-columns: 1fr; }
-            .cipher-grid { grid-template-columns: 1fr; border-right: none; border-bottom: 1px solid #1c3a25; }
-            .cipher-sidebar { border-top: 1px solid #1c3a25; padding-bottom: 1rem; }
             .adm-grid { grid-template-columns: 1fr; }
             .adm-field.full { grid-column: 1; }
-            /* Touch-friendly tap targets */
-            .c-word   { font-size: 0.82rem; line-height: 2; }
-            .c-junk   { font-size: 0.72rem; line-height: 2; }
             .cipher-btn { padding: 0.75rem 1.2rem; min-height: 44px; font-size: 0.75rem; }
             .adm-btn    { padding: 0.5rem 0.85rem; min-height: 40px; }
             .adm-input, .adm-textarea { font-size: 0.82rem; padding: 7px 9px; }
             .cs-pip { width: 16px; height: 16px; }
+            .cb-body { grid-template-columns: 1fr; }
+            .cb-history-panel { border-right: none; border-bottom: 1px solid #1a2a3a; }
+            .cb-input { width: 100%; font-size: 1.4rem; }
         }
+
+        /* ── CODEBREAKER terminal ─────────────────────────────────── */
+        .cb-terminal {
+            background: #050a10; border: 1px solid #1a2a3a;
+            font-family: 'Share Tech Mono', monospace;
+            position: relative; overflow: hidden;
+        }
+        .cb-terminal::before {
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+            pointer-events: none; z-index: 5;
+        }
+        .cb-term-header {
+            background: #07101a; border-bottom: 1px solid #1a2a3a; padding: 0.48rem 0.75rem;
+        }
+        .cb-th-title  { font-size: 0.58rem; color: #3a5a7a; letter-spacing: 0.12em; }
+        .cb-th-target { font-size: 0.7rem;  color: #5ab0e0; letter-spacing: 0.1em; margin: 2px 0; }
+        .cb-th-warn   { font-size: 0.54rem; color: #a03020; letter-spacing: 0.1em; }
+        .cb-body {
+            display: grid; grid-template-columns: 1fr 270px;
+        }
+        .cb-history-panel {
+            padding: 0.65rem 0.85rem; border-right: 1px solid #1a2a3a;
+        }
+        .cb-panel-label {
+            font-size: 0.54rem; color: #2a4a6a; letter-spacing: 0.18em;
+            padding-bottom: 4px; border-bottom: 1px solid #1a2a3a; margin-bottom: 8px;
+        }
+        .cb-history {
+            display: flex; flex-direction: column; gap: 3px;
+            max-height: 320px; overflow-y: auto;
+            scrollbar-width: thin; scrollbar-color: #1a2a3a transparent;
+        }
+        .cb-history-empty { font-size: 0.6rem; color: #2a4a6a; letter-spacing: 0.08em; opacity: 0.5; padding: 4px 0; }
+        .cb-guess-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 4px 0; border-bottom: 1px solid rgba(26,42,58,0.5);
+        }
+        .cb-guess-code { font-size: 0.84rem; color: #5ab0e0; letter-spacing: 0.22em; min-width: 72px; }
+        .cb-score { font-size: 1rem; letter-spacing: 0.1em; line-height: 1; }
+        .cb-exact   { color: #5dbf72; }
+        .cb-present { color: #b8a800; }
+        .cb-absent  { color: #2a3a4a; }
+        .cb-input-panel {
+            padding: 0.65rem 0.85rem;
+            display: flex; flex-direction: column; gap: 0.55rem;
+        }
+        .cb-pips-wrap { display: flex; flex-direction: column; gap: 4px; }
+        .cb-input-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+        .cb-input {
+            background: #07101a; border: 1px solid #1a3a5a; color: #5ab0e0;
+            font-family: 'Share Tech Mono', monospace; font-size: 1.3rem;
+            letter-spacing: 0.35em; padding: 6px 10px; outline: none;
+            width: 110px; text-align: center; text-transform: uppercase;
+            transition: border-color 0.15s;
+        }
+        .cb-input:focus { border-color: #5ab0e0; box-shadow: 0 0 8px rgba(90,176,224,0.15); }
+        .cb-input.shake { animation: cbShake 0.45s ease; }
+        @keyframes cbShake {
+            0%,100% { transform: translateX(0); }
+            20%     { transform: translateX(-5px); }
+            40%     { transform: translateX(5px); }
+            60%     { transform: translateX(-4px); }
+            80%     { transform: translateX(4px); }
+        }
+        .cb-hex-legend { font-size: 0.52rem; color: #2a4a6a; letter-spacing: 0.1em; margin-top: 2px; }
+        .cb-legend-block { display: flex; flex-direction: column; gap: 4px; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #1a2a3a; }
+        .cb-leg-row { font-size: 0.6rem; color: #3a5a7a; letter-spacing: 0.05em; }
     </style>
 </head>
 <body>
@@ -358,7 +423,7 @@
     <div class="ml-logo">LUXOR</div>
     <div class="ml-sub">BREACH.EXE</div>
     <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
-    <div class="ml-status">INITIALIZING CIPHER TERMINAL...</div>
+    <div class="ml-status">INITIALIZING SIGNAL LOCK PROTOCOL...</div>
 </div>
 
 <div class="app">
@@ -381,7 +446,7 @@
             <li><a href="social.html"               data-icon="11">Social Eng.</a></li>
             <li><a href="netmap.html"               data-icon="12">Network Map</a></li>
             <li><a href="evidence.html"             data-icon="13">Evidence</a></li>
-            <li><a href="filesystem.html"           data-icon="14">File System</a></li>
+            <li><a href="filesystem.html"           data-icon="14">File Decryption</a></li>
             <li><a href="dossier.html"              data-icon="15">Dossier</a></li>
         </ul>
         <div id="admin-nav-link" style="display:none;padding:10px 20px 0;">
@@ -401,7 +466,7 @@
     <main class="main">
         <div class="page-header">
             <h1>Hacking Terminal</h1>
-            <div class="tagline">// CIPHER TERMINAL â€” MAINFRAME PASSWORD BYPASS //</div>
+            <div class=”tagline”>// CODEBREAKER &mdash; SIGNAL LOCK PROTOCOL //</div>
             <div class="header-divider"></div>
         </div>
 
@@ -411,7 +476,7 @@
             <div class="cipher-statusbar">
                 <div class="cipher-target-block">
                     <div class="cipher-target-name" id="cipher-target-name">MAINFRAME-ALPHA</div>
-                    <div class="cipher-target-sub">â–¸ CIPHER.EXE â€” PASSWORD BYPASS PROTOCOL</div>
+                    <div class=”cipher-target-sub”>&#9656; CODEBREAKER.EXE &mdash; SIGNAL LOCK PROTOCOL</div>
                 </div>
                 <span class="cipher-phase-badge" id="cipher-phase-badge">STANDBY</span>
             </div>
@@ -433,7 +498,7 @@
             <!-- Overlord toggle (admin only) -->
             <div class="overlord-toggle-row" id="overlord-toggle-row">
                 <button class="overlord-toggle-btn" id="overlord-toggle-btn" onclick="toggleOverlordPanel()">
-                    <span>â—ˆ OVERLORD CONTROLS â€” CIPHER TERMINAL</span>
+                    <span>&#9672; OVERLORD CONTROLS &mdash; CODEBREAKER</span>
                     <span class="otb-arrow">â–¶</span>
                 </button>
             </div>
@@ -449,7 +514,7 @@
                     <div class="adm-status-row">
                         <div class="adm-status-txt" id="adm-status">Phase: IDLE</div>
                         <div class="adm-ctrl-row">
-                            <button class="adm-btn adm-cyan" onclick="adminReveal()">REVEAL ANSWER</button>
+                            <button class="adm-btn adm-cyan" onclick="adminReveal()">REVEAL CODE</button>
                             <button class="adm-btn adm-gold" onclick="adminForceWin()">FORCE WIN</button>
                             <button class="adm-btn adm-red"  onclick="adminForceFail()">FORCE FAIL</button>
                             <button class="adm-btn adm-gold" onclick="adminReset()">RESET</button>
@@ -461,22 +526,18 @@
                             <label class="adm-label">TARGET / SYSTEM NAME</label>
                             <input class="adm-input" type="text" id="adm-target" placeholder="MAINFRAME-ALPHA">
                         </div>
-                        <div class="adm-field">
-                            <label class="adm-label">WORD COUNT (8â€“20)</label>
-                            <input class="adm-input" type="number" id="adm-wordcount" min="8" max="20" value="12">
+                        <div class=”adm-field”>
+                            <label class=”adm-label”>CODE LENGTH (3&ndash;6 digits)</label>
+                            <input class=”adm-input” type=”number” id=”adm-code-length” min=”3” max=”6” value=”4”>
                         </div>
-                        <div class="adm-field">
-                            <label class="adm-label">ATTEMPTS (2â€“8)</label>
-                            <input class="adm-input" type="number" id="adm-attempts" min="2" max="8" value="4">
+                        <div class=”adm-field”>
+                            <label class=”adm-label”>ATTEMPTS (2&ndash;12)</label>
+                            <input class=”adm-input” type=”number” id=”adm-attempts” min=”2” max=”12” value=”6”>
                         </div>
-                        <div class="adm-field full">
-                            <label class="adm-label">FORCE ANSWER (blank = random each game)</label>
-                            <input class="adm-input" type="text" id="adm-answer" placeholder="e.g. SHADOW â€” must be in word pool">
-                            <div class="adm-hint">Leave blank for a random password each game.</div>
-                        </div>
-                        <div class="adm-field full">
-                            <label class="adm-label">WORD POOL (one per line, all same length recommended)</label>
-                            <textarea class="adm-textarea" id="adm-pool" rows="6"></textarea>
+                        <div class=”adm-field full”>
+                            <label class=”adm-label”>SECRET CODE (hex only &mdash; blank = random each game)</label>
+                            <input class=”adm-input” type=”text” id=”adm-secret-code” placeholder=”e.g. A3F7 &mdash; valid chars: 0-9, A-F” maxlength=”6” style=”letter-spacing:0.25em;text-transform:uppercase;”>
+                            <div class=”adm-hint”>Leave blank for a random code each game. Must match code length.</div>
                         </div>
                         <div class="adm-field full">
                             <label class="adm-label">SUCCESS MESSAGE</label>

@@ -126,6 +126,105 @@
         .fs-viewer-empty-icon { font-size:2rem; opacity:0.2; }
         .fs-viewer-empty-msg  { font-family:'Share Tech Mono',monospace; font-size:0.65rem; letter-spacing:0.2em; }
 
+        /* ── Cipher attack panel ───────────────────────────────────── */
+        #fs-cipher-section { margin-top: 1rem; }
+        .fs-cipher-wrap { background: var(--bg-card); border: 1px solid var(--border); }
+        .fs-cipher-hdr {
+            padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+            color: var(--gold-dim); letter-spacing: 0.18em;
+        }
+        .fs-cipher-badge {
+            font-size: 0.58rem; letter-spacing: 0.12em; padding: 2px 8px;
+            border: 1px solid var(--border); color: var(--text-dim);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .fs-cipher-badge.active { color: var(--cyan);   border-color: var(--cyan); }
+        .fs-cipher-badge.won    { color: var(--cyan);   border-color: var(--cyan); }
+        .fs-cipher-badge.lost   { color: var(--danger); border-color: var(--danger); }
+
+        /* green terminal interior */
+        .fc-terminal {
+            background: #05100a; font-family: 'Share Tech Mono', monospace;
+            position: relative; overflow: hidden;
+        }
+        .fc-terminal::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px);
+        }
+        .fc-term-hdr {
+            background: #08180d; border-bottom: 1px solid #1c3a25;
+            padding: 0.4rem 0.75rem; font-size: 0.56rem; color: #3d7a50; letter-spacing: 0.12em;
+        }
+        .fc-body { display: grid; grid-template-columns: 1fr 200px; }
+        @media (max-width: 680px) { .fc-body { grid-template-columns: 1fr; } }
+        .fc-grid {
+            padding: 0.5rem 0.75rem; border-right: 1px solid #1c3a25;
+            display: grid; grid-template-columns: 1fr 1fr; column-gap: 0.5rem; row-gap: 1px;
+        }
+        @media (max-width: 680px) { .fc-grid { grid-template-columns: 1fr; border-right: none; border-bottom: 1px solid #1c3a25; } }
+        .fc-line { display: flex; align-items: baseline; gap: 0.2rem; white-space: nowrap; }
+        .fc-addr { font-size: 0.5rem; color: #1e4028; flex-shrink: 0; }
+        .fc-junk { font-size: 0.62rem; color: #254a30; }
+        .fc-word { font-size: 0.68rem; color: #6dcc82; cursor: pointer; transition: color 0.1s; }
+        .fc-word:hover          { color: #c0ffcc; text-shadow: 0 0 6px rgba(109,204,130,0.6); }
+        .fc-word.w-guessed      { color: #7a3020; cursor: not-allowed; text-decoration: line-through; opacity: 0.55; }
+        .fc-word.w-eliminated   { color: #3a1a10; cursor: not-allowed; text-decoration: line-through; opacity: 0.4; }
+        .fc-word.w-correct      { color: var(--gold); cursor: default; }
+        .fc-word.w-locked       { color: #1c3a25; cursor: not-allowed; }
+        .fc-bracket { font-size: 0.66rem; cursor: pointer; transition: filter 0.1s; }
+        .fc-bracket:hover { filter: brightness(1.7); }
+        .fc-bracket.b-dud     { color: #55bb66; }
+        .fc-bracket.b-attempt { color: #b8a800; }
+        .fc-bracket.b-used    { color: #1c3a25; cursor: default; pointer-events: none; }
+        .fc-sidebar { padding: 0.5rem 0.6rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .fc-slabel { font-size: 0.5rem; color: #1e4028; letter-spacing: 0.16em; padding-bottom: 2px; border-bottom: 1px solid #1c3a25; }
+        .fc-pips   { display: flex; gap: 3px; flex-wrap: wrap; }
+        .fc-pip    { width: 10px; height: 10px; background: #3d7a50; border: 1px solid #3d7a50; }
+        .fc-pip.used { background: transparent; border-color: #1c3a25; }
+        .fc-pip-lbl  { font-size: 0.5rem; color: #3d7a50; letter-spacing: 0.08em; }
+        .fc-hist { display: flex; flex-direction: column; gap: 0.12rem; max-height: 110px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #1c3a25 transparent; }
+        .fc-guess .gw { font-size: 0.58rem; color: #6dcc82; }
+        .fc-guess .gr { font-size: 0.58rem; color: var(--gold); }
+        .fc-legend { display: flex; flex-direction: column; gap: 3px; }
+        .fc-leg    { font-size: 0.5rem; color: #2a5a35; letter-spacing: 0.04em; }
+        .fc-leg .lb-dud { color: #55bb66; } .fc-leg .lb-att { color: #b8a800; }
+        .fc-idle-msg {
+            padding: 1.2rem; text-align: center;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.62rem;
+            color: #2a5a35; letter-spacing: 0.14em; line-height: 1.9;
+        }
+        .fc-win-banner {
+            padding: 0.85rem; text-align: center;
+            background: rgba(0,229,200,0.04); border-top: 1px solid rgba(0,229,200,0.15);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .fc-win-title { font-size: 0.78rem; color: var(--cyan); letter-spacing: 0.2em; }
+        .fc-win-sub   { font-size: 0.58rem; color: #3d7a50; letter-spacing: 0.1em; margin-top: 3px; }
+        .fc-lost-banner {
+            padding: 0.85rem; text-align: center;
+            background: rgba(192,57,43,0.04); border-top: 1px solid rgba(192,57,43,0.15);
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .fc-lost-title { font-size: 0.78rem; color: var(--danger); letter-spacing: 0.2em; }
+        .fc-lost-sub   { font-size: 0.58rem; color: #7a3020; letter-spacing: 0.1em; margin-top: 3px; }
+        .fc-actions {
+            padding: 0.45rem 0.75rem; border-top: 1px solid #1c3a25;
+            display: flex; gap: 0.5rem; flex-wrap: wrap; background: #07120a;
+        }
+        .fc-btn {
+            padding: 0.35rem 0.85rem; font-family: 'Share Tech Mono', monospace;
+            font-size: 0.6rem; letter-spacing: 0.12em; border: 1px solid;
+            background: transparent; cursor: pointer; transition: all 0.15s;
+        }
+        .fc-btn-start:hover  { background: rgba(61,122,80,0.15); }
+        .fc-btn-start  { border-color: #3d7a50; color: #6dcc82; }
+        .fc-btn-reset  { border-color: rgba(184,168,0,0.4); color: var(--gold); }
+        .fc-btn-reset:hover  { background: rgba(184,168,0,0.1); }
+        .fc-btn-abort  { border-color: rgba(192,57,43,0.4); color: var(--danger); }
+        .fc-btn-abort:hover  { background: rgba(192,57,43,0.1); }
+
         /* ── Idle ───────────────────────────────────────────────── */
         .fs-idle {
             background:var(--bg-panel); border:1px solid var(--border);
@@ -301,6 +400,17 @@
                     </div>
 
                 </div>
+            <!-- Cipher attack terminal -->
+            <div id="fs-cipher-section" style="display:none;">
+                <div class="fs-cipher-wrap">
+                    <div class="fs-cipher-hdr">
+                        <span>&#9656; CIPHER ATTACK &mdash; <span id="fs-cipher-file">NO FILE</span></span>
+                        <span class="fs-cipher-badge" id="fs-cipher-badge">STANDBY</span>
+                    </div>
+                    <div id="fs-cipher-game"></div>
+                </div>
+            </div>
+
             </div>
 
             <!-- Activity log -->
@@ -347,6 +457,18 @@
         <div class="fs-cfg-row">
             <div class="fs-cfg-lbl">DECRYPT TN (for encrypted files)</div>
             <input class="fs-cfg-inp" id="fs-cfg-decryptTN" type="number" min="4" max="20" value="6">
+        </div>
+
+        <div class="fs-cfg-div"></div>
+
+        <div class="fs-cfg-lbl" style="margin-bottom:4px;">CIPHER ATTACK CONFIG</div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">ATTEMPTS (2&ndash;8)</div>
+            <input class="fs-cfg-inp" id="fs-cfg-cipher-attempts" type="number" min="2" max="8" value="4">
+        </div>
+        <div class="fs-cfg-row">
+            <div class="fs-cfg-lbl">WORD POOL (one per line &mdash; blank = built-in pool)</div>
+            <textarea class="fs-cfg-ta" id="fs-cfg-cipher-pool" rows="4" placeholder="SHADOW&#10;VECTOR&#10;BREACH&#10;CIPHER..."></textarea>
         </div>
 
         <div class="fs-cfg-div"></div>

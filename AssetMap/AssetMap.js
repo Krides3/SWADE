@@ -1166,13 +1166,21 @@ tickClock();
 //  LOCALSTORAGE — custom entry persistence
 // ================================================================
 
-const LS_DEPS     = 'luxor_custom_deployments';
-const LS_RTES     = 'luxor_custom_routes';
-const LS_REDACTED = 'luxorAssetRedacted';   // {nodeId: true} map of redacted nodes
+const LS_DEPS          = 'luxor_custom_deployments';
+const LS_RTES          = 'luxor_custom_routes';
+const LS_REDACTED      = 'luxorAssetRedacted';
+const LS_DEP_OVERRIDES = 'luxor_dep_overrides';  // { id: { name, lat, lng, type, status, clearance, notes } }
+const LS_RTE_OVERRIDES = 'luxor_rte_overrides';  // { id: { name, clearance, speedKmh, loop } }
+const LS_DEP_HIDDEN    = 'luxor_dep_hidden';      // [id, ...]
+const LS_RTE_HIDDEN    = 'luxor_rte_hidden';      // [id, ...]
 
-function getStoredDeps()  { try { return JSON.parse(localStorage.getItem(LS_DEPS)     || '[]'); } catch { return []; } }
-function getStoredRtes()  { try { return JSON.parse(localStorage.getItem(LS_RTES)     || '[]'); } catch { return []; } }
-function getRedactedMap() { try { return JSON.parse(localStorage.getItem(LS_REDACTED) || '{}'); } catch { return {}; } }
+function getStoredDeps()     { try { return JSON.parse(localStorage.getItem(LS_DEPS)          || '[]'); } catch { return []; } }
+function getStoredRtes()     { try { return JSON.parse(localStorage.getItem(LS_RTES)          || '[]'); } catch { return []; } }
+function getRedactedMap()    { try { return JSON.parse(localStorage.getItem(LS_REDACTED)      || '{}'); } catch { return {}; } }
+function getDepOverrides()   { try { return JSON.parse(localStorage.getItem(LS_DEP_OVERRIDES) || '{}'); } catch { return {}; } }
+function getRteOverrides()   { try { return JSON.parse(localStorage.getItem(LS_RTE_OVERRIDES) || '{}'); } catch { return {}; } }
+function getHiddenDeps()     { try { return JSON.parse(localStorage.getItem(LS_DEP_HIDDEN)    || '[]'); } catch { return []; } }
+function getHiddenRtes()     { try { return JSON.parse(localStorage.getItem(LS_RTE_HIDDEN)    || '[]'); } catch { return []; } }
 
 function isNodeRedacted(id) { return !!getRedactedMap()[id]; }
 
@@ -1185,10 +1193,42 @@ function setNodeRedacted(id, val) {
 function persistDep(d)  { const a = getStoredDeps(); a.push(d); localStorage.setItem(LS_DEPS, JSON.stringify(a)); }
 function persistRte(r)  { const a = getStoredRtes(); a.push(r); localStorage.setItem(LS_RTES, JSON.stringify(a)); }
 
-function removeDep(id)  { localStorage.setItem(LS_DEPS, JSON.stringify(getStoredDeps().filter(d => d.id !== id))); }
-function removeRte(id)  { localStorage.setItem(LS_RTES, JSON.stringify(getStoredRtes().filter(r => r.id !== id))); }
+function removeDep(id) {
+    localStorage.setItem(LS_DEPS, JSON.stringify(getStoredDeps().filter(d => d.id !== id)));
+    const h = getHiddenDeps(); if (!h.includes(id)) { h.push(id); localStorage.setItem(LS_DEP_HIDDEN, JSON.stringify(h)); }
+}
+function removeRte(id) {
+    localStorage.setItem(LS_RTES, JSON.stringify(getStoredRtes().filter(r => r.id !== id)));
+    const h = getHiddenRtes(); if (!h.includes(id)) { h.push(id); localStorage.setItem(LS_RTE_HIDDEN, JSON.stringify(h)); }
+}
+
+function saveDepOverride(id, patch) {
+    const ov = getDepOverrides(); ov[id] = Object.assign(ov[id] || {}, patch);
+    localStorage.setItem(LS_DEP_OVERRIDES, JSON.stringify(ov));
+    const d = DEPLOYMENTS.find(d => d.id === id); if (d) Object.assign(d, patch);
+}
+function saveRteOverride(id, patch) {
+    const ov = getRteOverrides(); ov[id] = Object.assign(ov[id] || {}, patch);
+    localStorage.setItem(LS_RTE_OVERRIDES, JSON.stringify(ov));
+    const r = ROUTES.find(r => r.id === id); if (r) Object.assign(r, patch);
+}
 
 function loadCustomFromStorage() {
+    const depOv     = getDepOverrides();
+    const rteOv     = getRteOverrides();
+    const hiddenDep = getHiddenDeps();
+    const hiddenRte = getHiddenRtes();
+
+    // Apply overrides + remove hidden built-ins
+    for (let i = DEPLOYMENTS.length - 1; i >= 0; i--) {
+        if (hiddenDep.includes(DEPLOYMENTS[i].id)) { DEPLOYMENTS.splice(i, 1); continue; }
+        if (depOv[DEPLOYMENTS[i].id]) Object.assign(DEPLOYMENTS[i], depOv[DEPLOYMENTS[i].id]);
+    }
+    for (let i = ROUTES.length - 1; i >= 0; i--) {
+        if (hiddenRte.includes(ROUTES[i].id)) { ROUTES.splice(i, 1); continue; }
+        if (rteOv[ROUTES[i].id]) Object.assign(ROUTES[i], rteOv[ROUTES[i].id]);
+    }
+
     getStoredDeps().forEach(d => DEPLOYMENTS.push(d));
     getStoredRtes().forEach(r => ROUTES.push(r));
 }
@@ -1258,29 +1298,177 @@ function renderWpRows() {
 function renderManageTab() {
     const c = document.getElementById('lx-mgr-list');
     if (!c) return;
-    const deps = getStoredDeps();
-    const rtes = getStoredRtes();
 
-    if (deps.length === 0 && rtes.length === 0) {
-        c.innerHTML = '<div class="lx-mgr-empty">No custom entries yet.<br>Use DEPLOY or ROUTE tabs to add.</div>';
+    if (DEPLOYMENTS.length === 0 && ROUTES.length === 0) {
+        c.innerHTML = '<div class="lx-mgr-empty">No entries on the map yet.</div>';
         return;
     }
 
-    let html = '';
-    deps.forEach(d => {
-        html += `<div class="lx-mgr-row">
-            <div><div class="lx-mgr-name">${d.name}</div><div class="lx-mgr-sub">${d.type} · ${d.status} · CLR${d.clearance}</div></div>
-            <button class="lx-mgr-del" data-type="dep" data-id="${d.id}">DELETE</button>
-        </div>`;
+    c.innerHTML = '';
+
+    // Section: Deployments
+    const depHdr = document.createElement('div');
+    depHdr.style.cssText = 'font-size:9px;letter-spacing:2px;opacity:0.4;padding:8px 0 4px;';
+    depHdr.textContent = 'DEPLOYMENTS';
+    c.appendChild(depHdr);
+
+    DEPLOYMENTS.forEach(d => {
+        const row = document.createElement('div');
+        row.className = 'lx-mgr-row';
+        row.style.flexWrap = 'wrap';
+        row.innerHTML = `
+            <div style="flex:1;min-width:0;">
+                <div class="lx-mgr-name">${d.name}</div>
+                <div class="lx-mgr-sub">${d.type} · ${d.status} · CLR${d.clearance}</div>
+            </div>
+            <div style="display:flex;gap:5px;flex-shrink:0;">
+                <button class="lx-mgr-edit" style="background:none;border:1px solid #00ffe750;color:#00ffe7;cursor:pointer;font-size:9px;letter-spacing:1px;padding:3px 7px;font-family:Consolas,monospace;" data-type="dep" data-id="${d.id}">EDIT</button>
+                <button class="lx-mgr-del" data-type="dep" data-id="${d.id}">DELETE</button>
+            </div>
+            <div class="lx-edit-form" data-id="${d.id}" style="display:none;width:100%;padding:8px 0;display:none;flex-direction:column;gap:5px;">
+                <input class="lx-field-inp" data-field="name" placeholder="Name" value="${(d.name||'').replace(/"/g,'&quot;')}" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;box-sizing:border-box;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;">
+                    <input class="lx-field-inp" data-field="lat" type="number" step="any" placeholder="Latitude" value="${d.lat||''}" style="background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                    <input class="lx-field-inp" data-field="lng" type="number" step="any" placeholder="Longitude" value="${d.lng||''}" style="background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;">
+                    <select class="lx-field-inp" data-field="type" style="background:#050d10;border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                        ${['mission','ground','outpost','naval','hq'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}
+                    </select>
+                    <select class="lx-field-inp" data-field="status" style="background:#050d10;border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                        ${['active','inactive','compromised','unknown'].map(s=>`<option value="${s}"${d.status===s?' selected':''}>${s}</option>`).join('')}
+                    </select>
+                    <select class="lx-field-inp" data-field="clearance" style="background:#050d10;border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                        ${[1,2,3,4,5].map(n=>`<option value="${n}"${d.clearance==n?' selected':''}>${n}</option>`).join('')}
+                    </select>
+                </div>
+                <textarea class="lx-field-inp" data-field="notes" placeholder="Notes" rows="2" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;resize:vertical;box-sizing:border-box;">${d.notes||''}</textarea>
+                <button class="lx-save-dep" data-id="${d.id}" style="background:rgba(0,255,231,0.08);border:1px solid #00ffe7;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;letter-spacing:1px;padding:5px;cursor:pointer;">SAVE CHANGES</button>
+            </div>`;
+        c.appendChild(row);
     });
-    rtes.forEach(r => {
+
+    // Section: Routes
+    const rteHdr = document.createElement('div');
+    rteHdr.style.cssText = 'font-size:9px;letter-spacing:2px;opacity:0.4;padding:12px 0 4px;';
+    rteHdr.textContent = 'ROUTES';
+    c.appendChild(rteHdr);
+
+    ROUTES.forEach(r => {
         const stops = (r.waypoints || []).length;
-        html += `<div class="lx-mgr-row">
-            <div><div class="lx-mgr-name">${r.name}</div><div class="lx-mgr-sub">${r.type} · ${stops} stops · CLR${r.clearance}</div></div>
-            <button class="lx-mgr-del" data-type="rte" data-id="${r.id}">DELETE</button>
-        </div>`;
+        const row   = document.createElement('div');
+        row.className = 'lx-mgr-row';
+        row.style.flexWrap = 'wrap';
+        row.innerHTML = `
+            <div style="flex:1;min-width:0;">
+                <div class="lx-mgr-name">${r.name}</div>
+                <div class="lx-mgr-sub">${r.type} · ${stops} stops · CLR${r.clearance}</div>
+            </div>
+            <div style="display:flex;gap:5px;flex-shrink:0;">
+                <button class="lx-mgr-edit" style="background:none;border:1px solid #00ffe750;color:#00ffe7;cursor:pointer;font-size:9px;letter-spacing:1px;padding:3px 7px;font-family:Consolas,monospace;" data-type="rte" data-id="${r.id}">EDIT</button>
+                <button class="lx-mgr-del" data-type="rte" data-id="${r.id}">DELETE</button>
+            </div>
+            <div class="lx-edit-form" data-id="${r.id}" style="display:none;width:100%;padding:8px 0;flex-direction:column;gap:5px;">
+                <input class="lx-field-inp" data-field="name" placeholder="Callsign" value="${(r.name||'').replace(/"/g,'&quot;')}" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;box-sizing:border-box;">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;">
+                    <select class="lx-field-inp" data-field="type" style="background:#050d10;border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                        ${['plane','helicopter','ship'].map(t=>`<option value="${t}"${r.type===t?' selected':''}>${t}</option>`).join('')}
+                    </select>
+                    <select class="lx-field-inp" data-field="clearance" style="background:#050d10;border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                        ${[1,2,3,4,5].map(n=>`<option value="${n}"${r.clearance==n?' selected':''}>${n}</option>`).join('')}
+                    </select>
+                    <select class="lx-field-inp" data-field="loop" style="background:#050d10;border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;">
+                        ${['pingpong','circuit','once'].map(l=>`<option value="${l}"${normalizeLoop(r.loop)===l?' selected':''}>${l}</option>`).join('')}
+                    </select>
+                </div>
+                <input class="lx-field-inp" data-field="speedKmh" type="number" placeholder="Speed km/h" value="${r.speedKmh||''}" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:4px 6px;outline:none;box-sizing:border-box;">
+                <button class="lx-save-rte" data-id="${r.id}" style="background:rgba(0,255,231,0.08);border:1px solid #00ffe7;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;letter-spacing:1px;padding:5px;cursor:pointer;">SAVE CHANGES</button>
+            </div>`;
+        c.appendChild(row);
     });
-    c.innerHTML = html;
+
+    // Wire EDIT toggle
+    c.querySelectorAll('.lx-mgr-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const form = c.querySelector(`.lx-edit-form[data-id="${btn.dataset.id}"]`);
+            if (!form) return;
+            const open = form.style.display === 'flex';
+            c.querySelectorAll('.lx-edit-form').forEach(f => f.style.display = 'none');
+            form.style.display = open ? 'none' : 'flex';
+        });
+    });
+
+    // Wire DELETE
+    c.querySelectorAll('.lx-mgr-del').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!confirm(`Delete "${btn.closest('.lx-mgr-row').querySelector('.lx-mgr-name').textContent}"?`)) return;
+            if (btn.dataset.type === 'dep') {
+                removeDep(btn.dataset.id);
+                const idx = DEPLOYMENTS.findIndex(d => d.id === btn.dataset.id);
+                if (idx >= 0) DEPLOYMENTS.splice(idx, 1);
+                const m = deployMarkers[btn.dataset.id];
+                if (m) { m.remove(); delete deployMarkers[btn.dataset.id]; }
+            } else {
+                removeRte(btn.dataset.id);
+                const idx = ROUTES.findIndex(r => r.id === btn.dataset.id);
+                if (idx >= 0) ROUTES.splice(idx, 1);
+                const vi = vehicles.findIndex(v => v.route.id === btn.dataset.id);
+                if (vi >= 0) { const v = vehicles[vi]; if (v.marker) v.marker.remove(); if (v.pathLine) v.pathLine.remove(); vehicles.splice(vi, 1); }
+            }
+            renderManageTab();
+        });
+    });
+
+    // Wire SAVE deployment
+    c.querySelectorAll('.lx-save-dep').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const form = c.querySelector(`.lx-edit-form[data-id="${btn.dataset.id}"]`);
+            if (!form) return;
+            const patch = {};
+            form.querySelectorAll('.lx-field-inp').forEach(inp => {
+                const f = inp.dataset.field;
+                patch[f] = (f === 'lat' || f === 'lng') ? parseFloat(inp.value) : (f === 'clearance' ? +inp.value : inp.value.trim());
+            });
+            const d = DEPLOYMENTS.find(d => d.id === btn.dataset.id);
+            if (d) {
+                if (d._custom) {
+                    Object.assign(d, patch);
+                    const stored = getStoredDeps(); const si = stored.findIndex(x => x.id === d.id);
+                    if (si >= 0) { Object.assign(stored[si], patch); localStorage.setItem(LS_DEPS, JSON.stringify(stored)); }
+                } else {
+                    saveDepOverride(btn.dataset.id, patch);
+                }
+                buildDeployments();
+                renderManageTab();
+            }
+        });
+    });
+
+    // Wire SAVE route
+    c.querySelectorAll('.lx-save-rte').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const form = c.querySelector(`.lx-edit-form[data-id="${btn.dataset.id}"]`);
+            if (!form) return;
+            const patch = {};
+            form.querySelectorAll('.lx-field-inp').forEach(inp => {
+                const f = inp.dataset.field;
+                patch[f] = (f === 'clearance') ? +inp.value : (f === 'speedKmh') ? parseFloat(inp.value) : inp.value.trim();
+            });
+            const r = ROUTES.find(r => r.id === btn.dataset.id);
+            if (r) {
+                if (r._custom) {
+                    Object.assign(r, patch);
+                    const stored = getStoredRtes(); const si = stored.findIndex(x => x.id === r.id);
+                    if (si >= 0) { Object.assign(stored[si], patch); localStorage.setItem(LS_RTES, JSON.stringify(stored)); }
+                } else {
+                    saveRteOverride(btn.dataset.id, patch);
+                }
+                const vi = vehicles.findIndex(v => v.route.id === r.id);
+                if (vi >= 0) { const v = vehicles.splice(vi, 1)[0]; if (v.marker) v.marker.remove(); if (v.pathLine) v.pathLine.remove(); vehicles.push(new Vehicle(r)); }
+                renderManageTab();
+            }
+        });
+    });
 
     c.querySelectorAll('.lx-mgr-del').forEach(btn => {
         btn.addEventListener('click', () => {
