@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!sessionStorage.getItem('luxorShowBoot')) {
     overlay.style.display = 'none';
+    document.body.classList.remove('boot-page');
   } else {
     sessionStorage.removeItem('luxorShowBoot');
 

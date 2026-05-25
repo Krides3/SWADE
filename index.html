@@ -63,157 +63,27 @@
         </div>
 
         <div class="tool-grid">
+            <!-- Cards handled by index.js -->
+        </div>
 
-            <a class="tool-card" href="AssetMap/AssetMap.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">◈</div>
-                    <div class="tool-card-badge">READY</div>
+        <!-- TACTICAL PROFILE SECTION -->
+        <div id="profile-section" class="profile-container" style="margin-top:40px; border:1px solid var(--border); background:rgba(0,0,0,0.1); padding:20px; display:none;">
+            <h2 style="font-family:'Rajdhani', sans-serif; color:var(--gold); font-size:1rem; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:5px;">TACTICAL PROFILE / ROLE PREFERENCES</h2>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:20px;">
+                <div>
+                    <label class="info-label" style="font-size:0.6rem;">PRIORITY 01</label>
+                    <input type="text" id="pref-1" class="form-input" placeholder="e.g. SNIPER" style="width:100%; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px; margin-top:5px; font-family:'Share Tech Mono', monospace; font-size:0.8rem;">
                 </div>
-                <div class="tool-card-title">Asset Map</div>
-                <div class="tool-card-desc">Live tactical overlay. Track team positions, objectives and points of interest.</div>
-                <div class="tool-card-code">MAP_SYS.EXE</div>
-            </a>
-
-            <a class="tool-card" href="RadioScanner/index.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">◎</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
+                <div>
+                    <label class="info-label" style="font-size:0.6rem;">PRIORITY 02</label>
+                    <input type="text" id="pref-2" class="form-input" placeholder="e.g. MEDIC" style="width:100%; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px; margin-top:5px; font-family:'Share Tech Mono', monospace; font-size:0.8rem;">
                 </div>
-                <div class="tool-card-title">Radio Scrambler</div>
-                <div class="tool-card-desc">Intercept and decrypt enemy comms. Frequency scanner with noise injection.</div>
-                <div class="tool-card-code">RADIO_SYS.EXE</div>
-            </a>
-
-            <a class="tool-card" href="bomb.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">◉</div>
-                    <div class="tool-card-badge badge-warn">STANDBY</div>
+                <div>
+                    <label class="info-label" style="font-size:0.6rem;">PRIORITY 03</label>
+                    <input type="text" id="pref-3" class="form-input" placeholder="e.g. RIFLEMAN" style="width:100%; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px; margin-top:5px; font-family:'Share Tech Mono', monospace; font-size:0.8rem;">
                 </div>
-                <div class="tool-card-title">Bomb Defusal</div>
-                <div class="tool-card-desc">Multi-stage defusal minigame. Wire sequences, timers, pressure triggers.</div>
-                <div class="tool-card-code">DEFUSAL.EXE</div>
-            </a>
-
-            <a class="tool-card" href="comms.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">▣</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">HQ Comms</div>
-                <div class="tool-card-desc">Encrypted channel to command. Broadcast orders and receive intel drops.</div>
-                <div class="tool-card-code">COMMS.EXE</div>
-            </a>
-
-            <a class="tool-card" href="lockpick.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⌗</div>
-                    <div class="tool-card-badge badge-warn">STANDBY</div>
-                </div>
-                <div class="tool-card-title">Lockpick Interface</div>
-                <div class="tool-card-desc">Electronic bypass simulator. Tumblers, keypads, biometric overrides.</div>
-                <div class="tool-card-code">LOCKPICK.EXE</div>
-            </a>
-
-            <a class="tool-card" href="hack.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">▦</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">Hacking Terminal</div>
-                <div class="tool-card-desc">Breach ICE layers. Port scan, inject payloads, exfiltrate data nodes.</div>
-                <div class="tool-card-code">BREACH.EXE</div>
-            </a>
-
-            <a class="tool-card" href="dice.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⬡</div>
-                    <div class="tool-card-badge badge-warn">STANDBY</div>
-                </div>
-                <div class="tool-card-title">Dice Roller</div>
-                <div class="tool-card-desc">SWADE dice set. d4 through d12 with wild die, raises and modifiers.</div>
-                <div class="tool-card-code">DICE.EXE</div>
-            </a>
-
-            <a class="tool-card" href="timer.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">◷</div>
-                    <div class="tool-card-badge badge-warn">STANDBY</div>
-                </div>
-                <div class="tool-card-title">Mission Timer</div>
-                <div class="tool-card-desc">Countdown and stopwatch. Track round timers, extraction windows, bomb clocks.</div>
-                <div class="tool-card-code">TIMER.EXE</div>
-            </a>
-
-            <a class="tool-card" href="tools.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⊞</div>
-                    <div class="tool-card-badge badge-warn">STANDBY</div>
-                </div>
-                <div class="tool-card-title">All Tools</div>
-                <div class="tool-card-desc">Open the full operator toolkit — all modules in one view.</div>
-                <div class="tool-card-code">TOOLKIT.EXE</div>
-            </a>
-
-            <a class="tool-card" href="social.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⊙</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">Social Engineering</div>
-                <div class="tool-card-desc">Psychological pressure simulator. Rapport, deception, silence — break the subject before attempts run out.</div>
-                <div class="tool-card-code">SOCIAL.EXE</div>
-            </a>
-
-            <a class="tool-card" href="netmap.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⊛</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">Network Map</div>
-                <div class="tool-card-desc">Node graph intrusion tool. Navigate enemy topology, probe firewalls and compromise target systems.</div>
-                <div class="tool-card-code">NETMAP.EXE</div>
-            </a>
-
-            <a class="tool-card" href="evidence.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⊡</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">Evidence Board</div>
-                <div class="tool-card-desc">Investigation link board. Pin clues, suspects and locations. NOTICE rolls reveal hidden Overlord connections.</div>
-                <div class="tool-card-code">EVIDENCE.EXE</div>
-            </a>
-
-            <a class="tool-card" href="filesystem.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⊟</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">File Decryption</div>
-                <div class="tool-card-desc">Remote archive browser. Open plain, redacted or encrypted enemy files. Decrypt with a Hacking roll.</div>
-                <div class="tool-card-code">FS.EXE</div>
-            </a>
-
-            <a class="tool-card" href="dossier.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⊠</div>
-                    <div class="tool-card-badge badge-warn">WIP</div>
-                </div>
-                <div class="tool-card-title">Operator Dossier</div>
-                <div class="tool-card-desc">Personnel file. Full SWADE character sheet — attributes, skills, wounds, bennies, edges and equipment.</div>
-                <div class="tool-card-code">DOSSIER.EXE</div>
-            </a>
-
-            <a class="tool-card" href="multiview.html">
-                <div class="tool-card-top">
-                    <div class="tool-card-icon">⧉</div>
-                    <div class="tool-card-badge">READY</div>
-                </div>
-                <div class="tool-card-title">Mission View</div>
-                <div class="tool-card-desc">Multi-terminal split screen. Run hacking, radio and other modules side-by-side in a custom layout.</div>
-                <div class="tool-card-code">MULTIVIEW.EXE</div>
-            </a>
-
+            </div>
+            <button class="btn-action" style="margin-top:20px; font-size:0.65rem; padding:8px 15px;" onclick="window.savePreferences()">UPDATE TACTICAL PROFILE</button>
         </div>
     </main>
 </div>
@@ -222,6 +92,7 @@
 <div class="corner-decoration tl"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="0,40 0,0 40,0" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
 <div class="corner-decoration br"><svg class="corner-svg" width="50" height="50" viewBox="0 0 60 60"><polyline points="60,20 60,60 20,60" fill="none" stroke="#b8a800" stroke-width="2"/></svg></div>
 
+<script src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js"></script>
 <script src="./auth.js"></script>
 <script src="./index.js"></script>
 <script src="./nav.js"></script>

@@ -1,23 +1,12 @@
 // ================================================================
 //  LUXOR AUTH — User authentication for SWADE Tactical Terminal
-//  Default OVERLORD password: overlord
-//  Change it immediately via the Admin Panel after first login.
+//  Simplified: Callsign only, no passwords required.
 // ================================================================
 (function () {
     'use strict';
 
     const STORE_KEY   = 'luxorUsers';
     const SESSION_KEY = 'luxorSession';
-    const DEFAULT_PW  = 'overlord';
-
-    // Simple but adequate hash for a game app
-    function hash(str) {
-        let h = 5381;
-        for (let i = 0; i < str.length; i++) {
-            h = (((h << 5) + h) ^ str.charCodeAt(i)) >>> 0;
-        }
-        return h.toString(36);
-    }
 
     function getUsers() {
         try { return JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
@@ -28,10 +17,22 @@
         localStorage.setItem(STORE_KEY, JSON.stringify(u));
     }
 
-    // Default roster — update via Admin Panel → LOCK IN ROSTER
-    const DEFAULT_USERS = [{"username":"OVERLORD","passwordHash":"d80m1q","role":"admin","clearance":5},{"username":"DRAGONFLY","passwordHash":"1dg01on","role":"player","clearance":1},{"username":"PLAN B","passwordHash":"3ujzpw","role":"player","clearance":1},{"username":"GHOST","passwordHash":"3giria","role":"player","clearance":1},{"username":"RATPACK","passwordHash":"3y71iz","role":"player","clearance":1},{"username":"TAIPAN","passwordHash":"1gkrxqe","role":"player","clearance":1},{"username":"BONES","passwordHash":"3h5xf4","role":"player","clearance":1}];
+    // Default roster — DAGGER SQUAD + HANDLERS
+    const DEFAULT_USERS = [
+        {"username":"OVERLORD","role":"admin","clearance":5, "isRestricted": false},
+        {"username":"HADES","role":"admin","clearance":5, "isRestricted": true},
+        {"username":"HEEST","role":"player","clearance":1, "isRestricted": true},
+        {"username":"BINGO","role":"player","clearance":1, "isRestricted": true},
+        {"username":"CINDER","role":"player","clearance":1, "isRestricted": true},
+        {"username":"RIG","role":"player","clearance":1, "isRestricted": true},
+        {"username":"HARMLESS","role":"player","clearance":1, "isRestricted": true},
+        {"username":"JOKER","role":"player","clearance":1, "isRestricted": true},
+        {"username":"LANCE","role":"player","clearance":1, "isRestricted": true},
+        {"username":"LIBRE","role":"player","clearance":1, "isRestricted": true},
+        {"username":"ZED","role":"player","clearance":1, "isRestricted": true}
+    ];
 
-    // Sync default accounts on every page load — adds missing, updates existing
+    // Sync default accounts on every page load — adds missing
     function ensureDefaults() {
         const users = getUsers();
         let changed = false;
@@ -39,9 +40,6 @@
             const idx = users.findIndex(u => u.username === def.username);
             if (idx === -1) {
                 users.push(Object.assign({}, def));
-                changed = true;
-            } else if (users[idx].passwordHash !== def.passwordHash) {
-                users[idx] = Object.assign({}, def);
                 changed = true;
             }
         });
@@ -60,7 +58,7 @@
         return !!(s && s.role === 'admin');
     }
 
-    // Call on every protected page. loginUrl is relative to that page.
+    // Call on every protected page.
     function requireAuth(loginUrl) {
         ensureOverlord();
         if (!getSession()) {
@@ -70,14 +68,19 @@
         return true;
     }
 
-    function login(username, password) {
+    function login(username) {
         ensureOverlord();
         const users = getUsers();
         const user  = users.find(u => u.username === username.toUpperCase().trim());
-        if (!user || user.passwordHash !== hash(password)) {
-            return { ok: false, error: 'ACCESS DENIED — INVALID CREDENTIALS' };
+        if (!user) {
+            return { ok: false, error: 'ACCESS DENIED — UNKNOWN CALLSIGN' };
         }
-        const session = { username: user.username, role: user.role, clearance: user.clearance };
+        const session = { 
+            username: user.username, 
+            role: user.role, 
+            clearance: user.clearance,
+            isRestricted: user.isRestricted ?? true 
+        };
         localStorage.setItem(SESSION_KEY, JSON.stringify(session));
         return { ok: true, session };
     }
@@ -89,16 +92,15 @@
 
     // ── User management (admin only) ────────────────────────────────
 
-    function createUser(username, password, clearance) {
+    function createUser(username, clearance) {
         if (!isAdmin()) return { ok: false, error: 'NOT AUTHORIZED' };
         const upper = username.toUpperCase().trim();
         if (!upper || upper.length < 2)    return { ok: false, error: 'USERNAME TOO SHORT (min 2)' };
-        if (!password || password.length < 3) return { ok: false, error: 'PASSWORD TOO SHORT (min 3)' };
         const cl = parseInt(clearance, 10);
         if (isNaN(cl) || cl < 1 || cl > 5) return { ok: false, error: 'CLEARANCE MUST BE 1–5' };
         const users = getUsers();
         if (users.find(u => u.username === upper)) return { ok: false, error: 'USER ALREADY EXISTS' };
-        users.push({ username: upper, passwordHash: hash(password), role: 'player', clearance: cl });
+        users.push({ username: upper, role: 'player', clearance: cl });
         saveUsers(users);
         return { ok: true };
     }
@@ -123,22 +125,9 @@
         return { ok: true };
     }
 
-    function updatePassword(username, newPassword) {
-        const session = getSession();
-        const selfEdit = session && session.username === username;
-        if (!isAdmin() && !selfEdit) return { ok: false, error: 'NOT AUTHORIZED' };
-        if (!newPassword || newPassword.length < 3) return { ok: false, error: 'PASSWORD TOO SHORT (min 3)' };
-        const users = getUsers();
-        const user  = users.find(u => u.username === username);
-        if (!user) return { ok: false, error: 'USER NOT FOUND' };
-        user.passwordHash = hash(newPassword);
-        saveUsers(users);
-        return { ok: true };
-    }
-
     window.LuxorAuth = {
         login, logout, getSession, isAdmin, requireAuth,
-        getUsers, createUser, deleteUser, updateClearance, updatePassword,
+        getUsers, createUser, deleteUser, updateClearance,
         ensureOverlord
     };
 })();

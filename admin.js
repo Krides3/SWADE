@@ -59,46 +59,17 @@ function delUser(username) {
 // ── Create user ─────────────────────────────────────────────────
 document.getElementById('create-btn').addEventListener('click', function () {
     const username  = document.getElementById('new-username').value.trim();
-    const password  = document.getElementById('new-password').value;
     const clearance = document.getElementById('new-clearance').value;
     const msgEl     = document.getElementById('create-msg');
 
-    const r = LuxorAuth.createUser(username, password, clearance);
+    const r = LuxorAuth.createUser(username, clearance);
     msgEl.className = 'form-msg ' + (r.ok ? 'ok' : 'err');
     msgEl.textContent = r.ok ? `✓ OPERATOR ${username.toUpperCase()} ENLISTED AT CLEARANCE ${clearance}` : '⚠ ' + r.error;
 
     if (r.ok) {
         document.getElementById('new-username').value = '';
-        document.getElementById('new-password').value = '';
         document.getElementById('new-clearance').value = '1';
         renderRoster();
-    }
-});
-
-// ── Change OVERLORD password ────────────────────────────────────
-document.getElementById('pw-change-btn').addEventListener('click', function () {
-    const np  = document.getElementById('new-pw').value;
-    const cp  = document.getElementById('confirm-pw').value;
-    const msg = document.getElementById('pw-msg');
-
-    if (!np || np.length < 3) {
-        msg.className = 'form-msg err';
-        msg.textContent = '⚠ PASSWORD TOO SHORT (min 3 chars)';
-        return;
-    }
-    if (np !== cp) {
-        msg.className = 'form-msg err';
-        msg.textContent = '⚠ ACCESS CODES DO NOT MATCH';
-        return;
-    }
-
-    const r = LuxorAuth.updatePassword('OVERLORD', np);
-    msg.className = 'form-msg ' + (r.ok ? 'ok' : 'err');
-    msg.textContent = r.ok ? '✓ OVERLORD ACCESS CODE UPDATED' : '⚠ ' + r.error;
-
-    if (r.ok) {
-        document.getElementById('new-pw').value    = '';
-        document.getElementById('confirm-pw').value = '';
     }
 });
 

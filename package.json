@@ -1,0 +1,12 @@
+{
+  "name": "luxor-tactical-terminal",
+  "version": "2.4.1",
+  "description": "Cyberpunk Tactical Dashboard for SWADE",
+  "main": "index.js",
+  "scripts": {
+    "dev": "convex dev"
+  },
+  "dependencies": {
+    "convex": "^1.11.0"
+  }
+}
