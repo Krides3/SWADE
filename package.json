@@ -1,6 +1,6 @@
 {
   "name": "luxor-tactical-terminal",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "LUXOR Tactical Operations Terminal — local game tool with live sync",
   "main": "server.js",
   "scripts": {
