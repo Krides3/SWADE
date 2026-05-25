@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const logoutBtn = document.getElementById('nav-logout');
 
   // ── ACCESS CONTROL ──────────────────────────────────────────────
-  const isRestricted = session && session.isRestricted === true;
+  const isRestricted = session && session.isRestricted === true && session.username !== 'OVERLORD';
 
   const isAdmin = session && session.role === 'admin';
 

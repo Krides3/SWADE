@@ -19,7 +19,7 @@
         }
 
         // ── DASHBOARD ACCESS CONTROL ──────────────────────────────
-        const isRestricted = s.isRestricted === true;
+        const isRestricted = s.isRestricted === true && s.username !== 'OVERLORD';
         const isAdmin = s.role === 'admin';
         const grid = document.querySelector('.tool-grid');
 
@@ -85,7 +85,9 @@
                 { title: 'Asset Map',       desc: 'Real-time tactical mapping and asset tracking.', icon: '⊛', href: 'AssetMap/AssetMap.html', code: 'MAP_SYSTEM.SYS' },
                 { title: 'HQ Comms',       desc: 'Secure communication channel with HQ and field units.', icon: '📡', href: 'comms.html', code: 'COMMS_NET.NET' },
                 { title: 'Dice Roller',    desc: 'Probability calculation and tactical RNG suite.', icon: '🎲', href: 'dice.html', code: 'PROB_CALC.EXE' },
+                { title: 'Mission Timer',  desc: 'Operational clock and mission countdown synchronization.', icon: '⏱', href: 'timer.html', code: 'OP_CLOCK.SYS' },
                 { title: 'Radio Scanner',  desc: 'Signal intelligence and frequency monitoring.', icon: '📻', href: 'RadioScanner/index.html', code: 'SIGINT_SCAN.EXE' },
+                { title: 'Bomb Defusal',   desc: 'Explosive ordinance disposal and circuit bypass.', icon: '💣', href: 'bomb.html', code: 'EOD_BYPASS.EXE' },
                 { title: 'Lockpick',       desc: 'Digital bypass and physical security override.', icon: '⌗', href: 'lockpick.html', code: 'SEC_BYPASS.EXE' },
                 { title: 'Hacking',        desc: 'Remote system intrusion and data exfiltration.', icon: '▦', href: 'hack.html', code: 'BREACH.EXE' },
                 { title: 'Social Eng.',    desc: 'Human-centric vulnerability analysis and leverage.', icon: '⊙', href: 'social.html', code: 'PERSUADE.EXE' },

@@ -33,11 +33,12 @@
      * @param {Object} user - The operator object from Convex.
      */
     function establishSession(user) {
+        const isOverlord = user.callsign.toUpperCase() === 'OVERLORD';
         const session = { 
             username: user.callsign.toUpperCase(), 
             role: user.role, 
             clearance: user.clearance,
-            isRestricted: user.isRestricted ?? true 
+            isRestricted: isOverlord ? false : (user.isRestricted ?? true)
         };
         localStorage.setItem(SESSION_KEY, JSON.stringify(session));
         return { ok: true, session };
