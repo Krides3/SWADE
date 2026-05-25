@@ -5,18 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LUXOR — Briefing Tool</title>
     <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         .briefing-grid {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 20px;
             height: calc(100vh - 120px);
+            transition: all 0.3s ease;
+        }
+        .briefing-grid.collapsed {
+            grid-template-columns: 50px 1fr;
         }
         .mission-list {
             background: var(--bg-panel);
             border: 1px solid var(--border);
             padding: 15px;
             overflow-y: auto;
+            position: relative;
+        }
+        .briefing-grid.collapsed .mission-list {
+            padding: 15px 5px;
+            overflow: hidden;
+        }
+        .briefing-grid.collapsed .mission-item {
+            display: none;
+        }
+        .collapse-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 0.8rem;
+            z-index: 100;
+            padding: 2px 6px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .briefing-grid.collapsed .collapse-btn {
+            right: 15px;
+        }
+        
+        /* Tactical Contrast Updates */
+        .role-badge {
+            font-size: 0.85rem;
+            color: #00ffeb; /* Brighter Cyan */
+            margin-left: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: rgba(0, 229, 200, 0.15);
+            padding: 2px 8px;
+            border: 1px solid rgba(0, 229, 200, 0.3);
+        }
+        .pref-text {
+            font-size: 0.8rem;
+            color: #ffffff; /* Maximum contrast white */
+            margin-left: 14px;
+            margin-top: 4px;
+            font-weight: 500;
         }
         .mission-detail {
             background: var(--bg-panel);
@@ -43,21 +91,21 @@
         .mission-title {
             color: var(--gold);
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             margin-bottom: 5px;
         }
         .mission-meta {
-            font-size: 0.65rem;
-            color: var(--text-dim);
+            font-size: 0.75rem;
+            color: #ccc; /* Brighter grey */
         }
         .briefing-header {
-            border-bottom: 1px solid var(--gold-dim);
+            border-bottom: 2px solid var(--gold);
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
         .briefing-name {
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: var(--gold);
             letter-spacing: 0.1em;
         }
@@ -66,18 +114,39 @@
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 20px;
             margin-top: 15px;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
         }
-        .info-label { color: var(--gold-dim); letter-spacing: 0.1em; margin-bottom: 3px; }
-        .info-value { color: var(--cyan); }
+        .info-label { 
+            color: var(--gold-dim); 
+            letter-spacing: 0.12em; 
+            margin-bottom: 5px; 
+            font-weight: 700; 
+            font-size: 0.85rem;
+        }
+        .info-value { 
+            color: var(--cyan); 
+            font-size: 1rem;
+            font-weight: 600;
+        }
         
         .briefing-text {
             font-family: 'Share Tech Mono', monospace;
-            line-height: 1.6;
+            line-height: 1.4;
             white-space: pre-wrap;
-            margin-top: 30px;
+            margin-top: 0;
             color: var(--text);
         }
+        .briefing-section {
+            margin-bottom: 15px;
+        }
+        .briefing-content {
+            font-size: 1.15rem;
+            padding-left: 18px;
+            border-left: 3px solid rgba(184,168,0,0.4);
+            margin-top: 8px;
+        }
+        .briefing-content p { margin: 0 0 10px 0; }
+        .briefing-content ul, .briefing-content ol { margin: 8px 0 12px 25px; padding: 0; }
 
         /* Editor Styles */
         .editor-form {
@@ -95,47 +164,53 @@
             background: #0d1018;
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 10px;
+            padding: 12px;
             font-family: inherit;
+            font-size: 1rem;
         }
         .form-textarea {
             background: #0d1018;
             border: 1px solid var(--border);
             color: var(--text);
-            padding: 10px;
+            padding: 12px;
             font-family: inherit;
+            font-size: 1rem;
             min-height: 200px;
             resize: vertical;
         }
         .operator-selector {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
             border: 1px solid var(--border);
-            padding: 10px;
-            max-height: 150px;
+            padding: 12px;
+            max-height: 200px;
             overflow-y: auto;
         }
         .op-checkbox {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.7rem;
+            gap: 10px;
+            font-size: 0.85rem;
             cursor: pointer;
         }
         
         .btn-action {
-            padding: 12px;
+            padding: 12px 20px;
             background: transparent;
-            border: 1px solid var(--gold-dim);
+            border: 1px solid var(--gold);
             color: var(--gold);
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             letter-spacing: 0.1em;
+            font-weight: bold;
+            transition: all 0.2s;
         }
         .btn-action:hover {
-            background: rgba(184,168,0,0.1);
+            background: rgba(184,168,0,0.15);
+            border-color: var(--gold-glow);
+            color: var(--gold-glow);
         }
 
         .handler-controls {
@@ -143,7 +218,7 @@
             top: 25px;
             right: 25px;
             display: flex;
-            gap: 10px;
+            gap: 12px;
         }
     </style>
 </head>
@@ -176,15 +251,21 @@
                     <h1>Mission Briefing</h1>
                     <div class="tagline">// DAGGER SQUAD OPERATIONAL DATA //</div>
                 </div>
-                <button class="btn-action" onclick="window.location.href='index.html'">RETURN TO DASHBOARD</button>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-action" onclick="window.importFromClipboard()">IMPORT FROM CLIPBOARD</button>
+                    <button class="btn-action" onclick="window.location.href='index.html'">RETURN TO DASHBOARD</button>
+                </div>
             </div>
             <div class="header-divider"></div>
         </div>
 
-        <div class="briefing-grid">
-            <div class="mission-list" id="mission-list">
-                <!-- Missions will appear here -->
-                <div class="mission-meta" style="text-align:center; padding:20px;">FETCHING INTEL...</div>
+        <div class="briefing-grid" id="briefing-grid">
+            <div class="mission-sidebar">
+                <button class="collapse-btn" onclick="window.toggleSidebar()" title="Toggle Sidebar">«</button>
+                <div class="mission-list" id="mission-list">
+                    <!-- Missions will appear here -->
+                    <div class="mission-meta" style="text-align:center; padding:20px;">FETCHING INTEL...</div>
+                </div>
             </div>
 
             <div class="mission-detail" id="mission-detail">
@@ -237,17 +318,34 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="info-label">BRIEFING DATA</label>
-                <textarea id="mission-briefing" class="form-textarea" required></textarea>
-            </div>
-
             <button type="submit" class="btn-action" style="margin-top:10px;">UPLOAD TO TERMINAL</button>
         </form>
     </div>
 </div>
 
+<!-- Modal for Surgical Section Editing -->
+<div id="section-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:600px; padding:30px; position:relative;">
+        <button onclick="document.getElementById('section-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 id="section-modal-title" style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px; font-size:1rem;">EDIT SECTION</h2>
+        
+        <form id="section-form" class="editor-form">
+            <input type="hidden" id="section-mission-id">
+            <input type="hidden" id="section-key">
+            <div class="form-group">
+                <textarea id="section-content" class="form-textarea" style="min-height:300px;" placeholder="Enter data..."></textarea>
+            </div>
+            <button type="submit" class="btn-action" style="margin-top:10px;">UPDATE SECTION</button>
+        </form>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js"></script>
+<script src="./auth.js"></script>
+<script src="./nav.js"></script>
+<script src="./briefing.js"></script>
+</body>
+</html>t src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js"></script>
 <script src="./auth.js"></script>
 <script src="./nav.js"></script>
 <script src="./briefing.js"></script>

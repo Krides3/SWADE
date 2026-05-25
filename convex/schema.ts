@@ -21,13 +21,17 @@ export default defineSchema({
     mapUrl: v.optional(v.string()),
     
     // Structured Briefing (SMELC / OPORD style)
-    briefing: v.object({
-      situation: v.string(),  // Enemy forces, weather, terrain
-      mission: v.string(),    // Clear statement of the task
-      execution: v.string(),  // The 'how' - movement, phases
-      logistics: v.string(),  // Ammo, medical, transport
-      command: v.string(),    // Signal, frequencies, chain of command
-    }),
+    // Union allows migration and makes fields optional for quick creation
+    briefing: v.union(
+      v.string(), 
+      v.object({
+        situation: v.optional(v.string()),
+        mission: v.optional(v.string()),
+        execution: v.optional(v.string()),
+        logistics: v.optional(v.string()),
+        command: v.optional(v.string()),
+      })
+    ),
 
     leader: v.optional(v.id("operators")),
     operators: v.array(v.id("operators")),
@@ -35,11 +39,6 @@ export default defineSchema({
     objectives: v.optional(v.array(v.object({
       text: v.string(),
       status: v.string(), // "PENDING" | "COMPLETED" | "FAILED"
-    }))),
-    intelDrops: v.optional(v.array(v.object({
-      timestamp: v.string(),
-      text: v.string(),
-      source: v.string(), // "HQ" | "FIELD" | "SIGNAL"
     }))),
   }).index("by_status", ["status"]),
 

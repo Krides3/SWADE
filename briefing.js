@@ -19,6 +19,11 @@
     const opListEl      = document.getElementById('op-list');
     const leaderSelect  = document.getElementById('mission-leader');
 
+    // Section Editor Elements
+    const sectionModalEl   = document.getElementById('section-modal');
+    const sectionForm      = document.getElementById('section-form');
+    const sectionContentEl = document.getElementById('section-content');
+
     // ── INITIALIZATION ─────────────────────────────────────────────
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -27,10 +32,21 @@
             return;
         }
 
+        // Configure Marked for tactical use
+        if (typeof marked !== 'undefined' && marked.setOptions) {
+            marked.setOptions({
+                gfm: true,
+                breaks: true,
+                headerIds: false,
+                mangle: false
+            });
+        }
+
         const CONVEX_URL = "https://focused-panda-809.eu-west-1.convex.cloud";
         window.client = new convex.ConvexClient(CONVEX_URL, { skipConvexDeploymentUrlCheck: true });
 
-        if (isHandler) {
+        // Prevents duplication from script double-loads
+        if (isHandler && !document.getElementById('create-mission-btn')) {
             addCreateButton();
         }
 
@@ -67,6 +83,7 @@
         if (!headerLeft) return;
         
         const btn = document.createElement('button');
+        btn.id = 'create-mission-btn';
         btn.className = 'btn-action';
         btn.style.marginTop = '15px';
         btn.style.display = 'block';
@@ -103,12 +120,37 @@
         `).join('');
     }
 
+    function parseTacticalMarkdown(content) {
+        if (!content) return '<div style="color:var(--text-dim); font-style:italic; font-size:0.85rem;">DATA PENDING...</div>';
+        
+        if (typeof marked !== 'undefined') {
+            // Modern marked library check
+            return typeof marked.parse === 'function' ? marked.parse(content) : marked(content);
+        }
+        
+        return `<pre style="font-family:inherit; white-space:pre-wrap; margin:0; font-size:1.1rem;">${content}</pre>`;
+    }
+
+    function renderSection(id, key, title, content, canEdit) {
+        const htmlContent = parseTacticalMarkdown(content);
+        
+        return `
+            <div class="briefing-section">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(184,168,0,0.3); margin-bottom:10px; padding-bottom:5px;">
+                    <div class="info-label" style="margin-bottom:0; font-size:0.85rem;">${title}</div>
+                    ${canEdit ? `<button class="btn-action" style="padding:4px 10px; font-size:0.6rem; height:auto;" onclick="window.openSectionEditor('${id}', '${key}', '${title}')">EDIT</button>` : ''}
+                </div>
+                <div class="briefing-content" style="${key === 'mission' ? 'color:var(--gold); border-left:4px solid var(--gold); font-weight:bold;' : ''}">${htmlContent}</div>
+            </div>
+        `;
+    }
+
     window.viewMission = async function(id, showLoading = true) {
         activeMissionId = id;
         renderMissionList();
         
         if (showLoading) {
-            detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px;">DECRYPTING TACTICAL DATA...</div>';
+            detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px; font-size:1rem;">DECRYPTING TACTICAL DATA...</div>';
         }
         
         try {
@@ -122,9 +164,10 @@
             detailEl.innerHTML = `
                 ${canEdit ? `
                 <div class="handler-controls">
+                    <button class="btn-action" style="border-color:var(--danger); color:var(--danger);" onclick="window.deleteMission('${mission._id}')">DELETE</button>
+                    <button class="btn-action" onclick="window.exportToClipboard('${mission._id}')">EXPORT</button>
                     <button class="btn-action" onclick="window.addObjectivePrompt('${mission._id}')">ADD OBJ</button>
-                    <button class="btn-action" onclick="window.addIntelPrompt('${mission._id}')">INTEL DROP</button>
-                    <button class="btn-action" onclick="window.openModal('${mission._id}')">EDIT</button>
+                    <button class="btn-action" onclick="window.openModal('${mission._id}')">EDIT INFO</button>
                 </div>` : ''}
                 
                 <div class="briefing-header">
@@ -149,85 +192,79 @@
                     </div>
                 </div>
 
-                <div class="tactical-layout" style="display:grid; grid-template-columns: 1fr 300px; gap:30px;">
+                <div class="tactical-layout" style="display:grid; grid-template-columns: 1fr 320px; gap:35px;">
                     <div class="tactical-main">
                         ${mission.mapUrl ? `
-                            <div class="tactical-map" style="margin-bottom:30px; border:1px solid var(--border);">
-                                <div class="info-label" style="background:var(--bg-panel); padding:5px 10px; border-bottom:1px solid var(--border);">SATELLITE IMAGERY / AO MAP</div>
-                                <img src="${mission.mapUrl}" style="width:100%; display:block; filter: sepia(0.5) hue-rotate(140deg) brightness(0.8) contrast(1.2);">
+                            <div class="tactical-map" style="margin-bottom:25px; border:1px solid var(--border);">
+                                <div class="info-label" style="background:var(--bg-panel); padding:8px 12px; border-bottom:1px solid var(--border); font-size:0.75rem;">SATELLITE IMAGERY / AO MAP</div>
+                                <img src="${mission.mapUrl}" style="width:100%; display:block; filter: sepia(0.4) hue-rotate(140deg) brightness(0.9) contrast(1.1);">
                             </div>
                         ` : ''}
                         
-                        <div class="briefing-text" style="margin-top:0;">
-                            <div class="info-label" style="border-bottom:1px solid var(--border); margin-bottom:15px; padding-bottom:5px;">SITUATION & ORDERS</div>
-                            ${mission.briefing}
+                        <div class="briefing-text">
+                            ${typeof mission.briefing === 'string' ? `
+                                <div style="color:var(--danger); font-size:0.8rem; margin-bottom:12px; font-weight:bold;">[ LEGACY FORMAT DETECTED — RE-SAVE MISSION TO CONVERT ]</div>
+                                <div class="briefing-content" style="border:1px dashed var(--gold); padding:20px; background:rgba(184,168,0,0.05);">${parseTacticalMarkdown(mission.briefing)}</div>
+                            ` : `
+                                ${renderSection(mission._id, 'situation', 'I. SITUATION', mission.briefing.situation, canEdit)}
+                                ${renderSection(mission._id, 'mission', 'II. MISSION', mission.briefing.mission, canEdit)}
+                                ${renderSection(mission._id, 'execution', 'III. EXECUTION', mission.briefing.execution, canEdit)}
+                                ${renderSection(mission._id, 'logistics', 'IV. LOGISTICS', mission.briefing.logistics, canEdit)}
+                                ${renderSection(mission._id, 'command', 'V. COMMAND & SIGNAL', mission.briefing.command, canEdit)}
+                            `}
                         </div>
                     </div>
 
                     <div class="tactical-side">
-                        <div class="tactical-section" style="margin-bottom:30px;">
-                            <div class="info-label">OPERATIONAL SQUAD</div>
-                            <div class="info-value" style="font-size:0.9rem; margin-top:5px;">
-                                <div style="color:var(--gold); margin-bottom:5px;">TL: ${mission.leaderName || 'UNASSIGNED'}</div>
-                                <div style="color:var(--text); font-size:0.8rem; display:flex; flex-direction:column; gap:5px;">
+                        <div class="tactical-section" style="margin-bottom:35px;">
+                            <div class="info-label" style="font-size:0.9rem; border-bottom:1px solid var(--gold-dim); padding-bottom:5px;">OPERATIONAL SQUAD</div>
+                            <div class="info-value" style="font-size:1rem; margin-top:10px;">
+                                <div style="color:var(--gold); margin-bottom:10px; font-weight:bold;">TL: ${mission.leaderName || 'UNASSIGNED'}</div>
+                                <div style="color:var(--text); font-size:0.95rem; display:flex; flex-direction:column; gap:12px;">
                                     ${mission.operatorList.map(o => {
                                         const assignment = mission.assignments?.find(a => a.operatorId === o.id);
                                         const role = assignment?.assignedRole || 'UNASSIGNED';
-                                        const isReady = assignment?.isReady ? '<span style="color:var(--cyan)">[READY]</span>' : '<span style="color:var(--gold-dim)">[STANDBY]</span>';
+                                        const isReady = assignment?.isReady ? '<span style="color:var(--cyan); font-weight:bold;">[READY]</span>' : '<span style="color:var(--gold-dim); opacity:0.7;">[STANDBY]</span>';
                                         const prefs = o.preferredRoles?.length > 0 ? o.preferredRoles.join(' / ') : 'NONE SET';
                                         
                                         return `
-                                            <div style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
+                                            <div style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
                                                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                                                    <span>◈ ${o.callsign} 
-                                                        <span style="font-size:0.6rem; color:var(--text-dim); margin-left:5px; ${canAssign ? 'cursor:pointer; border-bottom:1px dashed var(--gold-dim);' : ''}" 
+                                                    <span style="font-weight:600;">◈ ${o.callsign} 
+                                                        <span class="role-badge" 
+                                                              style="${canAssign ? 'cursor:pointer; border-bottom:1px dashed var(--gold-glow);' : ''}" 
                                                               ${canAssign ? `onclick="window.promptAssignment('${mission._id}', '${o.id}', '${o.callsign}', '${role}', '${prefs}')"` : ''}>
                                                             ${role}
                                                         </span>
                                                     </span>
                                                     ${isReady}
                                                 </div>
-                                                <div style="font-size:0.55rem; color:var(--text-dim); margin-left:14px; margin-top:2px;">PREF: ${prefs}</div>
+                                                <div class="pref-text">PREF: ${prefs}</div>
                                             </div>
                                         `;
                                     }).join('') || 'NONE'}
                                 </div>
                                 ${!isHandler ? `
-                                    <button class="btn-action" style="width:100%; margin-top:10px; font-size:0.65rem;" onclick="window.toggleReady('${mission._id}')">TOGGLE READINESS</button>
+                                    <button class="btn-action" style="width:100%; margin-top:15px; font-size:0.75rem;" onclick="window.toggleReady('${mission._id}')">TOGGLE READINESS</button>
                                 ` : ''}
                             </div>
                         </div>
 
-                        <div class="tactical-section" style="margin-bottom:30px;">
-                            <div class="info-label">OBJECTIVES</div>
+                        <div class="tactical-section">
+                            <div class="info-label" style="font-size:0.9rem; border-bottom:1px solid var(--gold-dim); padding-bottom:5px;">OBJECTIVES</div>
 
-                            <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px;">
+                            <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
                                 ${mission.objectives?.length > 0 
                                     ? mission.objectives.map((obj, idx) => `
-                                        <div style="font-size:0.75rem; display:flex; gap:8px; align-items:flex-start; ${canEdit ? 'cursor:pointer;' : ''}" 
+                                        <div style="font-size:0.95rem; display:flex; gap:10px; align-items:flex-start; ${canEdit ? 'cursor:pointer;' : ''}" 
                                              ${canEdit ? `onclick="window.toggleObjective('${mission._id}', ${idx})"` : ''}>
-                                            <span style="color:${obj.status === 'COMPLETED' ? 'var(--cyan)' : obj.status === 'FAILED' ? 'var(--danger)' : 'var(--gold-dim)'};">
+                                            <span style="color:${obj.status === 'COMPLETED' ? 'var(--cyan)' : obj.status === 'FAILED' ? 'var(--danger)' : 'var(--gold-dim)'}; font-size:1.1rem;">
                                                 ${obj.status === 'COMPLETED' ? '☑' : obj.status === 'FAILED' ? '☒' : '☐'}
                                             </span>
-                                            <span style="${obj.status === 'COMPLETED' ? 'text-decoration:line-through; opacity:0.6;' : ''}">${obj.text}</span>
+                                            <span style="${obj.status === 'COMPLETED' ? 'text-decoration:line-through; opacity:0.6;' : ''}; margin-top:2px;">${obj.text}</span>
                                         </div>
                                     `).join('')
-                                    : '<div class="mission-meta">NO DATA</div>'
-                                }
-                            </div>
-                        </div>
-
-                        <div class="tactical-section">
-                            <div class="info-label">INTEL DROPS</div>
-                            <div id="intel-feed" style="margin-top:10px; display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; border-left:1px solid var(--border); padding-left:10px;">
-                                ${mission.intelDrops?.length > 0
-                                    ? mission.intelDrops.map(drop => `
-                                        <div style="font-family:'Share Tech Mono', monospace; font-size:0.7rem;">
-                                            <div style="color:var(--purple-bright); font-size:0.6rem;">[${drop.timestamp}] FROM: ${drop.source}</div>
-                                            <div style="color:var(--text); margin-top:3px;">${drop.text}</div>
-                                        </div>
-                                    `).reverse().join('')
-                                    : '<div class="mission-meta">WAITING FOR HQ...</div>'
+                                    : '<div class="mission-meta" style="font-size:0.85rem;">NO DATA</div>'
                                 }
                             </div>
                         </div>
@@ -236,7 +273,74 @@
             `;
         } catch (e) {
             console.error(e);
-            detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px; color:var(--danger);">ERROR RETRIEVING DATA</div>';
+            detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px; color:var(--danger); font-size:1.2rem;">ERROR RETRIEVING DATA</div>';
+        }
+    };
+
+    window.toggleSidebar = function() {
+        const grid = document.getElementById('briefing-grid');
+        const btn = document.querySelector('.collapse-btn');
+        const isCollapsed = grid.classList.toggle('collapsed');
+        btn.textContent = isCollapsed ? '»' : '«';
+        btn.title = isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar';
+    };
+
+    window.openSectionEditor = function(missionId, key, title) {
+        const mission = currentMissions.find(m => m._id === missionId);
+        if (!mission) return;
+
+        document.getElementById('section-modal-title').textContent = `EDIT: ${title} (MARKDOWN SUPPORTED)`;
+        document.getElementById('section-mission-id').value = missionId;
+        document.getElementById('section-key').value = key;
+        
+        let content = '';
+        if (typeof mission.briefing === 'object') {
+            content = mission.briefing[key] || '';
+        } else if (key === 'situation') {
+            content = mission.briefing; // Legacy
+        }
+        
+        sectionContentEl.value = content;
+        sectionModalEl.style.display = 'flex';
+    };
+
+    sectionForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const id      = document.getElementById('section-mission-id').value;
+        const key     = document.getElementById('section-key').value;
+        const content = sectionContentEl.value;
+
+        const mission = currentMissions.find(m => m._id === id);
+        if (!mission) return;
+
+        let updatedBriefing = {
+            situation: '', mission: '', execution: '', logistics: '', command: ''
+        };
+        
+        if (typeof mission.briefing === 'object') {
+            updatedBriefing = { ...updatedBriefing, ...mission.briefing };
+        } else {
+            updatedBriefing.situation = mission.briefing || '';
+        }
+        
+        updatedBriefing[key] = content || '';
+
+        try {
+            await window.client.mutation("missions:update", {
+                missionId: id,
+                name: mission.name,
+                location: mission.location,
+                mapUrl: mission.mapUrl,
+                date: mission.date,
+                leader: mission.leader,
+                operators: mission.operators,
+                status: mission.status,
+                briefing: updatedBriefing,
+                handler: session.username
+            });
+            sectionModalEl.style.display = 'none';
+        } catch (e) {
+            alert(e.message);
         }
     };
 
@@ -267,18 +371,6 @@
         }
     };
 
-    window.addIntelPrompt = async function(missionId) {
-        const text = prompt("ENTER INTEL DATA:");
-        if (!text) return;
-        const source = prompt("ENTER SOURCE (HQ/FIELD/SIGNAL):", "HQ") || "HQ";
-        
-        try {
-            await window.client.mutation("missions:addIntel", { missionId, text, source: source.toUpperCase() });
-        } catch (e) {
-            alert(e.message);
-        }
-    };
-
     window.addObjectivePrompt = async function(missionId) {
         const text = prompt("ENTER OBJECTIVE DESCRIPTION:");
         if (!text) return;
@@ -292,6 +384,71 @@
             });
         } catch (e) {
             alert(e.message);
+        }
+    };
+
+    window.exportToClipboard = async function(missionId) {
+        const mission = currentMissions.find(m => m._id === missionId);
+        if (!mission) return;
+
+        const exportData = {
+            name: mission.name,
+            location: mission.location || '',
+            mapUrl: mission.mapUrl || '',
+            date: mission.date || '',
+            briefing: mission.briefing,
+            exportType: "LUXOR_MISSION_BRIEF_V2"
+        };
+
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(exportData));
+            alert("TACTICAL DATA COPIED TO CLIPBOARD");
+        } catch (err) {
+            alert("CLIPBOARD EXPORT FAILED: " + err.message);
+        }
+    };
+
+    window.deleteMission = async function(id) {
+        if (!confirm("PERMANENTLY DELETE MISSION BRIEFING? THIS CANNOT BE UNDONE.")) return;
+        
+        try {
+            await window.client.mutation("missions:remove", { missionId: id, handler: session.username });
+            activeMissionId = null;
+            detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px;">MISSION DELETED</div>';
+        } catch (e) {
+            alert(e.message);
+        }
+    };
+
+    window.importFromClipboard = async function() {
+        if (!isHandler) return;
+
+        try {
+            const text = await navigator.clipboard.readText();
+            const data = JSON.parse(text);
+
+            if (data.exportType !== "LUXOR_MISSION_BRIEF_V2") {
+                throw new Error("INVALID TACTICAL DATA FORMAT");
+            }
+
+            let mode = 'new';
+            if (activeMissionId) {
+                const choice = confirm("ACTIVE MISSION DETECTED.\n\n[ OK ] - OVERWRITE CURRENT MISSION\n[ CANCEL ] - CREATE AS NEW MISSION");
+                if (choice) mode = 'overwrite';
+            }
+
+            window.openModal(mode === 'overwrite' ? activeMissionId : null);
+            
+            document.getElementById('mission-name').value = data.name || '';
+            document.getElementById('mission-location').value = data.location || '';
+            document.getElementById('mission-map').value = data.mapUrl || '';
+            document.getElementById('mission-date').value = data.date || '';
+
+            window.importedBriefing = data.briefing; 
+
+            alert(mode === 'overwrite' ? "TACTICAL DATA IMPORTED (OVERWRITE MODE)" : "TACTICAL DATA IMPORTED (NEW MISSION MODE)");
+        } catch (err) {
+            alert("IMPORT FAILED: " + err.message);
         }
     };
 
@@ -318,7 +475,7 @@
         modalEl.style.display = 'flex';
         missionForm.reset();
         document.getElementById('edit-id').value = id || '';
-        document.getElementById('modal-title').textContent = id ? 'EDIT BRIEFING' : 'NEW BRIEFING';
+        document.getElementById('modal-title').textContent = id ? 'EDIT MISSION INFO' : 'NEW MISSION BRIEF';
 
         if (id) {
             const mission = currentMissions.find(m => m._id === id);
@@ -328,7 +485,6 @@
                 document.getElementById('mission-map').value = mission.mapUrl || '';
                 document.getElementById('mission-date').value = mission.date || '';
                 document.getElementById('mission-leader').value = mission.leader || '';
-                document.getElementById('mission-briefing').value = mission.briefing;
                 
                 const checkboxes = opListEl.querySelectorAll('input[type="checkbox"]');
                 checkboxes.forEach(cb => {
@@ -346,22 +502,43 @@
         const mapUrl   = document.getElementById('mission-map').value;
         const date     = document.getElementById('mission-date').value;
         const leader   = document.getElementById('mission-leader').value || undefined;
-        const briefing = document.getElementById('mission-briefing').value;
         
         const selectedOps = Array.from(opListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        const sanitize = (val) => (val === undefined || val === null) ? "" : String(val);
 
         try {
             if (id) {
+                const mission = currentMissions.find(m => m._id === id);
+                const currentBriefing = typeof mission.briefing === 'object' ? mission.briefing : { situation: mission.briefing || "" };
+                
                 await window.client.mutation("missions:update", {
                     missionId: id,
-                    name, briefing, location, mapUrl, date, leader,
+                    name, location, mapUrl, date, leader,
                     operators: selectedOps,
+                    briefing: {
+                        situation: sanitize(currentBriefing.situation),
+                        mission: sanitize(currentBriefing.mission),
+                        execution: sanitize(currentBriefing.execution),
+                        logistics: sanitize(currentBriefing.logistics),
+                        command: sanitize(currentBriefing.command),
+                    },
                     handler: session.username
                 });
             } else {
+                const imported = window.importedBriefing || {};
+                const briefing = {
+                    situation: sanitize(imported.situation),
+                    mission: sanitize(imported.mission),
+                    execution: sanitize(imported.execution),
+                    logistics: sanitize(imported.logistics),
+                    command: sanitize(imported.command),
+                };
+                delete window.importedBriefing;
+
                 await window.client.mutation("missions:create", {
-                    name, briefing, location, mapUrl, date, leader,
+                    name, location, mapUrl, date, leader,
                     operators: selectedOps,
+                    briefing,
                     handler: session.username
                 });
             }

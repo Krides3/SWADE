@@ -7,28 +7,33 @@ import { v } from "convex/values";
 export const create = mutation({
   args: {
     name: v.string(),
-    briefing: v.string(),
     handler: v.string(),
     date: v.optional(v.string()),
     location: v.optional(v.string()),
     mapUrl: v.optional(v.string()),
     leader: v.optional(v.id("operators")),
     operators: v.array(v.id("operators")),
+    briefing: v.object({
+      situation: v.optional(v.string()),
+      mission: v.optional(v.string()),
+      execution: v.optional(v.string()),
+      logistics: v.optional(v.string()),
+      command: v.optional(v.string()),
+    }),
   },
   handler: async (ctx, args) => {
     const missionId = await ctx.db.insert("missions", {
       name: args.name,
-      briefing: args.briefing,
       handler: args.handler.toUpperCase(),
       date: args.date,
       location: args.location,
       mapUrl: args.mapUrl,
       leader: args.leader,
       operators: args.operators,
+      briefing: args.briefing,
       status: "PRE-FLIGHT",
       timestamp: Date.now(),
       objectives: [],
-      intelDrops: [],
     });
     return missionId;
   },
@@ -41,7 +46,6 @@ export const update = mutation({
   args: {
     missionId: v.id("missions"),
     name: v.string(),
-    briefing: v.string(),
     handler: v.string(),
     date: v.optional(v.string()),
     location: v.optional(v.string()),
@@ -49,6 +53,13 @@ export const update = mutation({
     leader: v.optional(v.id("operators")),
     operators: v.array(v.id("operators")),
     status: v.optional(v.string()),
+    briefing: v.object({
+      situation: v.optional(v.string()),
+      mission: v.optional(v.string()),
+      execution: v.optional(v.string()),
+      logistics: v.optional(v.string()),
+      command: v.optional(v.string()),
+    }),
   },
   handler: async (ctx, args) => {
     const mission = await ctx.db.get(args.missionId);
@@ -60,41 +71,43 @@ export const update = mutation({
 
     await ctx.db.patch(args.missionId, {
       name: args.name,
-      briefing: args.briefing,
       date: args.date,
       location: args.location,
       mapUrl: args.mapUrl,
       leader: args.leader,
       operators: args.operators,
+      briefing: args.briefing,
       status: args.status ?? mission.status,
     });
   },
 });
 
 /**
- * Add an intel drop to a mission.
+ * Remove a mission briefing.
  */
-export const addIntel = mutation({
-  args: {
+export const remove = mutation({
+  args: { 
     missionId: v.id("missions"),
-    text: v.string(),
-    source: v.string(), // "HQ" | "FIELD" | "SIGNAL"
+    handler: v.string(),
   },
   handler: async (ctx, args) => {
     const mission = await ctx.db.get(args.missionId);
     if (!mission) throw new Error("Mission not found");
+    
+    if (mission.handler !== args.handler.toUpperCase()) {
+      throw new Error("ACCESS DENIED: You can only delete your own missions.");
+    }
 
-    const drops = mission.intelDrops ?? [];
-    await ctx.db.patch(args.missionId, {
-      intelDrops: [
-        ...drops,
-        {
-          timestamp: new Date().toLocaleTimeString(),
-          text: args.text,
-          source: args.source,
-        },
-      ],
-    });
+    // Also clean up assignments
+    const assignments = await ctx.db
+      .query("assignments")
+      .withIndex("by_mission", (q) => q.eq("missionId", args.missionId))
+      .collect();
+    for (const a of assignments) {
+      await ctx.db.delete(a._id);
+    }
+
+    await ctx.db.delete(args.missionId);
   },
 });
 
