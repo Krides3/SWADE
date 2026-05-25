@@ -138,7 +138,6 @@
         .briefing-text {
             font-family: 'Share Tech Mono', monospace;
             line-height: 1.3;
-            white-space: pre-wrap;
             margin-top: 0;
             color: var(--text);
         }
@@ -315,6 +314,15 @@
                         <!-- DAGGER operators -->
                     </select>
                 </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="info-label">OPERATIONAL STATUS</label>
+                <select id="mission-status" class="form-input">
+                    <option value="PRE-FLIGHT">PRE-FLIGHT (PLANNING)</option>
+                    <option value="ACTIVE">ACTIVE (LIVE OPERATION)</option>
+                    <option value="ARCHIVED">ARCHIVED (COMPLETED)</option>
+                </select>
             </div>
             
             <div class="form-group">

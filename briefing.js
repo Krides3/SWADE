@@ -494,12 +494,15 @@
                 document.getElementById('mission-map').value = mission.mapUrl || '';
                 document.getElementById('mission-date').value = mission.date || '';
                 document.getElementById('mission-leader').value = mission.leader || '';
+                document.getElementById('mission-status').value = mission.status || 'PRE-FLIGHT';
                 
                 const checkboxes = opListEl.querySelectorAll('input[type="checkbox"]');
                 checkboxes.forEach(cb => {
                     cb.checked = mission.operators.includes(cb.value);
                 });
             }
+        } else {
+            document.getElementById('mission-status').value = 'PRE-FLIGHT';
         }
     };
 
@@ -511,6 +514,7 @@
         const mapUrl   = document.getElementById('mission-map').value;
         const date     = document.getElementById('mission-date').value;
         const leader   = document.getElementById('mission-leader').value || undefined;
+        const status   = document.getElementById('mission-status').value;
         
         const selectedOps = Array.from(opListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
         const sanitize = (val) => (val === undefined || val === null) ? "" : String(val);
@@ -522,7 +526,7 @@
                 
                 await window.client.mutation("missions:update", {
                     missionId: id,
-                    name, location, mapUrl, date, leader,
+                    name, location, mapUrl, date, leader, status,
                     operators: selectedOps,
                     briefing: {
                         situation: sanitize(currentBriefing.situation),
@@ -550,6 +554,7 @@
                     briefing,
                     handler: session.username
                 });
+                // Note: status is set to "PRE-FLIGHT" by default in backend for create
             }
             modalEl.style.display = 'none';
         } catch (e) {
