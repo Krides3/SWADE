@@ -1,12 +1,14 @@
 {
   "name": "luxor-tactical-terminal",
-  "version": "2.4.1",
-  "description": "Cyberpunk Tactical Dashboard for SWADE",
-  "main": "index.js",
+  "version": "1.0.0",
+  "description": "LUXOR Tactical Operations Terminal — local game tool with live sync",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
     "dev": "convex dev"
   },
   "dependencies": {
-    "convex": "^1.11.0"
+    "convex": "^1.12.0",
+    "express": "^4.18.2"
   }
 }

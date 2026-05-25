@@ -3,7 +3,91 @@
 const EV_CFG_KEY   = 'luxorEvidenceConfig';
 const EV_STATE_KEY = 'luxorEvidenceState';
 
-// BroadcastChannel for instant same-machine multi-window sync
+// ── Sync layer ─────────────────────────────────────────────────────────────
+// Uses Server-Sent Events + POST when server.js is running (cross-browser/machine).
+// Falls back gracefully to BroadcastChannel (same-machine multi-tab) or
+// plain localStorage (single browser) when the server is unavailable.
+
+const SYNC_BASE       = '/api/evidence';
+let   _serverOnline   = false;
+let   _serverVersion  = 0;
+let   _ignoreNextPoll = false;  // skip one poll cycle after we post to avoid echo
+
+// Probe server once; if it responds, switch to server mode
+(async function probeServer() {
+    try {
+        const r = await fetch('/api/ping', { signal: AbortSignal.timeout?.(1500) });
+        if (r.ok) {
+            _serverOnline = true;
+            console.log('[LUXOR Sync] Server online — using server sync');
+            startSSEStream();
+            await pullFromServer(true);   // initial full load
+        }
+    } catch {
+        console.log('[LUXOR Sync] Server offline — using localStorage/BroadcastChannel');
+    }
+})();
+
+async function pushToServer(key) {
+    if (!_serverOnline) return;
+    try {
+        _ignoreNextPoll = true;
+        const value = key === 'cfg' ? cfg : state;
+        const r = await fetch(SYNC_BASE, {
+            method : 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify({ key, value }),
+        });
+        const d = await r.json();
+        if (d.ok) _serverVersion = d.version;
+    } catch { _serverOnline = false; }
+}
+
+async function pullFromServer(force) {
+    if (!_serverOnline) return;
+    try {
+        const r = await fetch(SYNC_BASE);
+        const d = await r.json();
+        if (!d.ok) return;
+        if (!force && d.version <= _serverVersion) return;
+        _serverVersion = d.version;
+        if (d.cfg)   { cfg   = Object.assign({ caseTitle:'CASE FILE', caseDesc:'', noticeTN:6, cards:[], hiddenConns:[] }, d.cfg); }
+        if (d.state) {
+            state = Object.assign(blankState(), d.state);
+            state.active     = true;
+            state.connColors = state.connColors || {};
+            state.connLabels = state.connLabels || {};
+        }
+        render();
+    } catch { _serverOnline = false; }
+}
+
+function startSSEStream() {
+    const src = new EventSource(SYNC_BASE + '/stream');
+    src.onmessage = async (e) => {
+        try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'hello') { _serverVersion = msg.version; return; }
+            if (_ignoreNextPoll) { _ignoreNextPoll = false; return; }
+            // Another client pushed a change — pull fresh state
+            await pullFromServer(true);
+        } catch {}
+    };
+    src.onerror = () => {
+        // SSE dropped — server went offline or network hiccup
+        _serverOnline = false;
+        src.close();
+        // Retry probe after 10s
+        setTimeout(async () => {
+            try {
+                const r = await fetch('/api/ping', { signal: AbortSignal.timeout?.(1500) });
+                if (r.ok) { _serverOnline = true; startSSEStream(); await pullFromServer(true); }
+            } catch {}
+        }, 10000);
+    };
+}
+
+// BroadcastChannel for same-machine multi-window sync (works without server)
 const _evChannel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('luxor-evidence') : null;
 
 const TYPE_COLORS = { clue:'#00e5c8', suspect:'#b8a800', location:'#c060e8', event:'#e74c3c' };
@@ -29,6 +113,7 @@ function loadCfg() {
 function saveCfg() {
     localStorage.setItem(EV_CFG_KEY, JSON.stringify(cfg));
     _evChannel?.postMessage({ key: EV_CFG_KEY });
+    pushToServer('cfg');
 }
 
 function loadState() {
@@ -44,6 +129,7 @@ function loadState() {
 function saveState() {
     localStorage.setItem(EV_STATE_KEY, JSON.stringify(state));
     _evChannel?.postMessage({ key: EV_STATE_KEY });
+    pushToServer('state');
 }
 
 function blankState() {
@@ -464,6 +550,14 @@ function render() {
     const section = document.getElementById('ev-board-section');
     if (idle)    idle.style.display    = 'none';
     if (section) section.style.display = 'block';
+
+    // Update sync indicator
+    const syncDot = document.getElementById('ev-sync-dot');
+    if (syncDot) {
+        syncDot.title       = _serverOnline ? 'LIVE SYNC — changes visible to all players instantly' : 'LOCAL ONLY — open via server.js for cross-browser sync';
+        syncDot.textContent = _serverOnline ? '⬤ LIVE' : '⬤ LOCAL';
+        syncDot.style.color = _serverOnline ? '#00e5c8' : '#b8a800';
+    }
 
     renderBoard(); applyZoom();
 

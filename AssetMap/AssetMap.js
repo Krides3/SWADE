@@ -764,7 +764,8 @@ const map = L.map('map', {
     zoomControl: false,
     attributionControl: true,
     maxBounds: [[-85, -180], [85, 180]],
-    maxBoundsViscosity: 1.0
+    maxBoundsViscosity: 1.0,
+    doubleClickZoom: false   // disabled so marker dblclick works for all players
 });
 
 L.control.zoom({ position: 'topright' }).addTo(map);

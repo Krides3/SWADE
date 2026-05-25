@@ -6,16 +6,28 @@
 (function () {
     'use strict';
 
-    // ── Constants ─────────────────────────────────────────────
+    // ── Fixed constants ────────────────────────────────────────
     const FREQ_MIN        = 400;
     const FREQ_MAX        = 500;
-    const LOCK_TOLERANCE  = 0.8;   // MHz — window for signal lock
-    const DECRYPT_TIME    = 45;    // seconds to complete decrypt
-    const JAM_DURATION    = 8;     // seconds jam is active
-    const JAM_COOLDOWN    = 28;    // seconds before jam is ready again
-    const SPOOF_DURATION  = 30;    // seconds spoof confusion lasts
-    const SPOOF_COOLDOWN  = 50;    // seconds before spoof is ready again
     const MAX_LOG_ENTRIES = 45;
+
+    // ── Runtime-configurable timing (overlord can change via GM TIMING tab) ──
+    const TIMING_STORE = 'luxorRadioTiming';
+    const DEFAULT_TIMING = {
+        LOCK_TOLERANCE : 0.8,   // MHz — window for signal lock
+        DECRYPT_TIME   : 45,    // seconds to complete decrypt
+        NUM_BLOCKS     : 4,     // cipher blocks in decrypt game (2–6)
+        JAM_DURATION   : 8,     // seconds jam is active
+        JAM_COOLDOWN   : 28,    // seconds before jam is ready again
+        SPOOF_DURATION : 30,    // seconds spoof confusion lasts
+        SPOOF_COOLDOWN : 50,    // seconds before spoof is ready again
+    };
+    function loadTiming() {
+        try { return Object.assign({}, DEFAULT_TIMING, JSON.parse(localStorage.getItem(TIMING_STORE) || '{}')); }
+        catch { return { ...DEFAULT_TIMING }; }
+    }
+    function saveTiming(t) { localStorage.setItem(TIMING_STORE, JSON.stringify(t)); }
+    let T = loadTiming(); // all timing accessed via T.DECRYPT_TIME etc.
 
     // ── Persistent GM config ──────────────────────────────────
     const RADIO_STORE = 'luxorRadioConfig';
@@ -200,7 +212,7 @@
 
         let candidate = null;
         for (const s of signals) {
-            if (s.type === 'hostile' && Math.abs(state.tunerFreq - s.freq) <= LOCK_TOLERANCE) {
+            if (s.type === 'hostile' && Math.abs(state.tunerFreq - s.freq) <= T.LOCK_TOLERANCE) {
                 candidate = s;
                 break;
             }
@@ -295,12 +307,12 @@
 
         state.mode       = 'JAM';
         state.jam.active = true;
-        state.jam.timer  = JAM_DURATION;
+        state.jam.timer  = T.JAM_DURATION;
 
         clearCmActive();
         el.cmJam.classList.add('danger');
         setStatusBadge('JAMMING', 'intercepting');
-        addLog(`BURST JAM FIRED — ${JAM_DURATION}s interference pulse`, 'sys');
+        addLog(`BURST JAM FIRED — ${T.JAM_DURATION}s interference pulse`, 'sys');
 
         // Reveal next-hop for currently locked signal
         if (state.lockedSignal) {
@@ -342,14 +354,14 @@
 
         state.mode         = 'SPOOF';
         state.spoof.active = true;
-        state.spoof.timer  = SPOOF_DURATION;
+        state.spoof.timer  = T.SPOOF_DURATION;
 
         clearCmActive();
         el.cmSpoof.classList.add('warn');
         setStatusBadge('SPOOFING', 'intercepting');
 
         const target = state.lockedSignal ? state.lockedSignal.callsign : 'ALL HOSTILE';
-        addLog(`SPOOF SIG INJECTED → ${target} — ${SPOOF_DURATION}s confusion window`, 'hostile');
+        addLog(`SPOOF SIG INJECTED → ${target} — ${T.SPOOF_DURATION}s confusion window`, 'hostile');
         addLog('FAKE ORDERS: RETREAT TO GRID 229-447 TRANSMITTED', 'hostile');
 
         state.spoof.effectIv = setInterval(() => {
@@ -403,7 +415,7 @@
     }
 
     function startCooldown(type) {
-        const duration = type === 'jam' ? JAM_COOLDOWN : SPOOF_COOLDOWN;
+        const duration = type === 'jam' ? T.JAM_COOLDOWN : T.SPOOF_COOLDOWN;
         const s        = state[type];
         const cdText   = type === 'jam' ? el.jamCdText  : el.spoofCdText;
         const cdBar    = type === 'jam' ? el.jamCdBar   : el.spoofCdBar;
@@ -473,12 +485,12 @@
     // DECRYPTION MINIGAME
     // ══════════════════════════════════════════════════════════
     function initDecrypt(sig) {
-        // Pick 4 unique hex fragments
-        const shuffledPool = [...HEX_POOL].sort(() => Math.random() - 0.5).slice(0, 4);
+        const n = Math.max(2, Math.min(6, T.NUM_BLOCKS));
+        // Pick n unique hex fragments
+        const shuffledPool = [...HEX_POOL].sort(() => Math.random() - 0.5).slice(0, n);
 
-        // Correct order = ascending by original pool position (0→1→2→3)
-        // Each block gets a stable id (0–3) representing its position in the correct sequence
-        const correctOrder = [0, 1, 2, 3];
+        // Correct order = 0 → n-1 (ascending id)
+        const correctOrder = Array.from({ length: n }, (_, i) => i);
 
         // Build blocks and shuffle their display positions
         const blocks = shuffledPool.map((hex, i) => ({ id: i, hex }));
@@ -491,7 +503,7 @@
             correctOrder,
             playerSeq:    [],
             progress:     0,
-            timer:        DECRYPT_TIME,
+            timer:        T.DECRYPT_TIME,
             timerIv:      null,
             decoded:      false,
             decodedMsg:   DECODED_MESSAGES[Math.floor(Math.random() * DECODED_MESSAGES.length)],
@@ -544,11 +556,11 @@
         if (blockId === expected) {
             d.playerSeq.push(blockId);
             divEl.classList.add('correct');
-            d.progress = (d.playerSeq.length / 4) * 100;
+            d.progress = (d.playerSeq.length / d.correctOrder.length) * 100;
             el.decryptBar.style.width = d.progress + '%';
             addLog(`BLOCK ${d.playerSeq.length}/4 VERIFIED — ${divEl.textContent}`, 'friendly');
 
-            if (d.playerSeq.length === 4) decryptSuccess();
+            if (d.playerSeq.length === d.correctOrder.length) decryptSuccess();
         } else {
             // Wrong sequence — reset and inject waveform noise
             d.playerSeq    = [];
@@ -821,7 +833,7 @@
         // Lock bracket around locked signal
         if (state.locked && state.lockedSignal) {
             const cx     = freqX(state.lockedSignal.freq);
-            const halfW  = Math.max(4, freqX(state.lockedSignal.freq + LOCK_TOLERANCE) - cx);
+            const halfW  = Math.max(4, freqX(state.lockedSignal.freq + T.LOCK_TOLERANCE) - cx);
 
             ctx.strokeStyle = '#00ffe755';
             ctx.lineWidth   = 1;
@@ -1046,6 +1058,7 @@
             <div class="gm-tabs">
                 <button class="gm-tab active" data-tab="sigs">SIGNALS</button>
                 <button class="gm-tab" data-tab="msgs">MESSAGES</button>
+                <button class="gm-tab" data-tab="timing">TIMING</button>
             </div>
             <div class="gm-body">
                 <div class="gm-tc" id="gm-tc-sigs">
@@ -1104,6 +1117,47 @@
                     <div id="gm-msg-err" class="gm-err"></div>
                     <button class="gm-btn" id="gm-add-msg">+ ADD MESSAGE</button>
                 </div>
+                <div class="gm-tc hidden" id="gm-tc-timing">
+                    <div class="gm-note">Adjust game difficulty. Changes take effect on the next decrypt attempt or cooldown cycle.</div>
+                    <div class="gm-row2">
+                        <div class="gm-field">
+                            <label>DECRYPT TIME (sec)</label>
+                            <input id="gm-t-decrypt" type="number" min="10" max="300" step="5" value="${T.DECRYPT_TIME}">
+                        </div>
+                        <div class="gm-field">
+                            <label>CIPHER BLOCKS (2–6)</label>
+                            <input id="gm-t-blocks" type="number" min="2" max="6" step="1" value="${T.NUM_BLOCKS}">
+                        </div>
+                    </div>
+                    <div class="gm-divider"></div>
+                    <div class="gm-row2">
+                        <div class="gm-field">
+                            <label>JAM DURATION (sec)</label>
+                            <input id="gm-t-jam-dur" type="number" min="1" max="60" value="${T.JAM_DURATION}">
+                        </div>
+                        <div class="gm-field">
+                            <label>JAM COOLDOWN (sec)</label>
+                            <input id="gm-t-jam-cd" type="number" min="5" max="300" value="${T.JAM_COOLDOWN}">
+                        </div>
+                    </div>
+                    <div class="gm-row2">
+                        <div class="gm-field">
+                            <label>SPOOF DURATION (sec)</label>
+                            <input id="gm-t-spoof-dur" type="number" min="1" max="120" value="${T.SPOOF_DURATION}">
+                        </div>
+                        <div class="gm-field">
+                            <label>SPOOF COOLDOWN (sec)</label>
+                            <input id="gm-t-spoof-cd" type="number" min="5" max="300" value="${T.SPOOF_COOLDOWN}">
+                        </div>
+                    </div>
+                    <div class="gm-field">
+                        <label>LOCK TOLERANCE (MHz)</label>
+                        <input id="gm-t-lock" type="number" min="0.1" max="5" step="0.1" value="${T.LOCK_TOLERANCE}">
+                    </div>
+                    <button class="gm-btn" id="gm-apply-timing">APPLY TIMING</button>
+                    <button class="gm-btn" id="gm-reset-timing" style="margin-top:4px;opacity:0.6;">RESET TO DEFAULTS</button>
+                    <div id="gm-timing-msg" class="gm-err" style="color:#00e5c8;"></div>
+                </div>
             </div>
         </div>`;
         document.body.appendChild(wrap);
@@ -1141,13 +1195,13 @@
         document.addEventListener('mouseup', () => { _dragging = false; });
 
         // Tabs
+        const gmTabs = ['sigs', 'msgs', 'timing'];
         document.querySelectorAll('.gm-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 document.querySelectorAll('.gm-tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
                 const t = tab.dataset.tab;
-                document.getElementById('gm-tc-sigs').classList.toggle('hidden', t !== 'sigs');
-                document.getElementById('gm-tc-msgs').classList.toggle('hidden', t !== 'msgs');
+                gmTabs.forEach(id => document.getElementById('gm-tc-' + id).classList.toggle('hidden', t !== id));
             });
         });
 
@@ -1260,6 +1314,38 @@
             saveRadioConfig();
             renderGMMsgs();
             document.getElementById('gm-new-msg').value = '';
+        });
+
+        // ── Timing apply / reset ──────────────────────────────
+        document.getElementById('gm-apply-timing').addEventListener('click', () => {
+            const get = id => parseFloat(document.getElementById(id).value);
+            const newT = {
+                DECRYPT_TIME   : get('gm-t-decrypt')   || T.DECRYPT_TIME,
+                NUM_BLOCKS     : Math.max(2, Math.min(6, parseInt(document.getElementById('gm-t-blocks').value) || T.NUM_BLOCKS)),
+                JAM_DURATION   : get('gm-t-jam-dur')   || T.JAM_DURATION,
+                JAM_COOLDOWN   : get('gm-t-jam-cd')    || T.JAM_COOLDOWN,
+                SPOOF_DURATION : get('gm-t-spoof-dur') || T.SPOOF_DURATION,
+                SPOOF_COOLDOWN : get('gm-t-spoof-cd')  || T.SPOOF_COOLDOWN,
+                LOCK_TOLERANCE : get('gm-t-lock')      || T.LOCK_TOLERANCE,
+            };
+            Object.assign(T, newT);
+            saveTiming(T);
+            const msg = document.getElementById('gm-timing-msg');
+            msg.textContent = '✓ Timing saved — applies to next decrypt/cooldown';
+            setTimeout(() => { msg.textContent = ''; }, 3000);
+        });
+
+        document.getElementById('gm-reset-timing').addEventListener('click', () => {
+            Object.assign(T, DEFAULT_TIMING);
+            saveTiming(T);
+            ['decrypt','blocks','jam-dur','jam-cd','spoof-dur','spoof-cd','lock'].forEach((id, i) => {
+                const keys = ['DECRYPT_TIME','NUM_BLOCKS','JAM_DURATION','JAM_COOLDOWN','SPOOF_DURATION','SPOOF_COOLDOWN','LOCK_TOLERANCE'];
+                const el_ = document.getElementById('gm-t-' + id);
+                if (el_) el_.value = T[keys[i]];
+            });
+            const msg = document.getElementById('gm-timing-msg');
+            msg.textContent = '✓ Reset to defaults';
+            setTimeout(() => { msg.textContent = ''; }, 3000);
         });
 
         renderGMSigs();
