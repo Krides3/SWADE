@@ -225,6 +225,59 @@
             display: flex;
             gap: 12px;
         }
+
+        /* ── Responsive Mobile Optimization ────────────────────────── */
+        @media (max-width: 900px) {
+            .briefing-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
+            }
+            .mission-sidebar {
+                max-height: 300px;
+                order: 2;
+            }
+            .mission-detail {
+                order: 1;
+                min-height: 400px;
+                overflow: visible;
+            }
+            .collapse-btn { display: none; }
+            .handler-controls {
+                position: static;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header > div {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .page-header .btn-action {
+                width: 100%;
+            }
+            .briefing-info-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .tactical-layout {
+                grid-template-columns: 1fr !important;
+                gap: 20px !important;
+            }
+            .briefing-name { font-size: 1.3rem; }
+            .mission-detail { padding: 15px; }
+            
+            #mission-modal > div {
+                padding: 20px;
+                max-height: 95vh;
+                overflow-y: auto;
+            }
+            .editor-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>

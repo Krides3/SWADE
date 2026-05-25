@@ -66,12 +66,19 @@ document.addEventListener('DOMContentLoaded', function () {
         window.location.replace(redirectPath);
     }
   } else {
-    // For OVERLORD (or other non-restricted admins), add the Briefing Tool to the end of the list
+    // For OVERLORD (or other non-restricted admins), add the Briefing Tool and Editor to the list
     const navUl = navbar.querySelector('.nav-links');
-    if (navUl && !navUl.querySelector('a[href="briefing.html"]')) {
-      const li = document.createElement('li');
-      li.innerHTML = '<a href="briefing.html" data-icon="17">Briefing Tool</a>';
-      navUl.appendChild(li);
+    if (navUl) {
+      if (!navUl.querySelector('a[href="briefing.html"]')) {
+        const li = document.createElement('li');
+        li.innerHTML = '<a href="briefing.html" data-icon="17">Briefing Tool</a>';
+        navUl.appendChild(li);
+      }
+      if (isAdmin && !navUl.querySelector('a[href="operator-editor.html"]')) {
+        const li = document.createElement('li');
+        li.innerHTML = '<a href="operator-editor.html" data-icon="15">Operator Editor</a>';
+        navUl.appendChild(li);
+      }
     }
   }
   if (nameEl && session) {
@@ -86,8 +93,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
   if (logoutBtn) {
     // Detect subdirectory depth so logout always reaches login.html
-    const depth = (window.location.pathname.match(/\//g) || []).length;
-    const loginUrl = depth > 2 ? '../login.html' : 'login.html';
+    // If we're in a subdirectory (like AssetMap/ or RadioScanner/), we need ../
+    const path = window.location.pathname;
+    const segments = path.split('/').filter(s => s.length > 0);
+    // If the last segment is a file, the depth is segments.length - 1
+    // But if we're at root /index.html, segments is ['index.html'], length 1, depth 0.
+    // If we're at /AssetMap/AssetMap.html, segments is ['AssetMap', 'AssetMap.html'], length 2, depth 1.
+    
+    // Simpler: count how many steps to get back to root
+    let rootPath = '';
+    const depth = segments.length - (path.endsWith('/') ? 0 : 1);
+    for (let i = 0; i < depth; i++) { rootPath += '../'; }
+    
+    const loginUrl = rootPath + 'login.html';
+    
     logoutBtn.addEventListener('click', function () {
       LuxorAuth.logout(loginUrl);
     });

@@ -81,6 +81,33 @@
                 </a>
             `;
 
+            const tools = [
+                { title: 'Asset Map',       desc: 'Real-time tactical mapping and asset tracking.', icon: '⊛', href: 'AssetMap/AssetMap.html', code: 'MAP_SYSTEM.SYS' },
+                { title: 'HQ Comms',       desc: 'Secure communication channel with HQ and field units.', icon: '📡', href: 'comms.html', code: 'COMMS_NET.NET' },
+                { title: 'Dice Roller',    desc: 'Probability calculation and tactical RNG suite.', icon: '🎲', href: 'dice.html', code: 'PROB_CALC.EXE' },
+                { title: 'Radio Scanner',  desc: 'Signal intelligence and frequency monitoring.', icon: '📻', href: 'RadioScanner/index.html', code: 'SIGINT_SCAN.EXE' },
+                { title: 'Lockpick',       desc: 'Digital bypass and physical security override.', icon: '⌗', href: 'lockpick.html', code: 'SEC_BYPASS.EXE' },
+                { title: 'Hacking',        desc: 'Remote system intrusion and data exfiltration.', icon: '▦', href: 'hack.html', code: 'BREACH.EXE' },
+                { title: 'Social Eng.',    desc: 'Human-centric vulnerability analysis and leverage.', icon: '⊙', href: 'social.html', code: 'PERSUADE.EXE' },
+                { title: 'Network Map',    desc: 'Topology visualization and node exploitation.', icon: '⊛', href: 'netmap.html', code: 'NET_STORM.EXE' },
+                { title: 'Evidence',       desc: 'Intelligence gathering and case link analysis.', icon: '⊡', href: 'evidence.html', code: 'INTEL_LOG.DB' },
+                { title: 'File Decrypt',   desc: 'Encrypted storage access and data recovery.', icon: '⊟', href: 'filesystem.html', code: 'DECRYPT.EXE' },
+                { title: 'Dossier',        desc: 'Personnel profiles and background intelligence.', icon: '👤', href: 'dossier.html', code: 'BIO_ARCHIVE.EXE' },
+                { title: 'Mission View',   desc: 'Consolidated multi-module tactical display.', icon: '⊞', href: 'multiview.html', code: 'QUAD_VIEW.SYS' }
+            ];
+
+            const toolCards = tools.map(t => `
+                <a class="tool-card" href="${t.href}">
+                    <div class="tool-card-top">
+                        <div class="tool-card-icon">${t.icon}</div>
+                        <div class="tool-card-badge">READY</div>
+                    </div>
+                    <div class="tool-card-title">${t.title}</div>
+                    <div class="tool-card-desc">${t.desc}</div>
+                    <div class="tool-card-code">${t.code}</div>
+                </a>
+            `).join('');
+
             if (isRestricted) {
                 // Clear all cards and only show Briefing and (if admin) Editor
                 grid.innerHTML = briefingCard + (isAdmin ? editorCard : '');
@@ -89,8 +116,8 @@
                 const tagline = document.querySelector('.tagline');
                 if (tagline) tagline.textContent = '// RESTRICTED ACCESS — AUTHORIZED MODULES ONLY //';
             } else {
-                // For OVERLORD, append Briefing and Editor cards to the start
-                grid.insertAdjacentHTML('afterbegin', briefingCard + (isAdmin ? editorCard : ''));
+                // For OVERLORD, show everything
+                grid.innerHTML = briefingCard + (isAdmin ? editorCard : '') + toolCards;
             }
         }
     }

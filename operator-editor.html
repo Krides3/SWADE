@@ -100,6 +100,38 @@
             letter-spacing: 0.1em;
         }
         .btn-delete:hover { background: rgba(192,57,43,0.1); border-color: var(--danger); }
+
+        /* ── Responsive Mobile Optimization ────────────────────────── */
+        @media (max-width: 900px) {
+            .editor-grid {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .operator-list {
+                max-height: 300px;
+                order: 2;
+            }
+            .operator-detail {
+                order: 1;
+                min-height: 400px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .page-header > div {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .page-header .btn-save {
+                width: 100%;
+            }
+            .op-form {
+                max-width: 100%;
+            }
+            .operator-detail {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>

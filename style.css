@@ -370,20 +370,22 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
 }
 .nav-logout-btn {
     background: transparent;
-    border: 1px solid rgba(192,57,43,0.35);
-    color: #c0392b;
+    border: 1px solid rgba(192,57,43,0.6);
+    color: #e74c3c;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     letter-spacing: 0.18em;
-    padding: 4px 0;
+    padding: 6px 0;
     cursor: pointer;
     width: 100%;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    margin-top: 4px;
 }
 .nav-logout-btn:hover {
-    background: rgba(192,57,43,0.1);
-    border-color: #e74c3c;
-    color: #e74c3c;
+    background: rgba(192,57,43,0.15);
+    border-color: #ff4d4d;
+    color: #ff4d4d;
+    box-shadow: 0 0 8px rgba(192,57,43,0.3);
 }
 /* ── Shared minigame activity log ─────────────────────────────────── */
 .hack-log-panel { background: var(--bg-card); border: 1px solid var(--border); }
