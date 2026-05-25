@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR — Briefing Tool</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .briefing-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - 120px);
+            transition: all 0.3s ease;
+        }
+        .briefing-grid.collapsed {
+            grid-template-columns: 50px 1fr;
+        }
+        .mission-sidebar {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .mission-list {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .briefing-grid.collapsed .mission-list {
+            padding: 15px 5px;
+            overflow: hidden;
+        }
+        .briefing-grid.collapsed .mission-item {
+            display: none;
+        }
+        .collapse-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            color: var(--gold);
+            cursor: pointer;
+            font-size: 0.8rem;
+            z-index: 100;
+            padding: 2px 6px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .briefing-grid.collapsed .collapse-btn {
+            right: 15px;
+        }
+        
+        /* Tactical Contrast Updates */
+        .role-badge {
+            font-size: 0.8rem;
+            color: #00ffeb;
+            margin-left: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: rgba(0, 229, 200, 0.1);
+            padding: 1px 6px;
+            border: 1px solid rgba(0, 229, 200, 0.2);
+        }
+        .pref-text {
+            font-size: 0.75rem;
+            color: #ffffff;
+            margin-left: 14px;
+            margin-top: 2px;
+            font-weight: 500;
+            opacity: 0.85;
+        }
+        .mission-detail {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 25px;
+            overflow-y: auto;
+            position: relative;
+        }
+        .mission-item {
+            padding: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mission-item:hover {
+            border-color: var(--gold-dim);
+            background: rgba(184,168,0,0.05);
+        }
+        .mission-item.active {
+            border-color: var(--gold);
+            background: rgba(184,168,0,0.1);
+        }
+        .mission-title {
+            color: var(--gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            margin-bottom: 3px;
+        }
+        .mission-meta {
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+        .briefing-header {
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+        }
+        .briefing-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            color: var(--gold);
+            letter-spacing: 0.1em;
+        }
+        .briefing-info-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        .info-label { 
+            color: var(--gold-dim); 
+            letter-spacing: 0.12em; 
+            margin-bottom: 3px; 
+            font-weight: 700; 
+            font-size: 0.75rem;
+        }
+        .info-value { 
+            color: var(--cyan); 
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        
+        .briefing-text {
+            font-family: 'Share Tech Mono', monospace;
+            line-height: 1.3;
+            margin-top: 0;
+            color: var(--text);
+        }
+        .briefing-section {
+            margin-bottom: 12px;
+        }
+        .briefing-content {
+            font-size: 1.1rem;
+            padding-left: 15px;
+            border-left: 3px solid rgba(184,168,0,0.3);
+            margin-top: 5px;
+        }
+        .briefing-content p { margin: 0 0 6px 0; }
+        .briefing-content ul, .briefing-content ol { margin: 4px 0 8px 20px; padding: 0; }
+
+        /* Editor Styles */
+        .editor-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .editor-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-input {
+            background: #0d1018;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+        }
+        .form-textarea {
+            background: #0d1018;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            min-height: 200px;
+            resize: vertical;
+        }
+        .operator-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+            border: 1px solid var(--border);
+            padding: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        .op-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .btn-action {
+            padding: 10px 18px;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .btn-action:hover {
+            background: rgba(184,168,0,0.15);
+            border-color: var(--gold-glow);
+            color: var(--gold-glow);
+        }
+
+        .handler-controls {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            display: flex;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <!-- Dynamic Injection -->
+        </ul>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username">——————</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h1>Mission Briefing</h1>
+                    <div class="tagline">// DAGGER SQUAD OPERATIONAL DATA //</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-action" onclick="window.importFromClipboard()">IMPORT FROM CLIPBOARD</button>
+                    <button class="btn-action" onclick="window.location.href='index.html'">RETURN TO DASHBOARD</button>
+                </div>
+            </div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="briefing-grid" id="briefing-grid">
+            <div class="mission-sidebar">
+                <button class="collapse-btn" onclick="window.toggleSidebar()" title="Toggle Sidebar">«</button>
+                <div class="mission-list" id="mission-list">
+                    <!-- Missions will appear here -->
+                    <div class="mission-meta" style="text-align:center; padding:20px;">FETCHING INTEL...</div>
+                </div>
+            </div>
+
+            <div class="mission-detail" id="mission-detail">
+                <div class="mission-meta" style="text-align:center; padding:100px;">SELECT A MISSION RECORD</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Modal for Creating/Editing Missions -->
+<div id="mission-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:800px; padding:30px; position:relative;">
+        <button onclick="document.getElementById('mission-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 id="modal-title" style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px;">NEW BRIEFING</h2>
+        
+        <form id="mission-form" class="editor-form">
+            <input type="hidden" id="edit-id">
+            <div class="editor-row">
+                <div class="form-group">
+                    <label class="info-label">MISSION NAME</label>
+                    <input type="text" id="mission-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="info-label">LOCATION</label>
+                    <input type="text" id="mission-location" class="form-input">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="info-label">TACTICAL MAP URL (IMG)</label>
+                <input type="text" id="mission-map" class="form-input" placeholder="https://...">
+            </div>
+            <div class="editor-row">
+                <div class="form-group">
+                    <label class="info-label">OPERATIONAL DATE</label>
+                    <input type="text" id="mission-date" class="form-input" placeholder="e.g. 2026-05-25">
+                </div>
+                <div class="form-group">
+                    <label class="info-label">MISSION LEADER</label>
+                    <select id="mission-leader" class="form-input">
+                        <option value="">-- UNASSIGNED --</option>
+                        <!-- DAGGER operators -->
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="info-label">OPERATIONAL STATUS</label>
+                <select id="mission-status" class="form-input">
+                    <option value="PRE-FLIGHT">PRE-FLIGHT (PLANNING)</option>
+                    <option value="ACTIVE">ACTIVE (LIVE OPERATION)</option>
+                    <option value="ARCHIVED">ARCHIVED (COMPLETED)</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="info-label">ASSIGN SQUAD (DAGGER)</label>
+                <div class="operator-selector" id="op-list">
+                    <!-- Operators checkboxes -->
+                </div>
+            </div>
+
+            <button type="submit" class="btn-action" style="margin-top:10px;">UPLOAD TO TERMINAL</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Surgical Section Editing -->
+<div id="section-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:600px; padding:30px; position:relative;">
+        <button onclick="document.getElementById('section-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 id="section-modal-title" style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px; font-size:1rem;">EDIT SECTION</h2>
+        
+        <form id="section-form" class="editor-form">
+            <input type="hidden" id="section-mission-id">
+            <input type="hidden" id="section-key">
+            <div class="form-group">
+                <textarea id="section-content" class="form-textarea" style="min-height:300px;" placeholder="Enter data..."></textarea>
+            </div>
+            <button type="submit" class="btn-action" style="margin-top:10px;">UPDATE SECTION</button>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js"></script>
+<script src="./auth.js"></script>
+<script src="./nav.js"></script>
+<script src="./briefing.js"></script>
+</body>
+</html>

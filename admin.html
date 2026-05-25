@@ -252,98 +252,13 @@
 
         <div class="admin-main">
 
-            <!-- ── Operator Roster ──────────────────────────────── -->
+            <!-- ── Operator Roster (Link to Editor) ──────────────── -->
             <div class="admin-section">
-                <div class="admin-section-title">▸ OPERATOR ROSTER</div>
-                <table class="user-table" id="user-table">
-                    <thead>
-                        <tr>
-                            <th>CALLSIGN</th>
-                            <th>ROLE</th>
-                            <th>CLEARANCE</th>
-                            <th>SET CLEARANCE</th>
-                            <th>ACTION</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-tbody"></tbody>
-                </table>
-            </div>
-
-            <!-- ── Create Operator ──────────────────────────────── -->
-            <div class="admin-section">
-                <div class="admin-section-title">▸ ENLIST NEW OPERATOR</div>
-                <div class="admin-form">
-                    <div class="form-field">
-                        <label class="form-label">CALLSIGN</label>
-                        <input class="form-input" type="text" id="new-username" placeholder="ALPHA-ONE" autocomplete="off">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">ACCESS CODE</label>
-                        <input class="form-input" type="password" id="new-password" placeholder="••••••" autocomplete="new-password">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">CLEARANCE LEVEL</label>
-                        <select class="form-select" id="new-clearance">
-                            <option value="1">1 — Basic Access</option>
-                            <option value="2">2 — Field Operator</option>
-                            <option value="3">3 — Senior Agent</option>
-                            <option value="4">4 — Classified</option>
-                            <option value="5">5 — Top Secret</option>
-                        </select>
-                    </div>
-                    <div class="form-field" style="justify-content: flex-end;">
-                        <button class="admin-btn" id="create-btn">ENLIST OPERATOR</button>
-                    </div>
-                    <div class="form-msg full-row" id="create-msg"></div>
-                </div>
-            </div>
-
-            <!-- ── Change OVERLORD Password ──────────────────────── -->
-            <div class="admin-section">
-                <div class="admin-section-title">▸ CHANGE OVERLORD ACCESS CODE</div>
-                <div class="overlord-row">
-                    <div class="form-field">
-                        <label class="form-label">NEW ACCESS CODE</label>
-                        <input class="form-input" type="password" id="new-pw" placeholder="••••••" autocomplete="new-password" style="width:220px">
-                    </div>
-                    <div class="form-field">
-                        <label class="form-label">CONFIRM CODE</label>
-                        <input class="form-input" type="password" id="confirm-pw" placeholder="••••••" autocomplete="new-password" style="width:220px">
-                    </div>
-                    <div class="form-field" style="justify-content: flex-end;">
-                        <button class="admin-btn" id="pw-change-btn">UPDATE CODE</button>
-                    </div>
-                </div>
-                <div class="form-msg" id="pw-msg"></div>
-            </div>
-
-            <!-- ── Backup / Restore ────────────────────────────── -->
-            <div class="admin-section">
-                <div class="admin-section-title">▸ OPERATOR DATA BACKUP</div>
+                <div class="admin-section-title">▸ OPERATOR ROSTER & AUTH</div>
                 <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
-                    Export all operator accounts to a file. Import to restore after clearing browser data or switching devices.
-                    The file contains hashed credentials — keep it secure.
+                    Operator accounts are now managed via the centralized database to ensure real-time synchronization across all terminals.
                 </p>
-                <div style="display:flex;gap:0.75rem;align-items:flex-start;flex-wrap:wrap;">
-                    <button class="admin-btn" id="export-btn">⬇ EXPORT ROSTER</button>
-                    <label class="admin-btn" style="cursor:pointer;display:inline-block;">
-                        ⬆ IMPORT ROSTER
-                        <input type="file" id="import-file" accept=".json" style="display:none">
-                    </label>
-                </div>
-                <div class="form-msg" id="backup-msg"></div>
-            </div>
-
-            <!-- ── Lock In Roster ──────────────────────────────── -->
-            <div class="admin-section">
-                <div class="admin-section-title">▸ LOCK IN ROSTER (PERMANENT SAVE)</div>
-                <p style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;line-height:1.7;margin-bottom:14px;">
-                    Bakes the current roster into <code style="color:var(--gold)">auth.js</code> as permanent defaults.
-                    Download the file, replace the existing <code style="color:var(--gold)">auth.js</code>, then push to git.
-                    After that, accounts auto-restore even if browser data is cleared.
-                </p>
-                <button class="admin-btn" id="lock-roster-btn">⬇ DOWNLOAD UPDATED AUTH.JS</button>
-                <div class="form-msg" id="lock-msg"></div>
+                <a href="operator-editor.html" class="admin-btn" style="text-decoration:none; display:inline-block;">OPEN OPERATOR EDITOR ↗</a>
             </div>
 
             <!-- ── Minigame Control ─────────────────────────────── -->

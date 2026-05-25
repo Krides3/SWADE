@@ -36,6 +36,44 @@ document.addEventListener('DOMContentLoaded', function () {
   const nameEl    = document.getElementById('nav-username');
   const logoutBtn = document.getElementById('nav-logout');
 
+  // ── ACCESS CONTROL ──────────────────────────────────────────────
+  const isRestricted = session && session.isRestricted === true;
+
+  const isAdmin = session && session.role === 'admin';
+
+  if (isRestricted) {
+    // Hide all navigation links and show only Briefing Tool and Home
+    const navUl = navbar.querySelector('.nav-links');
+    if (navUl) {
+      navUl.innerHTML = `
+        <li><a href="index.html" data-icon="01">Terminal Home</a></li>
+        <li><a href="briefing.html" data-icon="17">Briefing Tool</a></li>
+        ${isAdmin ? '<li><a href="operator-editor.html" data-icon="15">Operator Editor</a></li>' : ''}
+      `;
+    }
+    // Hide Overlord panel link if it exists
+    const adminLink = document.getElementById('admin-nav-link');
+    if (adminLink) adminLink.style.display = 'none';
+
+    // Redirect if on an unauthorized page
+    const path = window.location.pathname.toLowerCase();
+    const isAuthorized = path.includes('briefing') || path.includes('login.html') || path.includes('index.html') || path.includes('operator-editor') || path.endsWith('/');
+    
+    if (!isAuthorized) {
+        // Only redirect if we are NOT already on a briefing, login, or home page
+        const depth = (path.match(/\//g) || []).length;
+        const redirectPath = depth > 1 ? '../briefing.html' : 'briefing.html';
+        window.location.replace(redirectPath);
+    }
+  } else {
+    // For OVERLORD (or other non-restricted admins), add the Briefing Tool to the end of the list
+    const navUl = navbar.querySelector('.nav-links');
+    if (navUl && !navUl.querySelector('a[href="briefing.html"]')) {
+      const li = document.createElement('li');
+      li.innerHTML = '<a href="briefing.html" data-icon="17">Briefing Tool</a>';
+      navUl.appendChild(li);
+    }
+  }
   if (nameEl && session) {
     try {
       const dossiers = JSON.parse(localStorage.getItem('luxorDossiers') || '[]');

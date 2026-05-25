@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXOR — Operator Editor</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        .editor-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            height: calc(100vh - 120px);
+        }
+        .operator-list {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .operator-detail {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            padding: 25px;
+            overflow-y: auto;
+        }
+        .operator-item {
+            padding: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .operator-item:hover {
+            border-color: var(--gold-dim);
+            background: rgba(184,168,0,0.05);
+        }
+        .operator-item.active {
+            border-color: var(--gold);
+            background: rgba(184,168,0,0.1);
+        }
+        .op-name {
+            color: var(--gold);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+        }
+        .op-badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .badge-restricted { background: rgba(192,57,43,0.1); color: var(--danger); border: 1px solid rgba(192,57,43,0.3); }
+        .badge-full { background: rgba(0,229,200,0.1); color: var(--cyan); border: 1px solid rgba(0,229,200,0.3); }
+
+        /* Form Styles */
+        .op-form { display: flex; flex-direction: column; gap: 20px; max-width: 500px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; }
+        .form-label { color: var(--gold-dim); font-size: 0.7rem; letter-spacing: 0.1em; }
+        .form-input {
+            background: #0d1018;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 12px;
+            font-family: inherit;
+            outline: none;
+        }
+        .form-input:focus { border-color: var(--gold); }
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .btn-save {
+            padding: 15px;
+            background: rgba(184,168,0,0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.2em;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-save:hover { background: var(--gold); color: #000; }
+
+        .btn-delete {
+            margin-top: 40px;
+            padding: 10px;
+            background: transparent;
+            border: 1px solid rgba(192,57,43,0.3);
+            color: var(--danger);
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+        }
+        .btn-delete:hover { background: rgba(192,57,43,0.1); border-color: var(--danger); }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <!-- Dynamic Injection -->
+        </ul>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username">——————</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <div>
+                    <h1>Operator Editor</h1>
+                    <div class="tagline">// MANAGE SQUAD ROSTER AND ACCESS PRIVILEGES //</div>
+                </div>
+                <button class="btn-save" style="padding: 10px 20px; font-size: 0.7rem;" onclick="createNewOp()">+ ADD NEW OPERATOR</button>
+            </div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="editor-grid">
+            <div class="operator-list" id="op-list">
+                <div class="status-msg">SCANNING ROSTER...</div>
+            </div>
+
+            <div class="operator-detail" id="op-detail">
+                <div style="text-align:center; padding-top:100px; color:var(--text-dim);">SELECT AN OPERATOR TO MODIFY PERMISSIONS</div>
+            </div>
+        </div>
+    </main>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js" onload="console.log('CONVEX BUNDLE LOADED')"></script>
+    <script src="./auth.js"></script>
+    <script src="./nav.js"></script>
+    <script src="./operator-editor.js"></script>
+</body>
+</html>
