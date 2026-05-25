@@ -14,15 +14,24 @@ export default defineSchema({
   // Mission Briefings
   missions: defineTable({
     name: v.string(),         // Required
-    briefing: v.string(),     // Required (Tactical briefing text)
+    handler: v.string(),      // Callsign of the handler who created it
+    status: v.string(),       // "PRE-FLIGHT" | "ACTIVE" | "ARCHIVED"
     date: v.optional(v.string()),
     location: v.optional(v.string()),
-    mapUrl: v.optional(v.string()), // Tactical map image
+    mapUrl: v.optional(v.string()),
+    
+    // Structured Briefing (SMELC / OPORD style)
+    briefing: v.object({
+      situation: v.string(),  // Enemy forces, weather, terrain
+      mission: v.string(),    // Clear statement of the task
+      execution: v.string(),  // The 'how' - movement, phases
+      logistics: v.string(),  // Ammo, medical, transport
+      command: v.string(),    // Signal, frequencies, chain of command
+    }),
+
     leader: v.optional(v.id("operators")),
-    operators: v.array(v.id("operators")), // List of DAGGER members
-    status: v.string(),       // "PRE-FLIGHT" | "ACTIVE" | "ARCHIVED"
-    handler: v.string(),      // Callsign of the handler who created it
-    timestamp: v.number(),    // Creation date
+    operators: v.array(v.id("operators")),
+    timestamp: v.number(),
     objectives: v.optional(v.array(v.object({
       text: v.string(),
       status: v.string(), // "PENDING" | "COMPLETED" | "FAILED"

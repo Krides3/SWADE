@@ -174,15 +174,20 @@
                                         const assignment = mission.assignments?.find(a => a.operatorId === o.id);
                                         const role = assignment?.assignedRole || 'UNASSIGNED';
                                         const isReady = assignment?.isReady ? '<span style="color:var(--cyan)">[READY]</span>' : '<span style="color:var(--gold-dim)">[STANDBY]</span>';
+                                        const prefs = o.preferredRoles?.length > 0 ? o.preferredRoles.join(' / ') : 'NONE SET';
+                                        
                                         return `
-                                            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:3px;">
-                                                <span>◈ ${o.callsign} 
-                                                    <span style="font-size:0.6rem; color:var(--text-dim); margin-left:5px; ${canEdit ? 'cursor:pointer; border-bottom:1px dashed var(--gold-dim);' : ''}" 
-                                                          ${canEdit ? `onclick="window.promptAssignment('${mission._id}', '${o.id}', '${o.callsign}', '${role}')"` : ''}>
-                                                        ${role}
+                                            <div style="border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:5px;">
+                                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                                    <span>◈ ${o.callsign} 
+                                                        <span style="font-size:0.6rem; color:var(--text-dim); margin-left:5px; ${canAssign ? 'cursor:pointer; border-bottom:1px dashed var(--gold-dim);' : ''}" 
+                                                              ${canAssign ? `onclick="window.promptAssignment('${mission._id}', '${o.id}', '${o.callsign}', '${role}', '${prefs}')"` : ''}>
+                                                            ${role}
+                                                        </span>
                                                     </span>
-                                                </span>
-                                                ${isReady}
+                                                    ${isReady}
+                                                </div>
+                                                <div style="font-size:0.55rem; color:var(--text-dim); margin-left:14px; margin-top:2px;">PREF: ${prefs}</div>
                                             </div>
                                         `;
                                     }).join('') || 'NONE'}
@@ -235,9 +240,8 @@
         }
     };
 
-    window.promptAssignment = async function(missionId, operatorId, callsign, currentRole) {
-        if (!isHandler) return;
-        const role = prompt(`ASSIGN ROLE FOR ${callsign}:`, currentRole === 'UNASSIGNED' ? '' : currentRole);
+    window.promptAssignment = async function(missionId, operatorId, callsign, currentRole, prefs) {
+        const role = prompt(`ASSIGN ROLE FOR ${callsign}:\nPREFERENCES: ${prefs}`, currentRole === 'UNASSIGNED' ? '' : currentRole);
         if (role === null) return; // Cancelled
         
         try {
@@ -245,7 +249,7 @@
                 missionId, 
                 operatorId, 
                 assignedRole: role ? role.toUpperCase() : "UNASSIGNED",
-                loadout: "STANDARD" // Placeholder for future loadout editor
+                loadout: "STANDARD"
             });
         } catch (e) {
             alert(e.message);
