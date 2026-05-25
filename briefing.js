@@ -10,6 +10,7 @@
     let currentMissions = [];
     let currentOperators = [];
     let activeMissionId = null;
+    let detailUnsubscribe = null;
 
     // DOM Elements
     const missionListEl = document.getElementById('mission-list');
@@ -146,16 +147,27 @@
     }
 
     window.viewMission = async function(id, showLoading = true) {
+        if (activeMissionId === id && !showLoading) return; // Already viewing and not a refresh
+
         activeMissionId = id;
         renderMissionList();
         
+        // Clean up previous subscription
+        if (detailUnsubscribe) {
+            detailUnsubscribe();
+            detailUnsubscribe = null;
+        }
+
         if (showLoading) {
             detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px; font-size:1rem;">DECRYPTING TACTICAL DATA...</div>';
         }
         
-        try {
-            const mission = await window.client.query("missions:getDetails", { missionId: id });
-            if (!mission) return;
+        // Subscribe to mission details for real-time updates (like readiness)
+        detailUnsubscribe = window.client.onUpdate("missions:getDetails", { missionId: id }, (mission) => {
+            if (!mission) {
+                detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px; color:var(--danger);">MISSION RECORD DELETED OR NOT FOUND</div>';
+                return;
+            }
 
             const isLeader = mission.leader && currentOperators.find(o => o._id === mission.leader)?.callsign === session.username;
             const canEdit = isHandler && mission.handler === session.username;
@@ -195,8 +207,8 @@
                 <div class="tactical-layout" style="display:grid; grid-template-columns: 1fr 320px; gap:35px;">
                     <div class="tactical-main">
                         ${mission.mapUrl ? `
-                            <div class="tactical-map" style="margin-bottom:25px; border:1px solid var(--border);">
-                                <div class="info-label" style="background:var(--bg-panel); padding:8px 12px; border-bottom:1px solid var(--border); font-size:0.75rem;">SATELLITE IMAGERY / AO MAP</div>
+                            <div class="tactical-map" style="margin-bottom:20px; border:1px solid var(--border);">
+                                <div class="info-label" style="background:var(--bg-panel); padding:6px 10px; border-bottom:1px solid var(--border); font-size:0.7rem;">SATELLITE IMAGERY / AO MAP</div>
                                 <img src="${mission.mapUrl}" style="width:100%; display:block; filter: sepia(0.4) hue-rotate(140deg) brightness(0.9) contrast(1.1);">
                             </div>
                         ` : ''}
@@ -220,7 +232,7 @@
                             <div class="info-label" style="font-size:0.9rem; border-bottom:1px solid var(--gold-dim); padding-bottom:5px;">OPERATIONAL SQUAD</div>
                             <div class="info-value" style="font-size:1rem; margin-top:10px;">
                                 <div style="color:var(--gold); margin-bottom:10px; font-weight:bold;">TL: ${mission.leaderName || 'UNASSIGNED'}</div>
-                                <div style="color:var(--text); font-size:0.95rem; display:flex; flex-direction:column; gap:12px;">
+                                <div style="color:var(--text); font-size:0.9rem; display:flex; flex-direction:column; gap:10px;">
                                     ${mission.operatorList.map(o => {
                                         const assignment = mission.assignments?.find(a => a.operatorId === o.id);
                                         const role = assignment?.assignedRole || 'UNASSIGNED';
@@ -228,7 +240,7 @@
                                         const prefs = o.preferredRoles?.length > 0 ? o.preferredRoles.join(' / ') : 'NONE SET';
                                         
                                         return `
-                                            <div style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
+                                            <div style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:6px;">
                                                 <div style="display:flex; justify-content:space-between; align-items:center;">
                                                     <span style="font-weight:600;">◈ ${o.callsign} 
                                                         <span class="role-badge" 
@@ -253,12 +265,12 @@
                         <div class="tactical-section">
                             <div class="info-label" style="font-size:0.9rem; border-bottom:1px solid var(--gold-dim); padding-bottom:5px;">OBJECTIVES</div>
 
-                            <div style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+                            <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
                                 ${mission.objectives?.length > 0 
                                     ? mission.objectives.map((obj, idx) => `
-                                        <div style="font-size:0.95rem; display:flex; gap:10px; align-items:flex-start; ${canEdit ? 'cursor:pointer;' : ''}" 
+                                        <div style="font-size:0.9rem; display:flex; gap:10px; align-items:flex-start; ${canEdit ? 'cursor:pointer;' : ''}" 
                                              ${canEdit ? `onclick="window.toggleObjective('${mission._id}', ${idx})"` : ''}>
-                                            <span style="color:${obj.status === 'COMPLETED' ? 'var(--cyan)' : obj.status === 'FAILED' ? 'var(--danger)' : 'var(--gold-dim)'}; font-size:1.1rem;">
+                                            <span style="color:${obj.status === 'COMPLETED' ? 'var(--cyan)' : obj.status === 'FAILED' ? 'var(--danger)' : 'var(--gold-dim)'}; font-size:1rem;">
                                                 ${obj.status === 'COMPLETED' ? '☑' : obj.status === 'FAILED' ? '☒' : '☐'}
                                             </span>
                                             <span style="${obj.status === 'COMPLETED' ? 'text-decoration:line-through; opacity:0.6;' : ''}; margin-top:2px;">${obj.text}</span>
@@ -271,10 +283,7 @@
                     </div>
                 </div>
             `;
-        } catch (e) {
-            console.error(e);
-            detailEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:100px; color:var(--danger); font-size:1.2rem;">ERROR RETRIEVING DATA</div>';
-        }
+        });
     };
 
     window.toggleSidebar = function() {
