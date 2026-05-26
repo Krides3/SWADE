@@ -407,6 +407,48 @@
     </div>
 </div>
 
+<!-- Modal for Role Assignment -->
+<div id="role-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1200; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:400px; padding:30px; position:relative;">
+        <button onclick="document.getElementById('role-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 id="role-modal-title" style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px; font-size:1rem;">ASSIGN ROLE</h2>
+        
+        <form id="role-form" class="editor-form">
+            <input type="hidden" id="role-mission-id">
+            <input type="hidden" id="role-operator-id">
+            <div class="form-group">
+                <label class="info-label" id="role-operator-name" style="margin-bottom:10px;"></label>
+                <div class="info-label" id="role-operator-prefs" style="font-size:0.65rem; color:var(--text-dim); margin-bottom:15px;"></div>
+                <select id="role-select" class="form-input">
+                    <option value="UNASSIGNED">UNASSIGNED</option>
+                    <option value="AMMO BEARER">AMMO BEARER</option>
+                    <option value="AUTORIFLEMAN">AUTORIFLEMAN</option>
+                    <option value="BREACHER">BREACHER</option>
+                    <option value="COMBAT LIFE SAVER">COMBAT LIFE SAVER</option>
+                    <option value="COMMS SPECIALIST">COMMS SPECIALIST</option>
+                    <option value="ENGINEER">ENGINEER</option>
+                    <option value="EXPLOSIVE SPECIALIST">EXPLOSIVE SPECIALIST</option>
+                    <option value="FIGHTER PILOT">FIGHTER PILOT</option>
+                    <option value="GRENADIER">GRENADIER</option>
+                    <option value="HEAVY GUNNER">HEAVY GUNNER</option>
+                    <option value="HELICOPTER PILOT">HELICOPTER PILOT</option>
+                    <option value="MARKSMAN">MARKSMAN</option>
+                    <option value="MISSILE SPECIALIST (AA)">MISSILE SPECIALIST (AA)</option>
+                    <option value="MISSILE SPECIALIST (AT)">MISSILE SPECIALIST (AT)</option>
+                    <option value="POINT MAN">POINT MAN</option>
+                    <option value="RIFLEMAN">RIFLEMAN</option>
+                    <option value="SCOUT">SCOUT</option>
+                    <option value="SHARPSHOOTER (SNIPER)">SHARPSHOOTER (SNIPER)</option>
+                    <option value="SPOTTER">SPOTTER</option>
+                    <option value="TEAM LEADER">TEAM LEADER</option>
+                    <option value="UAV/UGV">UAV/UGV</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-action" style="margin-top:20px;">CONFIRM ASSIGNMENT</button>
+        </form>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js"></script>
 <script src="./auth.js"></script>
 <script src="./nav.js"></script>

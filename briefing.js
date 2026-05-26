@@ -354,16 +354,31 @@
     };
 
     window.promptAssignment = async function(missionId, operatorId, callsign, currentRole, prefs) {
-        const role = prompt(`ASSIGN ROLE FOR ${callsign}:\nPREFERENCES: ${prefs}`, currentRole === 'UNASSIGNED' ? '' : currentRole);
-        if (role === null) return; // Cancelled
+        document.getElementById('role-mission-id').value = missionId;
+        document.getElementById('role-operator-id').value = operatorId;
+        document.getElementById('role-operator-name').textContent = `OPERATOR: ${callsign}`;
+        document.getElementById('role-operator-prefs').textContent = `PREFERENCES: ${prefs}`;
+        
+        const roleSelect = document.getElementById('role-select');
+        roleSelect.value = (currentRole === 'UNASSIGNED') ? 'UNASSIGNED' : currentRole.toUpperCase();
+        
+        document.getElementById('role-modal').style.display = 'flex';
+    };
+
+    document.getElementById('role-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const missionId = document.getElementById('role-mission-id').value;
+        const operatorId = document.getElementById('role-operator-id').value;
+        const role = document.getElementById('role-select').value;
         
         try {
             await window.client.mutation("missions:setAssignment", { 
                 missionId, 
                 operatorId, 
-                assignedRole: role ? role.toUpperCase() : "UNASSIGNED",
+                assignedRole: role,
                 loadout: "STANDARD"
             });
+            document.getElementById('role-modal').style.display = 'none';
         } catch (e) {
             alert(e.message);
         }
@@ -522,21 +537,23 @@
         try {
             if (id) {
                 const mission = currentMissions.find(m => m._id === id);
-                const currentBriefing = typeof mission.briefing === 'object' ? mission.briefing : { situation: mission.briefing || "" };
+                // Use imported briefing if available (from importFromClipboard), otherwise keep current
+                const targetBriefing = window.importedBriefing || (typeof mission.briefing === 'object' ? mission.briefing : { situation: mission.briefing || "" });
                 
                 await window.client.mutation("missions:update", {
                     missionId: id,
                     name, location, mapUrl, date, leader, status,
                     operators: selectedOps,
                     briefing: {
-                        situation: sanitize(currentBriefing.situation),
-                        mission: sanitize(currentBriefing.mission),
-                        execution: sanitize(currentBriefing.execution),
-                        logistics: sanitize(currentBriefing.logistics),
-                        command: sanitize(currentBriefing.command),
+                        situation: sanitize(targetBriefing.situation),
+                        mission: sanitize(targetBriefing.mission),
+                        execution: sanitize(targetBriefing.execution),
+                        logistics: sanitize(targetBriefing.logistics),
+                        command: sanitize(targetBriefing.command),
                     },
                     handler: session.username
                 });
+                delete window.importedBriefing; // Clear after use
             } else {
                 const imported = window.importedBriefing || {};
                 const briefing = {
