@@ -20,6 +20,8 @@ export const create = mutation({
       logistics: v.optional(v.string()),
       command: v.optional(v.string()),
     }),
+    modlistUrl: v.optional(v.string()),
+    modlistStatus: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const missionId = await ctx.db.insert("missions", {
@@ -34,6 +36,8 @@ export const create = mutation({
       status: "PRE-FLIGHT",
       timestamp: Date.now(),
       objectives: [],
+      modlistUrl: args.modlistUrl,
+      modlistStatus: args.modlistStatus || "WIP",
     });
     return missionId;
   },
@@ -60,6 +64,8 @@ export const update = mutation({
       logistics: v.optional(v.string()),
       command: v.optional(v.string()),
     }),
+    modlistUrl: v.optional(v.string()),
+    modlistStatus: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const mission = await ctx.db.get(args.missionId);
@@ -78,7 +84,26 @@ export const update = mutation({
       operators: args.operators,
       briefing: args.briefing,
       status: args.status ?? mission.status,
+      modlistUrl: args.modlistUrl ?? mission.modlistUrl,
+      modlistStatus: args.modlistStatus ?? mission.modlistStatus,
     });
+  },
+});
+
+/**
+ * Generate a upload URL for modlist files.
+ */
+export const generateUploadUrl = mutation(async (ctx) => {
+  return await ctx.storage.generateUploadUrl();
+});
+
+/**
+ * Get the download URL for a modlist file.
+ */
+export const getModlistUrl = query({
+  args: { storageId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.storage.getUrl(args.storageId);
   },
 });
 

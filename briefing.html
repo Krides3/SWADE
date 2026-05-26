@@ -226,6 +226,33 @@
             gap: 12px;
         }
 
+        /* Modlist Styles */
+        .modlist-container {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(184,168,0,0.05);
+            border: 1px solid rgba(184,168,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modlist-status-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        .modlist-status-wip {
+            background: rgba(184,168,0,0.2);
+            color: var(--gold);
+            border: 1px solid var(--gold-dim);
+        }
+        .modlist-status-final {
+            background: rgba(0, 229, 200, 0.2);
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+        }
+
         /* ── Responsive Mobile Optimization ────────────────────────── */
         @media (max-width: 900px) {
             .briefing-grid {
@@ -385,7 +412,22 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-action" style="margin-top:10px;">UPLOAD TO TERMINAL</button>
+            <div class="editor-row" style="margin-top:10px; border-top:1px solid var(--border); padding-top:15px;">
+                <div class="form-group">
+                    <label class="info-label">ARMA 3 MODLIST (.HTML)</label>
+                    <input type="file" id="mission-modlist" class="form-input" accept=".html">
+                    <div id="current-modlist-info" style="font-size:0.7rem; color:var(--text-dim); margin-top:5px;"></div>
+                </div>
+                <div class="form-group">
+                    <label class="info-label">MODLIST STATUS</label>
+                    <select id="mission-modlist-status" class="form-input">
+                        <option value="WIP">WIP (SUBJECT TO CHANGE)</option>
+                        <option value="FINAL">FINAL (LOCKED)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-action" style="margin-top:20px;">UPLOAD TO TERMINAL</button>
         </form>
     </div>
 </div>

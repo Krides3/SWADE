@@ -36,6 +36,11 @@ export default defineSchema({
     leader: v.optional(v.id("operators")),
     operators: v.array(v.id("operators")),
     timestamp: v.number(),
+    
+    // Arma 3 Modlist Support
+    modlistUrl: v.optional(v.string()), // Convex File ID or External URL
+    modlistStatus: v.optional(v.string()), // "WIP" | "FINAL"
+
     objectives: v.optional(v.array(v.object({
       text: v.string(),
       status: v.string(), // "PENDING" | "COMPLETED" | "FAILED"

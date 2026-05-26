@@ -202,6 +202,18 @@
                             <div class="info-value" style="color:var(--gold);">${mission.status}</div>
                         </div>
                     </div>
+
+                    ${mission.modlistUrl ? `
+                    <div class="modlist-container">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div class="info-label" style="margin-bottom:0;">ARMA 3 MODLIST:</div>
+                            <div class="modlist-status-badge ${mission.modlistStatus === 'FINAL' ? 'modlist-status-final' : 'modlist-status-wip'}">
+                                ${mission.modlistStatus || 'WIP'}
+                            </div>
+                        </div>
+                        <button class="btn-action" style="padding:6px 12px; font-size:0.7rem;" onclick="window.downloadModlist('${mission.modlistUrl}', '${mission.name}')">DOWNLOAD .HTML</button>
+                    </div>
+                    ` : ''}
                 </div>
 
                 <div class="tactical-layout" style="display:grid; grid-template-columns: 1fr 320px; gap:35px;">
@@ -385,6 +397,12 @@
     };
 
     window.toggleReady = async function(missionId) {
+        const mission = currentMissions.find(m => m._id === missionId);
+        if (mission && mission.modlistUrl) {
+            const confirmed = confirm("CONFIRM TACTICAL PREPARATION:\n\nBY PROCEEDING, YOU CERTIFY THAT THE REQUIRED ARMA 3 MODLIST HAS BEEN DOWNLOADED, INSTALLED, AND VERIFIED.");
+            if (!confirmed) return;
+        }
+
         try {
             await window.client.mutation("missions:toggleReady", { 
                 missionId, 
@@ -501,6 +519,7 @@
         missionForm.reset();
         document.getElementById('edit-id').value = id || '';
         document.getElementById('modal-title').textContent = id ? 'EDIT MISSION INFO' : 'NEW MISSION BRIEF';
+        document.getElementById('current-modlist-info').textContent = '';
 
         if (id) {
             const mission = currentMissions.find(m => m._id === id);
@@ -511,7 +530,12 @@
                 document.getElementById('mission-date').value = mission.date || '';
                 document.getElementById('mission-leader').value = mission.leader || '';
                 document.getElementById('mission-status').value = mission.status || 'PRE-FLIGHT';
+                document.getElementById('mission-modlist-status').value = mission.modlistStatus || 'WIP';
                 
+                if (mission.modlistUrl) {
+                    document.getElementById('current-modlist-info').textContent = 'CURRENT MODLIST DETECTED (UPLOAD TO OVERWRITE)';
+                }
+
                 const checkboxes = opListEl.querySelectorAll('input[type="checkbox"]');
                 checkboxes.forEach(cb => {
                     cb.checked = mission.operators.includes(cb.value);
@@ -519,6 +543,23 @@
             }
         } else {
             document.getElementById('mission-status').value = 'PRE-FLIGHT';
+            document.getElementById('mission-modlist-status').value = 'WIP';
+        }
+    };
+
+    window.downloadModlist = async function(storageId, missionName) {
+        try {
+            const url = await window.client.query("missions:getModlistUrl", { storageId });
+            if (!url) throw new Error("FILE NOT FOUND ON SERVER");
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `MODLIST_${missionName.replace(/\s+/g, '_')}.html`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (e) {
+            alert("DOWNLOAD FAILED: " + e.message);
         }
     };
 
@@ -531,11 +572,25 @@
         const date     = document.getElementById('mission-date').value;
         const leader   = document.getElementById('mission-leader').value || undefined;
         const status   = document.getElementById('mission-status').value;
+        const modlistStatus = document.getElementById('mission-modlist-status').value;
+        const modlistFile = document.getElementById('mission-modlist').files[0];
         
         const selectedOps = Array.from(opListEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
         const sanitize = (val) => (val === undefined || val === null) ? "" : String(val);
 
         try {
+            let modlistUrl = undefined;
+            if (modlistFile) {
+                const postUrl = await window.client.mutation("missions:generateUploadUrl");
+                const result = await fetch(postUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": modlistFile.type },
+                    body: modlistFile,
+                });
+                const { storageId } = await result.json();
+                modlistUrl = storageId;
+            }
+
             if (id) {
                 const mission = currentMissions.find(m => m._id === id);
                 // Use imported briefing if available (from importFromClipboard), otherwise keep current
@@ -552,6 +607,8 @@
                         logistics: sanitize(targetBriefing.logistics),
                         command: sanitize(targetBriefing.command),
                     },
+                    modlistUrl: modlistUrl, // If undefined, backend keeps existing
+                    modlistStatus: modlistStatus,
                     handler: session.username
                 });
                 delete window._LUXOR_IMPORTED_BRIEF; // Clear after use
@@ -570,6 +627,8 @@
                     name, location, mapUrl, date, leader,
                     operators: selectedOps,
                     briefing,
+                    modlistUrl,
+                    modlistStatus,
                     handler: session.username
                 });
                 // Note: status is set to "PRE-FLIGHT" by default in backend for create
