@@ -455,6 +455,9 @@
                 throw new Error("INVALID TACTICAL DATA FORMAT");
             }
 
+            // Store briefing data globally for the form submission
+            window._LUXOR_IMPORTED_BRIEF = data.briefing; 
+
             let mode = 'new';
             if (activeMissionId) {
                 const choice = confirm("ACTIVE MISSION DETECTED.\n\n[ OK ] - OVERWRITE CURRENT MISSION\n[ CANCEL ] - CREATE AS NEW MISSION");
@@ -467,8 +470,6 @@
             document.getElementById('mission-location').value = data.location || '';
             document.getElementById('mission-map').value = data.mapUrl || '';
             document.getElementById('mission-date').value = data.date || '';
-
-            window.importedBriefing = data.briefing; 
 
             alert(mode === 'overwrite' ? "TACTICAL DATA IMPORTED (OVERWRITE MODE)" : "TACTICAL DATA IMPORTED (NEW MISSION MODE)");
         } catch (err) {
@@ -538,7 +539,7 @@
             if (id) {
                 const mission = currentMissions.find(m => m._id === id);
                 // Use imported briefing if available (from importFromClipboard), otherwise keep current
-                const targetBriefing = window.importedBriefing || (typeof mission.briefing === 'object' ? mission.briefing : { situation: mission.briefing || "" });
+                const targetBriefing = window._LUXOR_IMPORTED_BRIEF || (typeof mission.briefing === 'object' ? mission.briefing : { situation: mission.briefing || "" });
                 
                 await window.client.mutation("missions:update", {
                     missionId: id,
@@ -553,9 +554,9 @@
                     },
                     handler: session.username
                 });
-                delete window.importedBriefing; // Clear after use
+                delete window._LUXOR_IMPORTED_BRIEF; // Clear after use
             } else {
-                const imported = window.importedBriefing || {};
+                const imported = window._LUXOR_IMPORTED_BRIEF || {};
                 const briefing = {
                     situation: sanitize(imported.situation),
                     mission: sanitize(imported.mission),
@@ -563,7 +564,7 @@
                     logistics: sanitize(imported.logistics),
                     command: sanitize(imported.command),
                 };
-                delete window.importedBriefing;
+                delete window._LUXOR_IMPORTED_BRIEF;
 
                 await window.client.mutation("missions:create", {
                     name, location, mapUrl, date, leader,
