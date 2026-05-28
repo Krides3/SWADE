@@ -201,11 +201,53 @@
             gap: 12px;
         }
         .editor-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .form-group { display: flex; flex-direction: column; gap: 4px; }
+            .editor-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+            /* Color Coding Styles */
+            .text-gold { color: var(--gold); }
+            .text-cyan { color: var(--cyan); }
+            .text-green { color: var(--green); }
+            .text-blue { color: var(--blue); }
+            .text-red { color: var(--danger); }
+            .text-yellow { color: var(--warn); }
+            .text-purple { color: var(--purple-bright); }
+
+            .editor-toolbar {
+                display: flex;
+                gap: 5px;
+                margin-bottom: 0;
+                background: rgba(0,0,0,0.3);
+                padding: 5px;
+                border: 1px solid var(--border);
+                border-bottom: none;
+                flex-wrap: wrap;
+            }
+            .toolbar-btn {
+                padding: 2px 8px;
+                font-size: 0.7rem;
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--text-dim);
+                font-family: 'Share Tech Mono', monospace;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .toolbar-btn:hover {
+                border-color: var(--gold);
+                color: var(--gold);
+                background: rgba(184,168,0,0.1);
+            }
+            .toolbar-btn.btn-gold { color: var(--gold); border-color: rgba(184,168,0,0.3); }
+            .toolbar-btn.btn-cyan { color: var(--cyan); border-color: rgba(0,229,200,0.3); }
+            .toolbar-btn.btn-green { color: var(--green); border-color: rgba(46,204,113,0.3); }
+            .toolbar-btn.btn-blue { color: var(--blue); border-color: rgba(52,152,219,0.3); }
+            .toolbar-btn.btn-red { color: var(--danger); border-color: rgba(192,57,43,0.3); }
+            .toolbar-btn.btn-yellow { color: var(--warn); border-color: rgba(212,137,10,0.3); }
+            .toolbar-btn.btn-purple { color: var(--purple-bright); border-color: rgba(160,32,200,0.3); }
+
+            .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-input {
             background: #0d1018;
             border: 1px solid var(--border);
@@ -484,6 +526,15 @@
             <input type="hidden" id="section-mission-id">
             <input type="hidden" id="section-key">
             <div class="form-group">
+                <div class="editor-toolbar">
+                    <button type="button" class="toolbar-btn btn-gold" onclick="window.wrapSelection('section-content', 'gold')">GOLD</button>
+                    <button type="button" class="toolbar-btn btn-cyan" onclick="window.wrapSelection('section-content', 'cyan')">CYAN</button>
+                    <button type="button" class="toolbar-btn btn-green" onclick="window.wrapSelection('section-content', 'green')">GREEN</button>
+                    <button type="button" class="toolbar-btn btn-blue" onclick="window.wrapSelection('section-content', 'blue')">BLUE</button>
+                    <button type="button" class="toolbar-btn btn-red" onclick="window.wrapSelection('section-content', 'red')">RED</button>
+                    <button type="button" class="toolbar-btn btn-yellow" onclick="window.wrapSelection('section-content', 'yellow')">YELLOW</button>
+                    <button type="button" class="toolbar-btn btn-purple" onclick="window.wrapSelection('section-content', 'purple')">PURPLE</button>
+                </div>
                 <textarea id="section-content" class="form-textarea" style="min-height:300px;" placeholder="Enter data..."></textarea>
             </div>
             <button type="submit" class="btn-action" style="margin-top:10px;">UPDATE SECTION</button>
@@ -579,6 +630,15 @@
             <input type="hidden" id="plan-mission-id">
             <div class="form-group">
                 <label class="info-label">MISSION PLAN (MARKDOWN)</label>
+                <div class="editor-toolbar">
+                    <button type="button" class="toolbar-btn btn-gold" onclick="window.wrapSelection('plan-content', 'gold')">GOLD</button>
+                    <button type="button" class="toolbar-btn btn-cyan" onclick="window.wrapSelection('plan-content', 'cyan')">CYAN</button>
+                    <button type="button" class="toolbar-btn btn-green" onclick="window.wrapSelection('plan-content', 'green')">GREEN</button>
+                    <button type="button" class="toolbar-btn btn-blue" onclick="window.wrapSelection('plan-content', 'blue')">BLUE</button>
+                    <button type="button" class="toolbar-btn btn-red" onclick="window.wrapSelection('plan-content', 'red')">RED</button>
+                    <button type="button" class="toolbar-btn btn-yellow" onclick="window.wrapSelection('plan-content', 'yellow')">YELLOW</button>
+                    <button type="button" class="toolbar-btn btn-purple" onclick="window.wrapSelection('plan-content', 'purple')">PURPLE</button>
+                </div>
                 <textarea id="plan-content" class="form-textarea" style="min-height:300px;" placeholder="Outline your tactical approach..."></textarea>
             </div>
             <div class="form-group">

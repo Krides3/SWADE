@@ -27,6 +27,8 @@
     --text:          #ffffff; /* Brightened to pure white */
     --text-dim:      #cccccc; /* Brightened from grey to light grey */
     --cyan:          #00e5c8;
+    --green:         #2ecc71;
+    --blue:          #3498db;
     --danger:        #c0392b;
     --warn:          #d4890a;
     --navbar-w:      200px;

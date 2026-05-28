@@ -311,12 +311,44 @@
     function parseTacticalMarkdown(content) {
         if (!content) return '<div style="color:var(--text-dim); font-style:italic; font-size:0.85rem;">DATA PENDING...</div>';
         
+        // Custom color tags: [color]text[/color]
+        let parsed = content
+            .replace(/\[gold\](.*?)\[\/gold\]/gi, '<span class="text-gold">$1</span>')
+            .replace(/\[cyan\](.*?)\[\/cyan\]/gi, '<span class="text-cyan">$1</span>')
+            .replace(/\[green\](.*?)\[\/green\]/gi, '<span class="text-green">$1</span>')
+            .replace(/\[blue\](.*?)\[\/blue\]/gi, '<span class="text-blue">$1</span>')
+            .replace(/\[red\](.*?)\[\/red\]/gi, '<span class="text-red">$1</span>')
+            .replace(/\[yellow\](.*?)\[\/yellow\]/gi, '<span class="text-yellow">$1</span>')
+            .replace(/\[purple\](.*?)\[\/purple\]/gi, '<span class="text-purple">$1</span>');
+
         if (typeof marked !== 'undefined') {
-            return typeof marked.parse === 'function' ? marked.parse(content) : marked(content);
+            return typeof marked.parse === 'function' ? marked.parse(parsed) : marked(parsed);
         }
         
-        return `<pre style="font-family:inherit; white-space:pre-wrap; margin:0; font-size:1.1rem;">${content}</pre>`;
+        return `<pre style="font-family:inherit; white-space:pre-wrap; margin:0; font-size:1.1rem;">${parsed}</pre>`;
     }
+
+    // ── TEXT EDITOR HELPERS ────────────────────────────────────────
+
+    window.wrapSelection = function(textareaId, tag) {
+        const textarea = document.getElementById(textareaId);
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end   = textarea.selectionEnd;
+        const text  = textarea.value;
+        const selected = text.substring(start, end);
+        
+        const openTag = `[${tag}]`;
+        const closeTag = `[/${tag}]`;
+        
+        const replacement = openTag + selected + closeTag;
+        textarea.value = text.substring(0, start) + replacement + text.substring(end);
+        
+        // Restore focus and selection
+        textarea.focus();
+        textarea.setSelectionRange(start + openTag.length, start + openTag.length + selected.length);
+    };
 
     function renderSection(id, key, title, content, canEdit) {
         const htmlContent = parseTacticalMarkdown(content);
