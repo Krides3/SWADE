@@ -108,7 +108,14 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Simpler: count how many steps to get back to root
     let rootPath = '';
-    const depth = segments.length - (path.endsWith('/') ? 0 : 1);
+    let depth = segments.length - (path.endsWith('/') ? 0 : 1);
+    
+    // On GitHub Pages, the first segment is the repo name (e.g. /LUXOR/)
+    // We only want to go up if we are deeper than the repo root.
+    if (window.location.hostname.includes('github.io')) {
+      depth = Math.max(0, depth - 1);
+    }
+    
     for (let i = 0; i < depth; i++) { rootPath += '../'; }
     
     const loginUrl = rootPath + 'login.html';

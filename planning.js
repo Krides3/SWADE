@@ -161,7 +161,7 @@
             const cell = document.createElement('div');
             cell.className = 'grid-cell trash-cell';
             cell.id = `trash-${day.iso}`;
-            cell.innerHTML = '🗑';
+            cell.innerHTML = '⊠';
             cell.title = "Clear your availability for this day";
             cell.onclick = () => clearDayAvailability(day);
             grid.appendChild(cell);
