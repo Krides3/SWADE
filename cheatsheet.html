@@ -9,7 +9,14 @@
     <style>
         :root {
             --bg-cs: #0a0c12;
-            --panel-cs: rgba(20, 24, 36, 0.95);
+            --panel-cs: rgba(20, 24, 36, 0.98);
+            --gold: #b8a800;
+            --gold-dim: #c7bd31;
+            --cyan: #00e5c8;
+            --border: #2a2f45;
+            --text: #d4d0b0;
+            --text-dim: #6b6860;
+            --danger: #c0392b;
         }
 
         body, html {
@@ -20,6 +27,20 @@
             color: var(--text);
             font-family: 'Share Tech Mono', monospace;
             overflow: hidden;
+            position: relative;
+        }
+
+        /* Subtle Scanline Effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 1000;
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.1;
         }
 
         .cs-layout {
@@ -29,16 +50,18 @@
             height: 100%;
             gap: 1px;
             background: var(--border);
+            position: relative;
+            z-index: 1;
         }
 
         .cs-header {
             grid-column: 1 / -1;
-            background: var(--bg-cs);
-            padding: 15px 25px;
+            background: #000;
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid var(--gold);
+            align-items: baseline;
+            border-bottom: 2px solid var(--gold);
         }
 
         .cs-mission-name {
@@ -46,7 +69,19 @@
             font-size: 2rem;
             color: var(--gold);
             text-transform: uppercase;
-            text-shadow: 0 0 10px rgba(184, 168, 0, 0.3);
+            letter-spacing: 2px;
+            font-weight: 900;
+            display: flex;
+            align-items: baseline;
+            gap: 18px;
+        }
+
+        .cs-mission-name .hub-label {
+            font-size: 0.85rem;
+            color: var(--gold-dim);
+            letter-spacing: 5px;
+            font-weight: bold;
+            opacity: 0.7;
         }
 
         .cs-sidebar {
@@ -54,86 +89,60 @@
             background: var(--bg-cs);
             display: flex;
             flex-direction: column;
-            gap: 1px;
             overflow-y: auto;
             border-right: 1px solid var(--border);
         }
 
         .cs-main {
             grid-row: 2;
-            background: var(--bg-cs);
+            background: #0d0f18;
             overflow-y: auto;
-            padding: 25px;
+            padding: 30px;
             display: flex;
             flex-direction: column;
+            border-left: 1px solid var(--border);
         }
 
         .cs-section {
-            background: var(--panel-cs);
-            padding: 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cs-section-title {
-            color: var(--gold-dim);
-            font-size: 0.85rem;
-            letter-spacing: 3px;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: bold;
-        }
-
-        .cs-section-title::after {
-            content: "";
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.1);
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
 
         .squad-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px 12px;
         }
 
-        .operator-card {
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255,255,255,0.03);
-        }
-
-        .operator-card.tl {
-            border-left: 4px solid var(--gold);
-            background: rgba(184, 168, 0, 0.08);
-        }
-
-        .op-info {
+        .operator-item {
             display: flex;
             flex-direction: column;
+        }
+
+        .operator-item.tl {
+            border-left: 3px solid var(--gold);
+            padding-left: 10px;
         }
 
         .op-name {
-            font-size: 1rem;
+            font-size: 1.25rem;
             color: var(--text);
             font-weight: bold;
-        }
-
-        .op-role {
-            font-size: 0.65rem;
-            color: var(--gold-dim);
             text-transform: uppercase;
         }
 
-        .radio-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+        .op-role {
+            font-size: 0.75rem;
+            color: var(--gold-dim);
+            text-transform: uppercase;
+            margin-top: 2px;
+            opacity: 0.8;
+        }
+
+        .radio-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 25px;
         }
 
         .radio-item {
@@ -141,28 +150,49 @@
             flex-direction: column;
         }
 
-        .r-call { color: var(--cyan); font-weight: bold; font-size: 0.9rem; }
-        .r-def { color: var(--text-dim); font-size: 0.8rem; line-height: 1.3; }
+        .r-call { 
+            color: var(--text); 
+            font-weight: bold; 
+            font-size: 1.2rem; 
+            display: block;
+        }
+        
+        .r-def { 
+            color: var(--text-dim); 
+            font-size: 0.9rem; 
+            line-height: 1.3;
+        }
 
         .briefing-content {
-            font-size: 1.15rem;
-            line-height: 1.6;
+            font-size: 1.35rem;
+            line-height: 1.7;
             color: var(--text);
         }
-        .briefing-content h1, .briefing-content h2, .briefing-content h3 { color: var(--gold); margin-top: 25px; margin-bottom: 15px;}
+
+        .briefing-content h1, .briefing-content h2, .briefing-content h3 { 
+            color: var(--gold); 
+            margin-top: 30px; 
+            margin-bottom: 20px;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            border-bottom: 1px solid rgba(184, 168, 0, 0.2);
+            padding-bottom: 8px;
+            font-size: 1.4rem;
+        }
+        
         .briefing-content p { margin-bottom: 15px; }
 
         .tactical-gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 20px;
-            margin-top: 40px;
+            margin-top: 35px;
         }
 
         .tactical-img-container {
             border: 1px solid var(--border);
             background: #000;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            padding: 3px;
         }
 
         .tactical-img-container img {
@@ -171,11 +201,11 @@
         }
 
         ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--bg-cs); }
-        ::-webkit-scrollbar-thumb { background: var(--border); }
+        ::-webkit-scrollbar-track { background: #05060a; }
+        ::-webkit-scrollbar-thumb { background: #1a1e2b; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
 
-        @media (max-width: 1000px) {
+        @media (max-width: 1100px) {
             .cs-layout { grid-template-columns: 1fr; overflow-y: auto; height: auto; }
             .cs-sidebar, .cs-main { overflow-y: visible; height: auto; }
             body, html { overflow-y: auto; height: auto; }
@@ -186,38 +216,37 @@
 
 <div class="cs-layout">
     <header class="cs-header">
-        <div>
-            <div style="font-size: 0.7rem; color: var(--text-dim); letter-spacing: 3px; font-weight: bold;">LUXOR // TACTICAL REFERENCE HUB</div>
-            <div class="cs-mission-name" id="mission-name">INITIALIZING...</div>
+        <div class="cs-mission-name">
+            <span id="mission-name">ENCRYPTED</span>
+            <span class="hub-label">LUXOR // TACTICAL HUB</span>
         </div>
-        <div id="mission-date" style="color: var(--gold-dim); font-size: 1rem; font-weight: bold; font-family: 'Orbitron', sans-serif;"></div>
+        <div style="display: flex; gap: 20px; align-items: baseline;">
+            <div id="mission-date" style="color: var(--gold-dim); font-size: 0.8rem; font-weight: bold; font-family: 'Orbitron', sans-serif;"></div>
+            <div id="mission-status" style="color: var(--cyan); font-size: 0.8rem; font-weight: bold; font-family: 'Orbitron', sans-serif; letter-spacing: 1px;">STATUS: UNKNOWN</div>
+        </div>
     </header>
 
     <aside class="cs-sidebar">
         <section class="cs-section">
-            <div class="cs-section-title">OPERATIONAL SQUAD</div>
             <div class="squad-grid" id="squad-grid">
                 <!-- Populated by JS -->
             </div>
         </section>
 
         <section class="cs-section">
-            <div class="cs-section-title">NATO PHONETIC</div>
             <div id="phonetic-grid">
                 <!-- Populated by JS -->
             </div>
         </section>
 
-        <section class="cs-section">
-            <div class="cs-section-title">RADIO GLOSSARY</div>
-            <div class="radio-list" id="radio-list">
+        <section class="cs-section" style="border-bottom: none;">
+            <div class="radio-grid" id="radio-list">
                 <!-- Populated by JS -->
             </div>
         </section>
     </aside>
 
     <main class="cs-main">
-        <div class="cs-section-title">MISSION TACTICAL PLAN</div>
         <div id="mission-plan" class="briefing-content">
             <!-- Populated by JS -->
         </div>

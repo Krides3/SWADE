@@ -3,8 +3,6 @@
 
     console.log("[LUXOR CS] STARTUP URL:", window.location.href);
 
-    // Authentication removed per user request - anyone with the link can access the cheat sheet.
-
     const CONVEX_URL = "https://focused-panda-809.eu-west-1.convex.cloud";
     const client = new convex.ConvexClient(CONVEX_URL, { skipConvexDeploymentUrlCheck: true });
 
@@ -40,24 +38,14 @@
         missionId = url.searchParams.get('id');
 
         if (!missionId) {
-            // Check hash just in case
-            const hashMatch = window.location.hash.match(/[?&]id=([^&]+)/);
-            if (hashMatch) missionId = hashMatch[1];
+            const match = window.location.href.match(/[?&]id=([^&]+)/);
+            if (match) missionId = match[1];
         }
 
         if (!missionId) {
-            // Check full href string with regex
-            const hrefMatch = window.location.href.match(/[?&]id=([^&]+)/);
-            if (hrefMatch) missionId = hrefMatch[1];
-        }
-
-        if (!missionId) {
-            // Last resort: Fallback to localStorage (more persistent across tabs/redirects)
             missionId = localStorage.getItem('luxor_last_mission_id');
             if (missionId) console.log("[LUXOR CS] FALLBACK TO LOCALSTORAGE:", missionId);
         }
-
-        console.log("[LUXOR CS] RESOLVED MISSION ID:", missionId);
 
         if (!missionId) {
             document.getElementById('mission-name').textContent = "ERROR: MISSION ID MISSING";
@@ -71,6 +59,7 @@
                     console.log("[LUXOR CS] DATA RECEIVED:", mission.name);
                     document.getElementById('mission-name').textContent = mission.name || "MISSION RECORD";
                     document.getElementById('mission-date').textContent = mission.date || '';
+                    document.getElementById('mission-status').textContent = `STATUS: ${mission.status || 'UNKNOWN'}`;
                     document.title = `CHEAT SHEET — ${mission.name}`;
 
                     const planEl = document.getElementById('mission-plan');
@@ -89,8 +78,6 @@
                     `).join('');
 
                     renderSquad(mission.assignments);
-                } else {
-                    console.warn("[LUXOR CS] MISSION NOT FOUND:", missionId);
                 }
             });
         } catch (e) {
@@ -102,26 +89,23 @@
         const grid = document.getElementById('phonetic-grid');
         if (!grid) return;
 
-        // Split into two columns for alphabetical vertical flow
-        const half = Math.ceil(NATO_WORDS.length / 2);
-        const col1 = NATO_WORDS.slice(0, half);
-        const col2 = NATO_WORDS.slice(half);
-
-        let html = '<div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; width:100%;">';
+        // 4 Columns vertical flow
+        const colCount = 4;
+        const rowCount = Math.ceil(NATO_WORDS.length / colCount);
         
-        // Column 1
-        html += '<div style="display:flex; flex-direction:column; gap:2px;">';
-        col1.forEach(word => {
-            html += `<div style="font-size:0.75rem;"><span style="color:var(--cyan); font-weight:bold;">${word[0]}</span><span style="color:var(--text-dim);">${word.substring(1)}</span></div>`;
-        });
-        html += '</div>';
-
-        // Column 2
-        html += '<div style="display:flex; flex-direction:column; gap:2px;">';
-        col2.forEach(word => {
-            html += `<div style="font-size:0.75rem;"><span style="color:var(--cyan); font-weight:bold;">${word[0]}</span><span style="color:var(--text-dim);">${word.substring(1)}</span></div>`;
-        });
-        html += '</div>';
+        let html = `<div style="display:grid; grid-template-columns: repeat(${colCount}, 1fr); gap: 10px 15px; width:100%;">`;
+        
+        for (let c = 0; c < colCount; c++) {
+            html += '<div style="display:flex; flex-direction:column; gap:4px;">';
+            for (let r = 0; r < rowCount; r++) {
+                const idx = c * rowCount + r;
+                if (idx < NATO_WORDS.length) {
+                    const word = NATO_WORDS[idx];
+                    html += `<div style="font-size:1.35rem; line-height:1; font-weight:bold;"><span style="color:var(--cyan);">${word[0]}</span><span style="color:var(--text);">${word.substring(1)}</span></div>`;
+                }
+            }
+            html += '</div>';
+        }
 
         html += '</div>';
         grid.innerHTML = html;
@@ -148,13 +132,11 @@
             return;
         }
 
-        // Sort: Leader roles first, then by callsign
         const sorted = [...assignments].sort((a, b) => {
             const roleA = (a.assignedRole || '').toLowerCase();
             const roleB = (b.assignedRole || '').toLowerCase();
             const aIsLead = roleA.includes('leader') || roleA.includes('lead');
             const bIsLead = roleB.includes('leader') || roleB.includes('lead');
-            
             if (aIsLead && !bIsLead) return -1;
             if (!aIsLead && bIsLead) return 1;
             return (a.callsign || '').localeCompare(b.callsign || '');
@@ -165,11 +147,9 @@
             const isLead = role.includes('leader') || role.includes('lead');
             
             return `
-                <div class="operator-card ${isLead ? 'tl' : ''}">
-                    <div class="op-info">
-                        <span class="op-role">${op.assignedRole || 'RIFLEMAN'}</span>
-                        <span class="op-name">${op.callsign || 'UNKNOWN'}</span>
-                    </div>
+                <div class="operator-item ${isLead ? 'tl' : ''}">
+                    <span class="op-name">${op.callsign || 'UNKNOWN'}</span>
+                    <span class="op-role">${op.assignedRole || 'RIFLEMAN'}</span>
                 </div>
             `;
         }).join('');
