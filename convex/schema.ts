@@ -41,6 +41,11 @@ export default defineSchema({
     modlistUrl: v.optional(v.string()), // Convex File ID or External URL
     modlistStatus: v.optional(v.string()), // "WIP" | "FINAL"
 
+    // Multi-Image & Tactical Planning
+    handlerImages: v.optional(v.array(v.string())), // Storage IDs from Handler
+    leaderPlan: v.optional(v.string()),             // Markdown plan by Mission Leader
+    leaderImages: v.optional(v.array(v.string())),  // Storage IDs from Mission Leader
+
     objectives: v.optional(v.array(v.object({
       text: v.string(),
       status: v.string(), // "PENDING" | "COMPLETED" | "FAILED"

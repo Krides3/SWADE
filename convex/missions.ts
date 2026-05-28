@@ -91,6 +91,70 @@ export const update = mutation({
 });
 
 /**
+ * Update the Mission Leader's tactical plan (Only by assigned leader or handler).
+ */
+export const updateLeaderPlan = mutation({
+  args: {
+    missionId: v.id("missions"),
+    leaderPlan: v.string(),
+    userCallsign: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const mission = await ctx.db.get(args.missionId);
+    if (!mission) throw new Error("Mission not found");
+
+    const operator = await ctx.db
+      .query("operators")
+      .withIndex("by_callsign", (q) => q.eq("callsign", args.userCallsign.toUpperCase()))
+      .unique();
+
+    const isLeader = mission.leader && operator && mission.leader === operator._id;
+    const isHandler = mission.handler === args.userCallsign.toUpperCase();
+
+    if (!isLeader && !isHandler) {
+      throw new Error("ACCESS DENIED: Only the Mission Leader or Handler can update the tactical plan.");
+    }
+
+    await ctx.db.patch(args.missionId, { leaderPlan: args.leaderPlan });
+  },
+});
+
+/**
+ * Update images for either Handler or Leader.
+ */
+export const updateMissionImages = mutation({
+  args: {
+    missionId: v.id("missions"),
+    images: v.array(v.string()),
+    type: v.union(v.literal("handler"), v.literal("leader")),
+    userCallsign: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const mission = await ctx.db.get(args.missionId);
+    if (!mission) throw new Error("Mission not found");
+
+    if (args.type === "handler") {
+      if (mission.handler !== args.userCallsign.toUpperCase()) {
+        throw new Error("ACCESS DENIED: Only the Handler can update briefing images.");
+      }
+      await ctx.db.patch(args.missionId, { handlerImages: args.images });
+    } else {
+      const operator = await ctx.db
+        .query("operators")
+        .withIndex("by_callsign", (q) => q.eq("callsign", args.userCallsign.toUpperCase()))
+        .unique();
+      const isLeader = mission.leader && operator && mission.leader === operator._id;
+      const isHandler = mission.handler === args.userCallsign.toUpperCase();
+
+      if (!isLeader && !isHandler) {
+        throw new Error("ACCESS DENIED: Only the Mission Leader or Handler can update plan images.");
+      }
+      await ctx.db.patch(args.missionId, { leaderImages: args.images });
+    }
+  },
+});
+
+/**
  * Generate a upload URL for modlist files.
  */
 export const generateUploadUrl = mutation(async (ctx) => {
@@ -304,11 +368,20 @@ export const getDetails = query({
       })
     );
 
+    const handlerImageUrls = await Promise.all(
+      (mission.handlerImages || []).map(async (id) => await ctx.storage.getUrl(id))
+    );
+    const leaderImageUrls = await Promise.all(
+      (mission.leaderImages || []).map(async (id) => await ctx.storage.getUrl(id))
+    );
+
     return { 
       ...mission, 
       leaderName,
       operatorList: resolvedOperators,
-      assignments: fullAssignments 
+      assignments: fullAssignments,
+      handlerImageUrls,
+      leaderImageUrls
     };
   },
 });

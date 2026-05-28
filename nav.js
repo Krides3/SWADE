@@ -58,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Redirect if on an unauthorized page
     const path = window.location.pathname.toLowerCase();
-    const isAuthorized = path.includes('briefing') || path.includes('planning') || path.includes('login.html') || path.includes('index.html') || path.includes('operator-editor') || path.endsWith('/');
+    const isAuthorized = path.includes('briefing') || path.includes('planning') || path.includes('login.html') || path.includes('index.html') || path.includes('operator-editor') || path.includes('cheatsheet') || path.endsWith('/');
     
     if (!isAuthorized) {
         // Only redirect if we are NOT already on a briefing, login, or home page

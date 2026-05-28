@@ -148,6 +148,47 @@
             font-size: 1.1rem;
             padding-left: 15px;
             border-left: 3px solid rgba(184,168,0,0.3);
+            margin-bottom: 20px;
+        }
+        
+        /* Image Gallery */
+        .tactical-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .tactical-img-container {
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            background: #000;
+            aspect-ratio: 16/9;
+            cursor: pointer;
+        }
+        .tactical-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.4) hue-rotate(140deg) brightness(0.9) contrast(1.1);
+            transition: all 0.3s;
+        }
+        .tactical-img-container:hover img {
+            filter: none;
+            transform: scale(1.05);
+        }
+        .image-delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(192, 57, 43, 0.8);
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            font-size: 0.6rem;
+            cursor: pointer;
+            z-index: 10;
+        }
             margin-top: 5px;
         }
         .briefing-content p { margin: 0 0 6px 0; }
@@ -525,6 +566,45 @@
                 <button type="submit" class="btn-action">SAVE LOADOUT</button>
             </form>
         </div>
+    </div>
+</div>
+
+<!-- Modal for Mission Leader Plan Editing -->
+<div id="plan-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:800px; padding:30px; position:relative;">
+        <button onclick="document.getElementById('plan-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px;">TACTICAL PLAN EDITOR</h2>
+        
+        <form id="plan-form" class="editor-form">
+            <input type="hidden" id="plan-mission-id">
+            <div class="form-group">
+                <label class="info-label">MISSION PLAN (MARKDOWN)</label>
+                <textarea id="plan-content" class="form-textarea" style="min-height:300px;" placeholder="Outline your tactical approach..."></textarea>
+            </div>
+            <div class="form-group">
+                <label class="info-label">TACTICAL IMAGES / DIAGRAMS</label>
+                <input type="file" id="plan-images-input" class="form-input" multiple accept="image/*">
+                <div style="font-size:0.7rem; color:var(--text-dim); margin-top:5px;">Select multiple images to upload. Existing images will be kept.</div>
+            </div>
+            <button type="submit" class="btn-action" style="margin-top:10px;">SAVE TACTICAL PLAN</button>
+        </form>
+    </div>
+</div>
+
+<!-- Modal for Handler Images -->
+<div id="handler-images-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1100; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:500px; padding:30px; position:relative;">
+        <button onclick="document.getElementById('handler-images-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px;">UPLOAD BRIEFING IMAGES</h2>
+        
+        <form id="handler-images-form" class="editor-form">
+            <input type="hidden" id="handler-mission-id">
+            <div class="form-group">
+                <label class="info-label">SELECT IMAGES</label>
+                <input type="file" id="handler-images-input" class="form-input" multiple accept="image/*">
+            </div>
+            <button type="submit" class="btn-action" style="margin-top:10px;">UPLOAD IMAGES</button>
+        </form>
     </div>
 </div>
 
