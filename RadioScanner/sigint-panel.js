@@ -1049,10 +1049,10 @@
 
         const wrap = document.createElement('div');
         wrap.innerHTML = `
-        <button id="gm-toggle">⚙ GM CONFIG</button>
+        <button id="gm-toggle">⊠ GM CONFIG</button>
         <div id="gm-panel" class="hidden">
             <div id="gm-hdr">
-                <span>⚙ OVERLORD SIGNAL CONFIG</span>
+                <span>⊠ OVERLORD SIGNAL CONFIG</span>
                 <button id="gm-close-btn">✕</button>
             </div>
             <div class="gm-tabs">

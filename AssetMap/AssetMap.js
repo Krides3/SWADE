@@ -2081,7 +2081,7 @@ function injectAddUI() {
         <!-- ── MANAGE TAB ── -->
         <div class="lx-tc hidden" id="lx-tc-mgr">
             <div class="lx-note">Edit any deployment or route. Changes persist automatically.</div>
-            <input id="lx-mgr-search" type="text" placeholder="&#128269; Search nodes &amp; routes..." oninput="renderManageTab()" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:5px 8px;outline:none;box-sizing:border-box;margin-bottom:6px;">
+            <input id="lx-mgr-search" type="text" placeholder="SEARCH: nodes &amp; routes..." oninput="renderManageTab()" style="width:100%;background:rgba(0,255,231,0.04);border:1px solid #00ffe730;color:#00ffe7;font-family:Consolas,monospace;font-size:10px;padding:5px 8px;outline:none;box-sizing:border-box;margin-bottom:6px;">
             <div id="lx-mgr-list"></div>
             <button class="lx-export" id="lx-export">⬇ EXPORT CUSTOM JSON TO CLIPBOARD</button>
         </div>
@@ -2293,4 +2293,4 @@ buildVehicles();
 setClearance(PLAYER_CLEARANCE);
 requestAnimationFrame(animLoop);
 setTimeout(() => document.getElementById('map').classList.add('pulses-done'), 5000);
-if (window.LuxorAuth && LuxorAuth.isAdmin()) injectAddUI();
+if (window.LuxorAuth && LuxorAuth.isAdmin()) injectAddUI();tAddUI();
