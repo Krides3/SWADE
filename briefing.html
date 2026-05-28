@@ -189,8 +189,6 @@
             cursor: pointer;
             z-index: 10;
         }
-            margin-top: 5px;
-        }
         .briefing-content p { margin: 0 0 6px 0; }
         .briefing-content ul, .briefing-content ol { margin: 4px 0 8px 20px; padding: 0; }
 
@@ -201,53 +199,46 @@
             gap: 12px;
         }
         .editor-row {
-            .editor-row {
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-            }
-            /* Color Coding Styles */
-            .text-gold { color: var(--gold); }
-            .text-cyan { color: var(--cyan); }
-            .text-green { color: var(--green); }
-            .text-blue { color: var(--blue); }
-            .text-red { color: var(--danger); }
-            .text-yellow { color: var(--warn); }
-            .text-purple { color: var(--purple-bright); }
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
 
-            .editor-toolbar {
-                display: flex;
-                gap: 5px;
-                margin-bottom: 0;
-                background: rgba(0,0,0,0.3);
-                padding: 5px;
-                border: 1px solid var(--border);
-                border-bottom: none;
-                flex-wrap: wrap;
-            }
-            .toolbar-btn {
-                padding: 2px 8px;
-                font-size: 0.7rem;
-                background: transparent;
-                border: 1px solid var(--border);
-                color: var(--text-dim);
-                font-family: 'Share Tech Mono', monospace;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            .toolbar-btn:hover {
-                border-color: var(--gold);
-                color: var(--gold);
-                background: rgba(184,168,0,0.1);
-            }
-            .toolbar-btn.btn-gold { color: var(--gold); border-color: rgba(184,168,0,0.3); }
-            .toolbar-btn.btn-cyan { color: var(--cyan); border-color: rgba(0,229,200,0.3); }
-            .toolbar-btn.btn-green { color: var(--green); border-color: rgba(46,204,113,0.3); }
-            .toolbar-btn.btn-blue { color: var(--blue); border-color: rgba(52,152,219,0.3); }
-            .toolbar-btn.btn-red { color: var(--danger); border-color: rgba(192,57,43,0.3); }
-            .toolbar-btn.btn-yellow { color: var(--warn); border-color: rgba(212,137,10,0.3); }
-            .toolbar-btn.btn-purple { color: var(--purple-bright); border-color: rgba(160,32,200,0.3); }
+        .editor-toolbar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 0;
+            background: rgba(0,0,0,0.3);
+            padding: 5px;
+            border: 1px solid var(--border);
+            border-bottom: none;
+            flex-wrap: wrap;
+        }
+        .toolbar-btn {
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-family: 'Share Tech Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toolbar-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(184,168,0,0.1);
+        }
+        .toolbar-btn.btn-gold { color: var(--gold); border-color: rgba(184,168,0,0.3); }
+        .toolbar-btn.btn-cyan { color: var(--cyan); border-color: rgba(0,229,200,0.3); }
+        .toolbar-btn.btn-green { color: var(--green); border-color: rgba(46,204,113,0.3); }
+        .toolbar-btn.btn-blue { color: var(--blue); border-color: rgba(52,152,219,0.3); }
+        .toolbar-btn.btn-red { color: var(--danger); border-color: rgba(192,57,43,0.3); }
+        .toolbar-btn.btn-yellow { color: var(--warn); border-color: rgba(212,137,10,0.3); }
+        .toolbar-btn.btn-purple { color: var(--purple-bright); border-color: rgba(160,32,200,0.3); }
 
-            .form-group { display: flex; flex-direction: column; gap: 4px; }
+        .form-group { display: flex; flex-direction: column; gap: 4px; }
         .form-input {
             background: #0d1018;
             border: 1px solid var(--border);
@@ -281,24 +272,6 @@
             gap: 8px;
             font-size: 0.8rem;
             cursor: pointer;
-        }
-        
-        .btn-action {
-            padding: 10px 18px;
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            letter-spacing: 0.1em;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .btn-action:hover {
-            background: rgba(184,168,0,0.15);
-            border-color: var(--gold-glow);
-            color: var(--gold-glow);
         }
 
         .handler-controls {
