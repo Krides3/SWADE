@@ -69,6 +69,18 @@
                 </a>
             `;
 
+            const planningCard = `
+                <a class="tool-card" href="planning.html">
+                    <div class="tool-card-top">
+                        <div class="tool-card-icon">📅</div>
+                        <div class="tool-card-badge">NEW</div>
+                    </div>
+                    <div class="tool-card-title">Planning Tool</div>
+                    <div class="tool-card-desc">Operator availability matrix. Coordinate mission timings and squad readiness.</div>
+                    <div class="tool-card-code">PLANNING.EXE</div>
+                </a>
+            `;
+
             const editorCard = `
                 <a class="tool-card" href="operator-editor.html">
                     <div class="tool-card-top">
@@ -112,14 +124,14 @@
 
             if (isRestricted) {
                 // Clear all cards and only show Briefing and (if admin) Editor
-                grid.innerHTML = briefingCard + (isAdmin ? editorCard : '');
+                grid.innerHTML = briefingCard + planningCard + (isAdmin ? editorCard : '');
                 
                 // Also update tagline to reflect restricted status
                 const tagline = document.querySelector('.tagline');
                 if (tagline) tagline.textContent = '// RESTRICTED ACCESS — AUTHORIZED MODULES ONLY //';
             } else {
                 // For OVERLORD, show everything
-                grid.innerHTML = briefingCard + (isAdmin ? editorCard : '') + toolCards;
+                grid.innerHTML = briefingCard + planningCard + (isAdmin ? editorCard : '') + toolCards;
             }
         }
     }

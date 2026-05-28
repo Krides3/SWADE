@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Luxor Terminal — Planning Tool</title>
+    <link rel="stylesheet" href="./style.css">
+    <style>
+        .planning-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .planning-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .grid-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            background: rgba(20, 24, 36, 0.5);
+            position: relative;
+        }
+
+        .availability-grid {
+            display: grid;
+            grid-template-columns: 80px repeat(14, 1fr);
+            min-width: 1000px;
+        }
+
+        .grid-cell {
+            border: 1px solid rgba(42, 47, 69, 0.3);
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7rem;
+            position: relative;
+            cursor: default;
+        }
+
+        .header-cell {
+            background: var(--bg-panel);
+            color: var(--gold);
+            font-weight: bold;
+            height: 60px;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .time-cell {
+            background: var(--bg-panel);
+            color: var(--purple-bright);
+            position: sticky;
+            left: 0;
+            z-index: 10;
+        }
+
+        .slot-active {
+            transition: background 0.2s;
+        }
+
+        /* Intensity colors */
+        .intensity-0 { background: transparent; }
+        .intensity-1 { background: rgba(184, 168, 0, 0.2); }
+        .intensity-2 { background: rgba(184, 168, 0, 0.4); }
+        .intensity-3 { background: rgba(184, 168, 0, 0.6); }
+        .intensity-4 { background: rgba(184, 168, 0, 0.8); }
+        .intensity-high { background: var(--gold); color: var(--bg-deep); }
+
+        .trash-cell {
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border) !important;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--danger);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .trash-cell.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .trash-cell.active:hover {
+            background: rgba(192, 57, 43, 0.15);
+            color: #ff4d4d;
+        }
+
+        /* Skeleton UI */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .skeleton-cell {
+            background: linear-gradient(90deg, 
+                rgba(20, 24, 36, 0.2) 25%, 
+                rgba(42, 47, 69, 0.4) 50%, 
+                rgba(20, 24, 36, 0.2) 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+            border-color: rgba(42, 47, 69, 0.1) !important;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: var(--bg-panel);
+            border: 1px solid var(--gold);
+            padding: 8px;
+            z-index: 100;
+            font-size: 0.7rem;
+            pointer-events: none;
+            display: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            min-width: 120px;
+        }
+
+        .operator-list {
+            list-style: none;
+            margin-top: 5px;
+        }
+
+        .operator-list li {
+            color: var(--cyan);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 2px 0;
+        }
+
+        /* Editor Mode */
+        .editor-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .editor-content {
+            background: var(--bg-panel);
+            border: 1px solid var(--purple);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .editor-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .slot-btn {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px;
+            font-size: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .slot-btn.selected {
+            background: rgba(122, 5, 158, 0.3);
+            border-color: var(--purple-bright);
+            color: var(--text);
+        }
+
+        .editor-footer {
+            margin-top: 20px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 15px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .availability-grid {
+                min-width: 800px;
+            }
+            .editor-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body class="planning-page">
+
+<div class="mini-loader" id="mini-loader">
+    <div class="ml-logo">LUXOR</div>
+    <div class="ml-sub">// INITIALIZING MODULE //</div>
+    <div class="ml-bar-wrap"><div class="ml-bar"></div></div>
+    <div class="ml-status">LOADING MATRIX...</div>
+</div>
+
+<div class="app">
+    <nav class="navbar" id="navbar">
+        <div class="nav-brand">
+            <div class="nav-brand-title">LUXOR</div>
+            <div class="nav-brand-sub">// TACTICAL OPS //</div>
+        </div>
+        <ul class="nav-links">
+            <!-- Populated by nav.js -->
+        </ul>
+        <div class="nav-footer">
+            <span class="status-dot"></span>
+            <span id="nav-username" class="session-id">——————</span>
+            <button id="nav-logout" class="nav-logout-btn">LOGOUT</button>
+        </div>
+    </nav>
+
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <main class="main">
+        <div class="page-header">
+            <h1>Planning Tool</h1>
+            <div class="tagline">// OPERATOR AVAILABILITY MATRIX — 14 DAY WINDOW //</div>
+            <div class="header-divider"></div>
+        </div>
+
+        <div class="planning-container">
+            <div class="planning-header">
+                <div class="view-info">
+                    <span id="date-range" style="font-family: 'Share Tech Mono', monospace; color: var(--gold-dim);">Loading window...</span>
+                </div>
+                <div class="view-controls">
+                    <button class="subtab active" id="btn-refresh">REFRESH</button>
+                </div>
+            </div>
+
+            <div class="grid-wrapper">
+                <div class="availability-grid" id="availability-grid">
+                    <!-- Grid generated by JS -->
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Editor Modal -->
+<div class="editor-modal" id="editor-modal">
+    <div class="editor-content">
+        <div class="planning-header">
+            <div class="module-title">EDIT AVAILABILITY: <span id="editor-date-label"></span></div>
+            <button class="btn-ghost" id="btn-close-editor">X</button>
+        </div>
+        <div style="margin: 15px 0; font-size: 0.8rem; color: var(--text-dim);">
+            Select your available time slots for this day.
+            <div style="display:flex; gap: 10px; margin-top: 10px;">
+                <button class="btn-ghost" style="font-size: 0.6rem;" id="btn-select-all">SELECT ALL</button>
+                <button class="btn-ghost" style="font-size: 0.6rem;" id="btn-clear-all">CLEAR ALL</button>
+            </div>
+        </div>
+        <div class="editor-grid" id="editor-grid">
+            <!-- Slots generated by JS -->
+        </div>
+        <div class="editor-footer">
+            <button class="btn-ghost" id="btn-cancel-edit">CANCEL</button>
+            <button class="subtab active" id="btn-save-availability">SAVE SCHEDULE</button>
+        </div>
+    </div>
+</div>
+
+<div class="tooltip" id="tooltip">
+    <div style="color: var(--gold); border-bottom: 1px solid var(--border); padding-bottom: 3px; font-weight: bold;">AVAILABLE:</div>
+    <ul class="operator-list" id="tooltip-operators"></ul>
+</div>
+
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/convex@1.12.0/dist/browser.bundle.js"></script>
+<script src="./auth.js"></script>
+<script src="./nav.js"></script>
+<script src="./planning.js"></script>
+</body>
+</html>

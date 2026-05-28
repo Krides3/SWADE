@@ -62,4 +62,12 @@ export default defineSchema({
     name: v.string(),         // e.g., "CQB Specialist", "Desert Recon"
     content: v.string(),      // ACE Arsenal Export String
   }).index("by_operator", ["operatorId"]),
+
+  // Operator Availability for Planning Tool
+  availability: defineTable({
+    operatorId: v.id("operators"),
+    date: v.string(), // YYYY-MM-DD
+    slots: v.array(v.boolean()), // 48 boolean values for 30-min increments (00:00 to 23:30)
+  }).index("by_date", ["date"])
+    .index("by_operator_and_date", ["operatorId", "date"]),
 });

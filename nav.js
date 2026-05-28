@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', function () {
       navUl.innerHTML = `
         <li><a href="index.html" data-icon="01">Terminal Home</a></li>
         <li><a href="briefing.html" data-icon="17">Briefing Tool</a></li>
+        <li><a href="planning.html" data-icon="18">Planning Tool</a></li>
         ${isAdmin ? '<li><a href="operator-editor.html" data-icon="15">Operator Editor</a></li>' : ''}
       `;
     }
@@ -57,7 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Redirect if on an unauthorized page
     const path = window.location.pathname.toLowerCase();
-    const isAuthorized = path.includes('briefing') || path.includes('login.html') || path.includes('index.html') || path.includes('operator-editor') || path.endsWith('/');
+    const isAuthorized = path.includes('briefing') || path.includes('planning') || path.includes('login.html') || path.includes('index.html') || path.includes('operator-editor') || path.endsWith('/');
     
     if (!isAuthorized) {
         // Only redirect if we are NOT already on a briefing, login, or home page
@@ -72,6 +73,11 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!navUl.querySelector('a[href="briefing.html"]')) {
         const li = document.createElement('li');
         li.innerHTML = '<a href="briefing.html" data-icon="17">Briefing Tool</a>';
+        navUl.appendChild(li);
+      }
+      if (!navUl.querySelector('a[href="planning.html"]')) {
+        const li = document.createElement('li');
+        li.innerHTML = '<a href="planning.html" data-icon="18">Planning Tool</a>';
         navUl.appendChild(li);
       }
       if (isAdmin && !navUl.querySelector('a[href="operator-editor.html"]')) {
