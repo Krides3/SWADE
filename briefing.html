@@ -337,6 +337,7 @@
                     <div class="tagline">// DAGGER SQUAD OPERATIONAL DATA //</div>
                 </div>
                 <div style="display:flex; gap:10px;">
+                    <button class="btn-action" onclick="window.openLoadoutManager()">MY LOADOUTS</button>
                     <button class="btn-action" onclick="window.importFromClipboard()">IMPORT FROM CLIPBOARD</button>
                     <button class="btn-action" onclick="window.location.href='index.html'">RETURN TO DASHBOARD</button>
                 </div>
@@ -486,8 +487,44 @@
                     <option value="UAV/UGV">UAV/UGV</option>
                 </select>
             </div>
+            <div class="form-group">
+                <label class="info-label">SELECT LOADOUT</label>
+                <select id="role-loadout-select" class="form-input">
+                    <option value="STANDARD">STANDARD ISSUE</option>
+                    <!-- Saved loadouts will appear here -->
+                </select>
+                <div id="loadout-preview-hint" style="font-size:0.65rem; color:var(--text-dim); margin-top:5px;">[ SELECTED LOADOUT WILL BE SNAPSHOTTED TO MISSION ]</div>
+            </div>
             <button type="submit" class="btn-action" style="margin-top:20px;">CONFIRM ASSIGNMENT</button>
         </form>
+    </div>
+</div>
+
+<!-- Modal for Loadout Management -->
+<div id="loadout-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1300; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:var(--bg-panel); border:1px solid var(--gold); width:100%; max-width:600px; padding:30px; position:relative; max-height:90vh; overflow-y:auto;">
+        <button onclick="document.getElementById('loadout-modal').style.display='none'" style="position:absolute; top:15px; right:15px; background:none; border:none; color:var(--text-dim); cursor:pointer;">[ CLOSE ]</button>
+        <h2 style="font-family:'Orbitron',sans-serif; color:var(--gold); margin-bottom:20px; font-size:1.2rem;">MY LOADOUTS</h2>
+        
+        <div id="loadout-list" style="margin-bottom:25px; display:flex; flex-direction:column; gap:10px;">
+            <!-- Saved loadouts list -->
+        </div>
+
+        <div style="border-top:1px solid var(--border); padding-top:20px;">
+            <h3 style="font-family:'Orbitron',sans-serif; color:var(--gold-dim); font-size:0.9rem; margin-bottom:15px;">ADD NEW LOADOUT</h3>
+            <form id="loadout-form" class="editor-form">
+                <input type="hidden" id="loadout-id">
+                <div class="form-group">
+                    <label class="info-label">LOADOUT NAME</label>
+                    <input type="text" id="loadout-name" class="form-input" placeholder="e.g. POINT MAN (NIGHT)" required>
+                </div>
+                <div class="form-group">
+                    <label class="info-label">ACE ARSENAL EXPORT</label>
+                    <textarea id="loadout-content" class="form-textarea" style="min-height:150px; font-size:0.7rem;" placeholder="Paste export string here..." required></textarea>
+                </div>
+                <button type="submit" class="btn-action">SAVE LOADOUT</button>
+            </form>
+        </div>
     </div>
 </div>
 

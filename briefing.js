@@ -9,6 +9,7 @@
     // State
     let currentMissions = [];
     let currentOperators = [];
+    let myLoadouts = [];
     let activeMissionId = null;
     let detailUnsubscribe = null;
 
@@ -20,10 +21,9 @@
     const opListEl      = document.getElementById('op-list');
     const leaderSelect  = document.getElementById('mission-leader');
 
-    // Section Editor Elements
-    const sectionModalEl   = document.getElementById('section-modal');
-    const sectionForm      = document.getElementById('section-form');
-    const sectionContentEl = document.getElementById('section-content');
+    const loadoutModalEl = document.getElementById('loadout-modal');
+    const loadoutListEl  = document.getElementById('loadout-list');
+    const loadoutForm    = document.getElementById('loadout-form');
 
     // ── INITIALIZATION ─────────────────────────────────────────────
 
@@ -61,6 +61,12 @@
         try {
             currentOperators = await window.client.query("operators:list");
             renderOperatorSelectors();
+
+            // Fetch current user's record to get their ID for loadouts
+            const me = currentOperators.find(o => o.callsign === session.username);
+            if (me) {
+                fetchMyLoadouts(me._id);
+            }
         } catch (e) {
             console.error("Failed to fetch operators", e);
         }
@@ -76,6 +82,84 @@
             }
         });
     }
+
+    async function fetchMyLoadouts(operatorId) {
+        try {
+            myLoadouts = await window.client.query("operators:listLoadouts", { operatorId });
+            renderLoadoutManager();
+        } catch (e) {
+            console.error("Failed to fetch loadouts", e);
+        }
+    }
+
+    // ── LOADOUT MANAGEMENT ────────────────────────────────────────
+
+    window.openLoadoutManager = function() {
+        loadoutModalEl.style.display = 'flex';
+        renderLoadoutManager();
+    };
+
+    function renderLoadoutManager() {
+        if (myLoadouts.length === 0) {
+            loadoutListEl.innerHTML = '<div class="mission-meta" style="text-align:center; padding:10px;">NO SAVED LOADOUTS</div>';
+        } else {
+            loadoutListEl.innerHTML = myLoadouts.map(l => `
+                <div style="background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="color:var(--gold); font-weight:bold; font-size:0.9rem;">${l.name}</div>
+                        <div style="font-size:0.6rem; color:var(--text-dim); margin-top:3px;">${l.content.substring(0, 50)}...</div>
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn-action" style="padding:4px 8px; font-size:0.6rem;" onclick="window.editLoadout('${l._id}')">EDIT</button>
+                        <button class="btn-action" style="padding:4px 8px; font-size:0.6rem; border-color:var(--danger); color:var(--danger);" onclick="window.deleteLoadout('${l._id}')">DELETE</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+
+    window.editLoadout = function(id) {
+        const loadout = myLoadouts.find(l => l._id === id);
+        if (!loadout) return;
+        document.getElementById('loadout-id').value = loadout._id;
+        document.getElementById('loadout-name').value = loadout.name;
+        document.getElementById('loadout-content').value = loadout.content;
+    };
+
+    window.deleteLoadout = async function(id) {
+        if (!confirm("PERMANENTLY DELETE THIS LOADOUT?")) return;
+        try {
+            await window.client.mutation("operators:deleteLoadout", { id });
+            const me = currentOperators.find(o => o.callsign === session.username);
+            if (me) fetchMyLoadouts(me._id);
+        } catch (e) {
+            alert(e.message);
+        }
+    };
+
+    loadoutForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('loadout-id').value || undefined;
+        const name = document.getElementById('loadout-name').value;
+        const content = document.getElementById('loadout-content').value;
+        const me = currentOperators.find(o => o.callsign === session.username);
+        
+        if (!me) return;
+
+        try {
+            await window.client.mutation("operators:saveLoadout", {
+                id,
+                operatorId: me._id,
+                name,
+                content
+            });
+            loadoutForm.reset();
+            document.getElementById('loadout-id').value = '';
+            fetchMyLoadouts(me._id);
+        } catch (e) {
+            alert(e.message);
+        }
+    };
 
     // ── UI RENDERING ───────────────────────────────────────────────
 
@@ -260,6 +344,13 @@
                                                               ${canAssign ? `onclick="window.promptAssignment('${mission._id}', '${o.id}', '${o.callsign}', '${role}', '${prefs}')"` : ''}>
                                                             ${role}
                                                         </span>
+                                                        ${(assignment?.loadout && assignment.loadout !== 'STANDARD') ? `
+                                                            <button class="btn-action" 
+                                                                    style="padding:2px 6px; font-size:0.55rem; margin-left:10px; height:auto; border-color:var(--cyan); color:var(--cyan);" 
+                                                                    onclick="window.copyLoadoutToClipboard(\`${assignment.loadout}\`)">
+                                                                COPY LOADOUT
+                                                            </button>
+                                                        ` : ''}
                                                     </span>
                                                     ${isReady}
                                                 </div>
@@ -373,6 +464,22 @@
         
         const roleSelect = document.getElementById('role-select');
         roleSelect.value = (currentRole === 'UNASSIGNED') ? 'UNASSIGNED' : currentRole.toUpperCase();
+
+        const loadoutSelect = document.getElementById('role-loadout-select');
+        loadoutSelect.innerHTML = '<option value="STANDARD">STANDARD ISSUE</option>';
+
+        // Fetch loadouts for the operator being assigned
+        try {
+            const opLoadouts = await window.client.query("operators:listLoadouts", { operatorId });
+            opLoadouts.forEach(l => {
+                const opt = document.createElement('option');
+                opt.value = l.content;
+                opt.textContent = l.name;
+                loadoutSelect.appendChild(opt);
+            });
+        } catch (e) {
+            console.error("Failed to fetch operator loadouts", e);
+        }
         
         document.getElementById('role-modal').style.display = 'flex';
     };
@@ -382,17 +489,31 @@
         const missionId = document.getElementById('role-mission-id').value;
         const operatorId = document.getElementById('role-operator-id').value;
         const role = document.getElementById('role-select').value;
+        const loadout = document.getElementById('role-loadout-select').value;
         
         try {
             await window.client.mutation("missions:setAssignment", { 
                 missionId, 
                 operatorId, 
                 assignedRole: role,
-                loadout: "STANDARD"
+                loadout: loadout
             });
             document.getElementById('role-modal').style.display = 'none';
         } catch (e) {
             alert(e.message);
+        }
+    };
+
+    window.copyLoadoutToClipboard = async function(loadoutContent) {
+        if (!loadoutContent || loadoutContent === 'STANDARD') {
+            alert("NO CUSTOM LOADOUT DATA ASSIGNED");
+            return;
+        }
+        try {
+            await navigator.clipboard.writeText(loadoutContent);
+            alert("ACE ARSENAL EXPORT COPIED TO CLIPBOARD");
+        } catch (err) {
+            alert("COPY FAILED: " + err.message);
         }
     };
 

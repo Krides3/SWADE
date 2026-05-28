@@ -281,6 +281,7 @@ body.boot-page .tool-grid   { animation: slideUp 0.5s 4.0s both; }
     top: 0; left: 0;
     width: var(--navbar-w);
     height: 100vh;
+    height: 100dvh;
     background: var(--bg-panel);
     border-right: 1px solid var(--purple-dim);
     display: flex;
@@ -1158,6 +1159,9 @@ body.is-admin .ev-notice-roll { display: flex; align-items: center; gap: 0.5rem;
     .nav-links li a {
         padding: 0.9rem 1.1rem;
         min-height: 48px;
+    }
+    .nav-footer {
+        padding-bottom: calc(1.1rem + env(safe-area-inset-bottom));
     }
     .nav-logout-btn {
         padding: 8px 0;

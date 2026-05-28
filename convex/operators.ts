@@ -97,6 +97,56 @@ export const remove = mutation({
 });
 
 /**
+ * List loadouts for a specific operator.
+ */
+export const listLoadouts = query({
+  args: { operatorId: v.id("operators") },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("loadouts")
+      .withIndex("by_operator", (q) => q.eq("operatorId", args.operatorId))
+      .collect();
+  },
+});
+
+/**
+ * Save (create or update) a loadout.
+ */
+export const saveLoadout = mutation({
+  args: {
+    id: v.optional(v.id("loadouts")),
+    operatorId: v.id("operators"),
+    name: v.string(),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.id) {
+      await ctx.db.patch(args.id, {
+        name: args.name,
+        content: args.content,
+      });
+      return args.id;
+    } else {
+      return await ctx.db.insert("loadouts", {
+        operatorId: args.operatorId,
+        name: args.name,
+        content: args.content,
+      });
+    }
+  },
+});
+
+/**
+ * Delete a loadout.
+ */
+export const deleteLoadout = mutation({
+  args: { id: v.id("loadouts") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
+/**
  * Initialize default roster if empty.
  */
 export const seed = mutation({

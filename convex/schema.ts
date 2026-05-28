@@ -55,4 +55,11 @@ export default defineSchema({
     loadout: v.string(),      // Equipment and assets
     isReady: v.boolean(),     // Operator readiness status
   }).index("by_mission", ["missionId"]),
+
+  // Operator Loadouts (ACE Arsenal Exports)
+  loadouts: defineTable({
+    operatorId: v.id("operators"),
+    name: v.string(),         // e.g., "CQB Specialist", "Desert Recon"
+    content: v.string(),      // ACE Arsenal Export String
+  }).index("by_operator", ["operatorId"]),
 });
