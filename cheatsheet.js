@@ -32,10 +32,8 @@
         renderNATO();
         renderRadio();
 
-        // Extract ID from multiple possible sources
-        let missionId = null;
-        const url = new URL(window.location.href);
-        missionId = url.searchParams.get('id');
+        const urlParams = new URLSearchParams(window.location.search);
+        let missionId = urlParams.get('id');
 
         if (!missionId) {
             const match = window.location.href.match(/[?&]id=([^&]+)/);
@@ -56,10 +54,10 @@
         try {
             client.onUpdate("missions:getDetails", { missionId }, (mission) => {
                 if (mission) {
-                    console.log("[LUXOR CS] DATA RECEIVED:", mission.name);
-                    document.getElementById('mission-name').textContent = mission.name || "MISSION RECORD";
-                    document.getElementById('mission-date').textContent = mission.date || '';
-                    document.getElementById('mission-status').textContent = `STATUS: ${mission.status || 'UNKNOWN'}`;
+                    console.log("[LUXOR CS] DATA RECEIVED:", mission.name, "STATUS:", mission.status);
+                    
+                    document.getElementById('mission-name').textContent = mission.name || "ENCRYPTED";
+                    document.getElementById('mission-status').textContent = mission.status || "UNKNOWN";
                     document.title = `CHEAT SHEET — ${mission.name}`;
 
                     const planEl = document.getElementById('mission-plan');
@@ -78,10 +76,13 @@
                     `).join('');
 
                     renderSquad(mission.assignments);
+                } else {
+                    console.warn("[LUXOR CS] MISSION NOT FOUND FOR ID:", missionId);
                 }
             });
+
         } catch (e) {
-            console.error("[LUXOR CS] ERROR:", e);
+            console.error("[LUXOR CS] INIT FAILED:", e);
         }
     }
 
@@ -89,7 +90,6 @@
         const grid = document.getElementById('phonetic-grid');
         if (!grid) return;
 
-        // 4 Columns vertical flow
         const colCount = 4;
         const rowCount = Math.ceil(NATO_WORDS.length / colCount);
         
@@ -101,7 +101,7 @@
                 const idx = c * rowCount + r;
                 if (idx < NATO_WORDS.length) {
                     const word = NATO_WORDS[idx];
-                    html += `<div style="font-size:1.35rem; line-height:1; font-weight:bold;"><span style="color:var(--cyan);">${word[0]}</span><span style="color:var(--text);">${word.substring(1)}</span></div>`;
+                    html += `<div style="font-size:clamp(1.1rem, 2.3vh, 1.6rem); line-height:1; font-weight:bold;"><span style="color:var(--cyan);">${word[0]}</span><span style="color:var(--text);">${word.substring(1)}</span></div>`;
                 }
             }
             html += '</div>';
@@ -128,7 +128,8 @@
         grid.innerHTML = '';
 
         if (!assignments || assignments.length === 0) {
-            grid.innerHTML = '<div style="color: var(--text-dim); font-size:0.7rem;">NO OPERATORS ASSIGNED</div>';
+            console.warn("[LUXOR CS] NO ASSIGNMENTS FOUND");
+            grid.innerHTML = '<div style="color: var(--text-dim); font-size:0.8rem; font-style:italic;">NO OPERATORS ASSIGNED TO MISSION</div>';
             return;
         }
 

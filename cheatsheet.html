@@ -57,31 +57,25 @@
         .cs-header {
             grid-column: 1 / -1;
             background: #000;
-            padding: 15px 30px;
+            padding: 10px 30px;
             display: flex;
             justify-content: space-between;
-            align-items: baseline;
-            border-bottom: 2px solid var(--gold);
-        }
-
-        .cs-mission-name {
+            align-items: center;
             font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
+            font-weight: 900;
+            font-size: 1.8rem;
             color: var(--gold);
             text-transform: uppercase;
             letter-spacing: 2px;
-            font-weight: 900;
-            display: flex;
-            align-items: baseline;
-            gap: 18px;
         }
 
-        .cs-mission-name .hub-label {
-            font-size: 0.85rem;
-            color: var(--gold-dim);
-            letter-spacing: 5px;
-            font-weight: bold;
-            opacity: 0.7;
+        .cs-mission-display {
+            display: flex;
+            gap: 15px;
+        }
+
+        .cs-status-display {
+            color: var(--cyan);
         }
 
         .cs-sidebar {
@@ -89,7 +83,7 @@
             background: var(--bg-cs);
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
+            overflow: hidden; /* Prevent scrolling */
             border-right: 1px solid var(--border);
         }
 
@@ -104,14 +98,15 @@
         }
 
         .cs-section {
-            padding: 25px 30px;
+            padding: 2.2vh 2.5vw;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            flex-shrink: 1;
         }
 
         .squad-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 18px 12px;
+            gap: 1.5vh 1vw;
         }
 
         .operator-item {
@@ -125,24 +120,25 @@
         }
 
         .op-name {
-            font-size: 1.25rem;
+            font-size: clamp(1.1rem, 2.4vh, 1.6rem);
             color: var(--text);
             font-weight: bold;
             text-transform: uppercase;
+            line-height: 1.1;
         }
 
         .op-role {
-            font-size: 0.75rem;
+            font-size: clamp(0.7rem, 1.5vh, 1rem);
             color: var(--gold-dim);
             text-transform: uppercase;
-            margin-top: 2px;
+            margin-top: 1px;
             opacity: 0.8;
         }
 
         .radio-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px 25px;
+            gap: 1.5vh 2.5vw;
         }
 
         .radio-item {
@@ -153,13 +149,15 @@
         .r-call { 
             color: var(--text); 
             font-weight: bold; 
-            font-size: 1.2rem; 
+            font-size: clamp(1rem, 2.2vh, 1.5rem); 
             display: block;
+            line-height: 1.1;
+            margin-bottom: 3px;
         }
         
         .r-def { 
             color: var(--text-dim); 
-            font-size: 0.9rem; 
+            font-size: clamp(0.8rem, 1.8vh, 1.1rem); 
             line-height: 1.3;
         }
 
@@ -216,13 +214,11 @@
 
 <div class="cs-layout">
     <header class="cs-header">
-        <div class="cs-mission-name">
-            <span id="mission-name">ENCRYPTED</span>
-            <span class="hub-label">LUXOR // TACTICAL HUB</span>
+        <div class="cs-mission-display">
+            LUXOR: <span id="mission-name">ENCRYPTED</span>
         </div>
-        <div style="display: flex; gap: 20px; align-items: baseline;">
-            <div id="mission-date" style="color: var(--gold-dim); font-size: 0.8rem; font-weight: bold; font-family: 'Orbitron', sans-serif;"></div>
-            <div id="mission-status" style="color: var(--cyan); font-size: 0.8rem; font-weight: bold; font-family: 'Orbitron', sans-serif; letter-spacing: 1px;">STATUS: UNKNOWN</div>
+        <div class="cs-status-display">
+            STATUS: <span id="mission-status">UNKNOWN</span>
         </div>
     </header>
 
