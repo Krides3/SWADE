@@ -12,7 +12,7 @@
     ];
 
     const RADIO_GLOSSARY = [
-        { c: "CONTACT [BEARING]", d: "Visual sighting of enemy at specific compass bearing." },
+        { c: "CONTACT [BEARING]", d: "Visual on Hostile at [bearing]" },
         { c: "COPY", d: "Received and understood last transmission." },
         { c: "VISUAL", d: "Sighting of a friendly person or object." },
         { c: "HOLD", d: "Stop current action and wait for orders." },
@@ -20,13 +20,33 @@
         { c: "NO JOY", d: "No visual contact with target." },
         { c: "BLIND", d: "Lost visual contact with friendly." },
         { c: "WINCHESTER", d: "Out of all ammunition/ordnance." },
-        { c: "REMINGTON", d: "Only small amount of ammo left." },
+        { c: "REMINGTON", d: "Out of all ordinences" },
         { c: "OSCAR MIKE", d: "On the move / mobile." },
         { c: "CHARLIE MIKE", d: "Continue Mission." },
         { c: "BOGEY", d: "Unknown radar or visual contact." },
         { c: "BANDIT", d: "Confirmed enemy aircraft/contact." },
         { c: "HOSTILE", d: "Confirmed enemy; authorized to engage." }
     ];
+
+    function parseTacticalMarkdown(content) {
+        if (!content) return '';
+
+        // Custom color tags: [color]text[/color]
+        let parsed = content
+            .replace(/\[gold\](.*?)\[\/gold\]/gi, '<span class="text-gold">$1</span>')
+            .replace(/\[cyan\](.*?)\[\/cyan\]/gi, '<span class="text-cyan">$1</span>')
+            .replace(/\[green\](.*?)\[\/green\]/gi, '<span class="text-green">$1</span>')
+            .replace(/\[blue\](.*?)\[\/blue\]/gi, '<span class="text-blue">$1</span>')
+            .replace(/\[red\](.*?)\[\/red\]/gi, '<span class="text-red">$1</span>')
+            .replace(/\[yellow\](.*?)\[\/yellow\]/gi, '<span class="text-yellow">$1</span>')
+            .replace(/\[purple\](.*?)\[\/purple\]/gi, '<span class="text-purple">$1</span>');
+
+        if (typeof marked !== 'undefined') {
+            return typeof marked.parse === 'function' ? marked.parse(parsed) : marked(parsed);
+        }
+
+        return `<pre style="font-family:inherit; white-space:pre-wrap; margin:0; font-size:1.1rem;">${parsed}</pre>`;
+    }
 
     async function init() {
         renderNATO();
@@ -62,8 +82,7 @@
 
                     const planEl = document.getElementById('mission-plan');
                     if (mission.leaderPlan) {
-                        const content = typeof marked.parse === 'function' ? marked.parse(mission.leaderPlan) : marked(mission.leaderPlan);
-                        planEl.innerHTML = content;
+                        planEl.innerHTML = parseTacticalMarkdown(mission.leaderPlan);
                     } else {
                         planEl.innerHTML = '<div style="color:var(--text-dim); font-style:italic; padding:20px; border:1px dashed var(--border);">TACTICAL PLAN PENDING FROM MISSION LEADER...</div>';
                     }
